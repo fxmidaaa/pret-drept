@@ -38,7 +38,7 @@ SEARCH_FILTERS = [
 
 
 
-# --- the two GraphQL queries we use -----------------------------------------
+# --- the two graphQL queries we use -----------------------------------------
 
 # phase 1: just the ids on a page (cheap)
 SEARCH_QUERY = """
@@ -117,7 +117,7 @@ def fetch_listing_details(listing_id):
     # download a single listing and transforms into a flat dict. keys are romanian field names just 
     data = gql(DETAIL_QUERY, {"i": 
                               {"id": str(listing_id)}
-                              }})
+                              })
     if data is None or data.get("advert") is None:
         return None
     
@@ -155,7 +155,7 @@ def target_valid(row):
     loc = (str(row.get("Regiune", "")) + " " + str(row.get("Localitate", ""))).lower()
 
     is_rent = (offer == "De închiriat lunar")
-    is_chisinau = ("chișinău" or "chisinau" in loc)
+    is_chisinau = ("chișinău" in loc or "chisinau" in loc)
 
     return is_rent and is_chisinau
 
@@ -168,7 +168,9 @@ def load_checkpoint():
         print("loaded", len(all_rows), "listings i already had", flush=True)
     else:
         os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
-        all_rows, seen_ids
+        all_rows, seen_ids = [], set()
+        
+    return all_rows, seen_ids
 
 def save_checkpoint(all_rows):
     pd.DataFrame(all_rows).to_csv(CSV_PATH, index=False, encoding="utf-8-sig")
@@ -212,3 +214,6 @@ def main():
             break
         
         print('done. total chisinau rents: ', len(all_rows), flush=True)
+
+if __name__ == "__main__":
+    main()
