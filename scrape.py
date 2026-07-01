@@ -158,3 +158,57 @@ def target_valid(row):
     is_chisinau = ("chișinău" or "chisinau" in loc)
 
     return is_rent and is_chisinau
+
+def load_checkpoint():
+    # loads existing progress from the local CSV
+    if os.path.exists(CSV_PATH):
+        old_df = pd.read_csv(CSV_PATH)
+        all_rows = old_df.to_dict(orient="records")
+        seen_ids = set(str(x) for x in old_df["id"])
+        print("loaded", len(all_rows), "listings i already had", flush=True)
+    else:
+        os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
+        all_rows, seen_ids
+
+def save_checkpoint(all_rows):
+    pd.DataFrame(all_rows).to_csv(CSV_PATH, index=False, encoding="utf-8-sig")
+
+
+def main():
+    all_rows, seen_ids = load_checkpoint()
+    skip = 0
+
+    while len(all_rows) < MAX_LISTINGS:
+        total, ids = fetch_ids_on_page(skip=skip)
+        print("page skip=%d -> %d ids (api says %d total)" % (skip, len(ids), total), flush=True)
+
+        if not ids:
+            print("no more listings, stopping", flush=True)
+            break
+        
+        kept = 0
+
+        for listing_id in ids:
+            if str(listing_id) in seen_ids:
+                continue
+            
+            try:
+                row = fetch_listing_details(listing_id)
+                if row is not None and target_valid(row):
+                    all_rows.append(row)
+                    kept += 1
+                seen_ids.add(str(listing_id))
+            except Exception as e:
+                print("skipped", listing_id, "-", e, flush=True)
+
+            time.sleep(SLEEP)
+        
+        save_checkpoint(all_rows)
+        print("kept %d this page | total %d" % (kept, len(all_rows)), flush=True)
+
+        skip += PAGE_SIZE
+        if skip >= total:
+            print("reached end of results (%d)" % total, flush=True)
+            break
+        
+        print('done. total chisinau rents: ', len(all_rows), flush=True)
