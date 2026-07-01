@@ -26,7 +26,7 @@ SUBCATEGORY_RENT = 1404 # the "apartamente/camere" subcategory
 CSV_PATH = "data/raw/listings.csv"
 PAGE_SIZE = 50 # how many ids per search page
 MAX_LISTINGS = 6000 
-SLEEP = 1.0  # delay between API calls
+SLEEP = 0.3  # delay between API calls
 
 
 # first filter is for "De inchiriat lunar", second is for "Chisinau"
@@ -160,8 +160,8 @@ def target_valid(row):
     return is_rent and is_chisinau
 
 def load_checkpoint():
-    # loads existing progress from the local CSV
-    if os.path.exists(CSV_PATH):
+    # loads existing progress from the local CSV if it exists and is not empty
+    if os.path.exists(CSV_PATH) and os.path.getsize(CSV_PATH) > 0:
         old_df = pd.read_csv(CSV_PATH)
         all_rows = old_df.to_dict(orient="records")
         seen_ids = set(str(x) for x in old_df["id"])
