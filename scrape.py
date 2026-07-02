@@ -12,6 +12,7 @@ import pandas as pd
 import os
 import json
 import time
+from datetime import date
 
 GRAPHQL_URL = "https://999.md/graphql"
 
@@ -23,7 +24,11 @@ HEADERS = {
 }
 
 SUBCATEGORY_RENT = 1404 # the "apartamente/camere" subcategory
-CSV_PATH = "data/raw/listings.csv"
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CSV_PATH = os.path.join(BASE_DIR, "data", "raw", "listings.csv")
+TODAY = date.today().isoformat()
+
 PAGE_SIZE = 50 # how many ids per search page
 MAX_LISTINGS = 6000 
 SLEEP = 0.3  # delay between API calls
@@ -163,26 +168,23 @@ def load_checkpoint():
     # loads existing progress from the local CSV if it exists and is not empty
     if os.path.exists(CSV_PATH) and os.path.getsize(CSV_PATH) > 0:
         old_df = pd.read_csv(CSV_PATH)
-        all_rows = old_df.to_dict(orient="records")
-        seen_ids = set(str(x) for x in old_df["id"])
-        print("loaded", len(all_rows), "listings i already had", flush=True)
+
+        rows_by_id = {str(row["id"]): row for row in old_df.to_dict(orient="records")}
+        print("loaded", len(rows_by_id), "listings i already had", flush=True)
     else:
         os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
-        all_rows, seen_ids = [], set()
+        rows_by_id = {}
         
-    return all_rows, seen_ids
-
-def save_checkpoint(all_rows):
-    pd.DataFrame(all_rows).to_csv(CSV_PATH, index=False, encoding="utf-8-sig")
+    return rows_by_id
 
 
 def main():
-    all_rows, seen_ids = load_checkpoint()
+    rows_by_id = load_checkpoint()
     skip = 0
 
-    while len(all_rows) < MAX_LISTINGS:
+    while len(rows_by_id) < MAX_LISTINGS:
         total, ids = fetch_ids_on_page(skip=skip)
-        print("page skip=%d -> %d ids (api says %d total)" % (skip, len(ids), total), flush=True)
+        # print("page skip=%d -> %d ids (api says %d total)" % (skip, len(ids), total), flush=True)
 
         if not ids:
             print("no more listings, stopping", flush=True)
@@ -191,29 +193,41 @@ def main():
         kept = 0
 
         for listing_id in ids:
-            if str(listing_id) in seen_ids:
+            sid = str(listing_id)
+
+            if sid in rows_by_id:
+                rows_by_id[sid]["last_seen"] = TODAY
                 continue
             
             try:
                 row = fetch_listing_details(listing_id)
+
                 if row is not None and target_valid(row):
-                    all_rows.append(row)
+                    row["first_seen"] = TODAY
+                    row["last_seen"] = TODAY
+                    rows_by_id[sid] = row
                     kept += 1
-                seen_ids.add(str(listing_id))
+                else:
+                    rows_by_id[sid] = {
+                        "id": listing_id,
+                        "first_seen": TODAY,
+                        "last_seen": TODAY,
+                        "Tipul ofertei": "rejected"
+                    }
             except Exception as e:
                 print("skipped", listing_id, "-", e, flush=True)
 
             time.sleep(SLEEP)
         
-        save_checkpoint(all_rows)
-        print("kept %d this page | total %d" % (kept, len(all_rows)), flush=True)
+        pd.DataFrame(rows_by_id.values()).to_csv(CSV_PATH, index=False, encoding='utf-8-sig')
+        print("kept %d this page | total %d" % (kept, len(rows_by_id)), flush=True)
 
         skip += PAGE_SIZE
         if skip >= total:
             print("reached end of results (%d)" % total, flush=True)
             break
         
-        print('done. total chisinau rents: ', len(all_rows), flush=True)
+    print('done. total chisinau rents: ', len(rows_by_id), flush=True)
 
 if __name__ == "__main__":
     main()
