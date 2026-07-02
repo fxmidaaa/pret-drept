@@ -203,4 +203,102 @@ def clean_price(row):
     
     if unit == "UNIT_USD":
         return value * 0.92 # roughly USD to EUR, very few of these
-    return value      
+    return value
+
+def clean_data(df):
+    # cleans raw scraped 999 dataframe and returns a ready one for the model
+    df = df.copy()
+
+    # --- NUMERICAL FEATURES --- 
+
+    df["price"] = df.apply(clean_price, axis=1)
+
+    df['rooms'] = df[ROOMS_COL].apply(clean_rooms)
+    df['area'] = df[AREA_COL].apply(first_number)
+    df['floor'] = df[FLOOR_COL].apply(first_number)
+    df['total_floors'] = df[TOTAL_FLOORS_COL].apply(first_number)
+
+    latlon = [parse_latlon(h) for h in df[MAP_COL]]
+    df["lat"] = np.array([p[0] if p[0] is not None else np.nan for p in latlon], dtype = float)
+    df["lon"] = np.array([p[1] if p[1] is not None else np.nan for p in latlon], dtype=float)
+    df["dist_to_center"] = np.array(
+        [latlon_to_km(p[0], p[1]) if p[0] is not None else np.nan for p in latlon], dtype=float
+    )
+
+    df["kitchen_area"] = df[KITCHEN_COL].apply(clean_kitchen)
+    df["ceiling_height"] = df[CEILING_COL].apply(clean_ceiling)
+    df["balcony_count"] = df[BALCONY_COL].apply(clean_balcony)
+    df["photo_count"] = df[PHOTOS_COL].apply(clean_photos)
+
+    # --- BINARY FEATURES --- 
+    df["autonomous_heating"] = df[HEATING_COL].apply(to_flag)
+    df["furnished"] = df[FURNISHED_COL].apply(to_flag)
+    df["elevator"] = df[ELEVATOR_COL].apply(to_flag)
+    df["parking"] = df[PARKING_COL].apply(clean_parking)
+    df["air_conditioning"] = df[AC_COL].apply(to_flag)
+    df["floor_heating"] = df[FLOOR_HEATING_COL].apply(to_flag)
+    df["terrace"] = df[TERRACE_COL].apply(to_flag)
+    df["panoramic_windows"] = df[PANORAMIC_COL].apply(to_flag)
+    df["utilities_included"] = df[TEXT_COL].apply(utilities_from_text)
+
+    # --- CATEGORICAL FEATURES ---
+    df["sector"] = df[SECTOR_COL].apply(clean_text)
+    df["building_fund"] = df[FUND_COL].apply(clean_text) # new vs secundar 
+    df["condition"] = df[CONDITION_COL].apply(clean_text)
+    df["author"] = df[AUTHOR_COL].apply(clean_text) # agency / personal property / dezvoltator
+    df["building_type"] = df[BUILDING_TYPE_COL].apply(clean_text)
+
+    # ~1/3 of listings with empty condiftion field but describe it in the ad.
+    # ad text ("euroreparatie", "евроремонт"...). recover what we can from there.
+    blank = df["condition"] == "necunoscut"
+    from_text = df.loc[blank, TEXT_COL].apply(condition_from_text)
+    df.loc[blank, "condition"] = from_text.fillna("necunoscut")
+
+    # drop rows that lack the most important features
+    df = df.dropna(subset=["price", "area", "rooms"])
+
+    # drop duplicated listings. a lot of apartments are reposted with another ad.
+    # if one copy lands in train and another in validation, the model gets graded on flats
+    # it has already seen and the metrics look better than they really are.
+    # same key attributes + same price = same flat, i assume. 
+    df = df.drop_duplicates(
+        subset=["sector", "rooms", "area", "floor", "total_floors", "price"]
+    )
+
+    # remove obvious outliers (typos, daily-rate leftovers, bad areas)
+    # the price cap is 3000 EUR/month on purpose: this model is for the mass
+    # segment. the ~3% luxury tail above that is rare, wildly heterogeneous and
+    # wrecks every squared metric while telling us nothing about ordinary flats.
+    df = df[(df["price"] >= 100) & (df["price"] <= 3000)] # in euros
+    df = df[(df["area"] >= 10) & (df["area"] <= 400)]
+    df = df[(df["rooms"] >= 1) & (df["rooms"] <= 6)]
+
+    # drop the worst 1% on each end of "rent-per-m2". these are almost always some data issues.
+    # i.e, wrong area, prices includes utilities and etc.
+    # this step alone is one of the biggest R^2 improvements i found so far.
+
+    ppm = df['price'] / df['area']
+    lo, hi = ppm.quantile(0.01), ppm.quantile(0.99)
+    df = df[(ppm >= lo) & (ppm <= hi)]
+
+    # fill with median some numerical variables
+
+    for column in ["floor", "total_floors", "dist_center", 
+                   "lat", "lon", "kitchen_area", "ceiling_height"]:
+        df[column] = df[column].fillna(df[column].median())
+
+    # two cheap derived flags, computed by the shared rule above 
+    flags = [floor_flags(f, t) for f, t in zip(df["floor"], df["total_floors"])]
+    df["is_ground"] = [g for g, _ in flags]
+    df["is_top"] = [t for _, t in flags]
+
+    return df
+
+def knn_market_rate(df_fit, df_target, k=15, exclude_self = False):
+    # "what do the neighbors charge?"
+    # median eur/m2 among the k nearest listings of df_fit for every df_target row.
+    # this is what we basically do when judge a price - look around.
+
+    from sklearn.neighbors import NearestNeighbors
+
+    pass
