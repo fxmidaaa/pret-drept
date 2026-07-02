@@ -20,17 +20,38 @@ FURNISHED_COL = "Mobilat"
 ELEVATOR_COL = "Ascensor"
 PARKING_COL = "Loc de parcare"
 MAP_COL = "Harta"
+AUTHOR_COL = "Autorul anunțului"
+BUILDING_TYPE_COL = "Tip clădire"
+BALCONY_COL = "Balcon/ lojie"
+PHOTOS_COL = "Fotografii"
+KITCHEN_COL = "Suprafață bucătărie"
+CEILING_COL = "Inălțimea tavanelor"
+TERRACE_COL = "Terasă"
+AC_COL = "Aparat de aer condiționat"
+FLOOR_HEATING_COL = "Încălzire prin pardoseală"
+PANORAMIC_COL = "Geamuri panoramice"
+TEXT_COL = "Textul anunțului"
 
 # I turn each listing's gps coordinate into a distance-to-center in km. (Chisinau city centre)
 CENTER_LAT, CENTER_LON = 47.0245, 28.8322 # piata marii adunari nationale 
 LON_SCALE = 0.682   # cos(47 deg): 1 deg of longitude is shorter than 1 deg of latitude here
 
-numerical = ["rooms", "area", "floor", "total_floors", "dist_center"]
-binary = ["autonomous_heating", "furnished", "elevator", "parking", "is_ground", "is_top"]
-categorical = ["sector", "building_fund", "condition"]
+numerical = ["rooms", "area", "floor", "total_floors", "dist_center",
+              "lat", "lon", "kitchen_area", "ceiling_height",
+                "balcony_count", "photo_count"]
+binary = ["autonomous_heating", "furnished", "elevator", "parking", "is_ground", "is_top",
+          "air_conditioning", "floor_heating", "terrace", "panoramic_windows",
+          "utilities_included"]
+categorical = ["sector", "building_fund", "condition", "author", "building_type"]
 features = numerical + binary + categorical
 
-def distance_to_center(harta):
+def floor_flags(floor, total_floors):
+    # this rule lives here (and ONLY here) so that
+    # training, predict.py and the api can never drift apart on what "ground" means
+    is_ground = int(floor is not None and floor <= 1)
+    is_top = int(floor is not None and total_floors is not None and floor >= total_floors)
+
+def parse_latlon(harta):
     # 'Harta' is a json string like {"lat": 47.03, "lon": 28.80}. Turn it into the
     # approximate distance in km from the city centre. Bad / missing coords -> None.
     try:
@@ -38,18 +59,26 @@ def distance_to_center(harta):
         lat, lon = h.get("lat"), h.get("lon")
 
     except Exception:
-        return None
+        return None, None
     
     if lat is None or lon is None:
-        return None
+        return None, None
     
-    if not (46.9 < lat < 47.1 and 28.74 < lon < 28.95):
-        return None
+    if not (46.9 < lat < 47.10 and 28.74 < lon < 28.95):
+        return None, None
+    return float(lat), float(lon)    
     
+def latlon_to_km(lat, lon):
     dlat = lat - CENTER_LAT
-    dlon = lon - CENTER_LON
+    dlon = (lon - CENTER_LON) * LON_SCALE
 
     return float(np.sqrt(dlat ** 2 + dlon ** 2) * 111.0) # degrees into kilometers (thanks to geography in lyceum)
+
+def distance_to_center(harta):
+    lat, lon = parse_latlon(harta)
+    if lat is None:
+        return None
+    return latlon_to_km(lat, lon)
 
 def first_number(text):
     # pull the first number out of a value. "62" -> 62.0, "Apartament cu 3 camere" -> 3.0
@@ -89,6 +118,75 @@ def clean_parking(value):
     if isinstance(value, str) and value.strip() and value.strip().lower() != "nu":
         return 1
     return 0
+
+def clean_balcony(value):
+    # "Balcon/ lojie" is "1"/"2"/"3"/"4 si mai multe"/"Nu"/NaN -> a count
+    n = first_number(value)
+    if n is None:
+        return 0 # "Nu" or not specified
+    return min(n, 4.0)
+
+def clean_photos(value):
+    n = first_number(value)
+    if not isinstance(value, str):
+        return 0
+    return value.count(".jpg") + value.count(".png") + value.count(".webp")
+
+def clean_kitchen(value):
+    # kitchen area in m2; only ~10% of listings fill it, and some put 0 for "unknown"
+    v = first_number(value)
+    if v is None or not (3 <= v <= 60):
+        return None
+    return v
+
+def clean_ceiling(value):
+    # ceiling height. people type it in whatever unit they feel like:
+    # "3" (m), "28" (dm??!), "280" (cm). normalize everything to meters.
+    v = first_number(value)
+    if v is None or v <= 0:
+        return None
+    if 2 <= v <= 4.5:
+        return v
+    if 20 <= v <= 45:
+        return v / 10
+    if 200 <= v <= 450:
+        return v / 100
+    return None
+
+# people often write the condition in the ad text even when the structured field
+# is empty (~1/3 of listings). ads come in romanian AND russian, so both.
+# order matters: the first pattern that matches wins.
+CONDITION_PATTERNS = [
+    ("euroreparație", ["eurorepara", "euro repara", "евроремонт"]),
+    ("design individual", ["design individual", "дизайнерск"]),
+    ("dat în exploatare", ["dat în exploatare", "dat in exploatare", "сдан в эксплуатацию"]),
+    ("variantă albă", ["variantă albă", "varianta alba", "белый вариант", "белом варианте"]),
+    ("are nevoie de reparație", ["nevoie de repara", "necesită repara", "требует ремонта"]),
+    ("fără reparație", ["fără repara", "fara repara", "без ремонта"]),
+    ("reparație cosmetică", ["cosmetic", "косметическ"]),
+]
+
+def condition_from_text(text):
+    if not isinstance(text, str):
+        return None
+    t = text.lower()
+    for condition, keys in CONDITION_PATTERNS:
+        if any(k in t for k in keys):
+            return condition
+    return None
+
+# "utilities included in the rent" is invisible in the structured fields but is a
+# known source of price noise. conservative keywords only - "+ comunale" usually
+# means the OPPOSITE (utilities on top), so it's not in the list.
+UTILITIES_KEYS = ["comunale incluse", "inclusiv comunale", "incluse comunale",
+                  "totul inclus", "toate incluse",
+                  "коммунальные включены", "включая коммунальные", "все включено"]
+
+def utilities_from_text(text):
+    if not isinstance(text, str):
+        return 0
+    t = text.lower()
+    return int(any(k in t for k in UTILITIES_KEYS))
 
 def clean_price(row):
     # building the monthly rent in EUR from the value + its current unit
