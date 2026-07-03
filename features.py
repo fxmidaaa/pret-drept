@@ -36,7 +36,7 @@ TEXT_COL = "Textul anunțului"
 CENTER_LAT, CENTER_LON = 47.0245, 28.8322 # piata marii adunari nationale 
 LON_SCALE = 0.682   # cos(47 deg): 1 deg of longitude is shorter than 1 deg of latitude here
 
-numerical = ["rooms", "area", "floor", "total_floors", "dist_center",
+numerical = ["rooms", "area", "floor", "total_floors", "dist_to_center",
               "lat", "lon", "kitchen_area", "ceiling_height",
                 "balcony_count", "photo_count"]
 binary = ["autonomous_heating", "furnished", "elevator", "parking", "is_ground", "is_top",
@@ -50,6 +50,7 @@ def floor_flags(floor, total_floors):
     # training, predict.py and the api can never drift apart on what "ground" means
     is_ground = int(floor is not None and floor <= 1)
     is_top = int(floor is not None and total_floors is not None and floor >= total_floors)
+    return is_ground, is_top
 
 def parse_latlon(harta):
     # 'Harta' is a json string like {"lat": 47.03, "lon": 28.80}. Turn it into the
@@ -283,7 +284,7 @@ def clean_data(df):
 
     # fill with median some numerical variables
 
-    for column in ["floor", "total_floors", "distance_to_center", 
+    for column in ["floor", "total_floors", "dist_to_center", 
                    "lat", "lon", "kitchen_area", "ceiling_height"]:
         df[column] = df[column].fillna(df[column].median())
 
