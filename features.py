@@ -283,7 +283,7 @@ def clean_data(df):
 
     # fill with median some numerical variables
 
-    for column in ["floor", "total_floors", "dist_center", 
+    for column in ["floor", "total_floors", "distance_to_center", 
                    "lat", "lon", "kitchen_area", "ceiling_height"]:
         df[column] = df[column].fillna(df[column].median())
 
@@ -300,5 +300,14 @@ def knn_market_rate(df_fit, df_target, k=15, exclude_self = False):
     # this is what we basically do when judge a price - look around.
 
     from sklearn.neighbors import NearestNeighbors
+    pts_fit = np.column_stack([df_fit["lat"].values, df_fit["lon"].values * LON_SCALE])
+    ppm_fit = (df_fit["price"] / df_fit["area"]).values
+    pts_target = np.column_stack([df_target["lat"].values, df_target["lon"].values * LON_SCALE])
 
-    pass
+    n = min(k + (1 if exclude_self else 0), len(df_fit))
+    nn = NearestNeighbors(n_neighbors=n)
+    nn.fit(pts_fit)
+    _, idx = nn.kneighbors(pts_target)
+    if exclude_self:
+        idx = idx[:, 1:]
+    return np.median(ppm_fit[idx], axis=1)
