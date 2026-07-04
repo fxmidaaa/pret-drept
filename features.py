@@ -1,8 +1,3 @@
-# The data from 999.md comes with romanian column names and mixed value types
-# (numbers, text labels, True/None booleans). Before training I turn it into clean
-# numbers and categories. I keep this in its own file so train.py and predict.py
-# use exactly the same columns - otherwise the model would get confused.
-
 import numpy as np
 import json
 import re

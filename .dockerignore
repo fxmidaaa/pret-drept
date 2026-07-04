@@ -1,0 +1,9 @@
+data/
+notebooks/
+images/
+__pycache__/
+.ipynb_checkpoints/
+.gitignore
+Dockerfile
+.dockerignore
+README.md
