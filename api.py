@@ -53,6 +53,19 @@ class Apartment(BaseModel):
     lat: Optional[float] = Field(None, ge=46.9, le=47.1)
     lon: Optional[float] = Field(None, ge=28.74, le=28.95)
 
+    @field_validator("sector", "building_fund", "condition")
+    @classmethod
+    def category_the_model_knows(cls, value, info):
+        # a category the model never saw would silently one-hot to all zeros and
+        # produce a confident-looking nonsense prediction. better to refuse loudly.
+        value = value.strip().lower()
+        allowed = predict.known_values(info.field_name)
+        if value not in allowed:
+            raise ValueError(
+                f"unknown {info.field_name} '{value}', expected one of: {', '.join(allowed)}"
+            )
+        return value
+
 @app.post("/predict")
 def make_prediction(apartment: Apartment):
     # predict.run derives is_ground/is_top from the floors itself

@@ -34,7 +34,7 @@ def known_values(column):
 
     dv = get_bundle()['dv']
     return sorted(
-        n.split('=', 1) for n in dv.get_feature_names_out()
+        n.split('=', 1)[1] for n in dv.get_feature_names_out()
         if n.startswith(column + '=')
     )
 
@@ -130,6 +130,6 @@ if __name__ == "__main__":
         "condition": "euroreparație",
         "price": 700,
     }
-    
+
     from pprint import pprint
     pprint(run(example))
