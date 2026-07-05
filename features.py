@@ -38,7 +38,7 @@ binary = ["autonomous_heating", "furnished", "elevator", "parking", "is_ground",
           "air_conditioning", "floor_heating", "terrace", "panoramic_windows",
           "utilities_included"]
 categorical = ["sector", "building_fund", "condition", "author", "building_type"]
-features = numerical + binary + categorical
+FEATURES = numerical + binary + categorical
 
 def floor_flags(floor, total_floors):
     # this rule lives here (and ONLY here) so that

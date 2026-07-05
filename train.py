@@ -12,14 +12,14 @@ import os
 
 from features import clean_data, knn_market_rate, FEATURES, numerical, LON_SCALE
 
-BASE = os.path.dirname(os.path.dirname(__file__))
+BASE = os.path.dirname(os.path.abspath(__file__))
 
 def rmse(y_true, y_pred):
     return np.sqrt(mean_squared_error(y_true, y_pred))
 
 def main():
     # load and clean the data (999.md monthly rent)
-    df = pd.read_csv(os.path.join(BASE, "data", "raw", "listings_999.csv"))
+    df = pd.read_csv(os.path.join(BASE, "data", "raw", "listings.csv"))
     print("raw rows:", len(df))
     df = clean_data(df)
     print("rows after cleaning:", len(df))
@@ -34,10 +34,10 @@ def main():
     features = FEATURES + ['knn_ppm']
 
     y_train = np.log1p(df_train['price'].values)
-    y_val = np.log1p(df_train['price'].values)
+    y_val = np.log1p(df_val['price'].values)
 
-    dicts_train = df_train['features'].to_dict(orient='records')
-    dicts_val = df_val['features'].to_dict(orient='records')
+    dicts_train = df_train[features].to_dict(orient='records')
+    dicts_val = df_val[features].to_dict(orient='records')
 
     # one-hot encoding using dicts
     dv = DictVectorizer(sparse=False)
@@ -60,8 +60,9 @@ def main():
         min_child_weight = 7
     )
 
+    model.fit(X_train, y_train)
     pred = np.expm1(model.predict(X_val))
-    true = np.exmp1(y_val)
+    true = np.expm1(y_val)
     mape = np.mean(np.abs((true - pred) / true)) * 100
 
     print("RMSE:", round(rmse(true, pred)), "EUR")
@@ -83,7 +84,7 @@ def main():
     #    web user can't type: typical coordinates per sector, the training listings'
     #    coordinates + EUR/m2 (for the knn feature), and median defaults for the
     #    numeric fields nobody fills in by hand (photo count, ceiling height, blablabla).
-    sector_dist = df.groupby("sector")["dist_center"].median().to_dict()
+    sector_dist = df.groupby("sector")["dist_to_center"].median().to_dict()
     sector_latlon = {s: [float(g["lat"].median()), 
                          float(g["lon"].median())]
                      for s, g in df.groupby("sector")} 
@@ -92,7 +93,7 @@ def main():
         "model": model,
         "features": features,
         "sector_dist": sector_dist,
-        "median_dist": float(df["dist_center"].median()),
+        "median_dist": float(df["dist_to_center"].median()),
         "sector_latlon": sector_latlon,
         "median_latlon": [float(df["lat"].median()), float(df["lon"].median())],
         "numeric_defaults": {c: float(df_train[c].median()) for c in numerical},
