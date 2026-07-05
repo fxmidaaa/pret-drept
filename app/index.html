@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Is this Chișinău apartment overpriced?</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --ink: #1f2733;
+    --muted: #6b7685;
+    --line: #e3e8f0;
+    --accent: #3a6df0;
+    --accent-soft: #eaf0fe;
+    --green: #1a9d6a;
+    --green-soft: #e6f6ef;
+    --red: #d8453e;
+    --red-soft: #fdecec;
+    --blue: #3a6df0;
+    --blue-soft: #eaf0fe;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    padding: 32px 16px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 24px; }
+  header h1 { font-size: 1.7rem; margin: 0 0 6px; }
+  header p { color: var(--muted); margin: 0; font-size: 0.95rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 6px 24px rgba(31, 39, 51, 0.05);
+  }
+  .section-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin: 18px 0 10px;
+    font-weight: 600;
+  }
+  .section-title:first-child { margin-top: 0; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 540px) { .grid { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+  input[type="number"], select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    background: #fff;
+    color: var(--ink);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input[type="number"]:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .amenities { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chk {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 9px 13px; cursor: pointer; user-select: none;
+    font-size: 0.9rem; transition: all 0.15s;
+  }
+  .chk input { accent-color: var(--accent); width: 16px; height: 16px; }
+  .chk:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+  button {
+    width: 100%; margin-top: 22px;
+    background: var(--accent); color: #fff; border: none;
+    padding: 14px; font-size: 1rem; font-weight: 600;
+    border-radius: 12px; cursor: pointer; transition: background 0.15s;
+  }
+  button:hover { background: #2f5fd6; }
+  button:disabled { opacity: 0.6; cursor: default; }
+
+  #result { margin-top: 20px; display: none; }
+  .result-card { text-align: center; padding: 26px 20px; }
+  .fair-label { color: var(--muted); font-size: 0.85rem; }
+  .fair-price { font-size: 2.4rem; font-weight: 700; margin: 4px 0 14px; }
+  .badge {
+    display: inline-block; padding: 8px 18px; border-radius: 999px;
+    font-weight: 600; font-size: 0.95rem;
+  }
+  .badge.overpriced { background: var(--red-soft); color: var(--red); }
+  .badge.good       { background: var(--green-soft); color: var(--green); }
+  .badge.fair       { background: var(--blue-soft); color: var(--blue); }
+  .dev-text { color: var(--muted); font-size: 0.9rem; margin-top: 10px; }
+  .drivers { margin-top: 20px; text-align: left; }
+  .drivers h3 { font-size: 0.85rem; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+  .driver {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 0; border-top: 1px solid var(--line); font-size: 0.92rem;
+  }
+  .driver .arrow { font-size: 1.05rem; }
+  .driver .up { color: var(--red); }
+  .driver .down { color: var(--green); }
+  footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🏠 Is this Chișinău apartment overpriced?</h1>
+    <p>Fill in the apartment details and get an estimated fair monthly rent.</p>
+  </header>
+
+  <div class="card">
+    <form id="form">
+      <div class="section-title">Basics</div>
+      <div class="grid">
+        <div><label>Rooms</label><input type="number" id="rooms" min="1" max="6" value="2"></div>
+        <div><label>Area (m²)</label><input type="number" id="area" min="10" max="400" value="55"></div>
+        <div><label>Floor</label><input type="number" id="floor" min="1" max="30" value="3"></div>
+        <div><label>Floors in building</label><input type="number" id="total_floors" min="1" max="30" value="9"></div>
+      </div>
+
+      <div class="section-title">Location & building</div>
+      <div class="grid">
+        <div><label>Sector</label><select id="sector"></select></div>
+        <div><label>Building fund</label><select id="building_fund"></select></div>
+        <div style="grid-column: 1 / -1;"><label>Condition</label><select id="condition"></select></div>
+      </div>
+
+      <div class="section-title">Amenities</div>
+      <div class="amenities">
+        <label class="chk"><input type="checkbox" id="autonomous_heating"> Autonomous heating</label>
+        <label class="chk"><input type="checkbox" id="furnished" checked> Furnished</label>
+        <label class="chk"><input type="checkbox" id="elevator"> Elevator</label>
+        <label class="chk"><input type="checkbox" id="parking"> Parking</label>
+      </div>
+
+      <div class="section-title">Asking rent</div>
+      <div class="grid">
+        <div style="grid-column: 1 / -1;">
+          <label>Listed rent (EUR / month) — optional, to get a verdict</label>
+          <input type="number" id="price" min="0" value="600" step="50">
+        </div>
+      </div>
+
+      <button type="submit" id="submitBtn">Estimate fair rent</button>
+    </form>
+  </div>
+
+  <div id="result"></div>
+
+  <footer>Learning project · estimates are not professional advice · data from 999.md</footer>
+</div>
+
+<script>
+// nicer labels for the romanian option values, while still submitting the raw value
+const NICE = {
+  building_fund: { "construcţii noi": "New build", "secundar": "Secondary (older stock)" },
+  condition: {
+    "euroreparație": "Euro-renovation",
+    "reparație cosmetică": "Cosmetic renovation",
+    "design individual": "Individual design",
+    "are nevoie de reparație": "Needs renovation",
+    "fără reparație": "No renovation",
+    "dat în exploatare": "Newly delivered",
+    "variantă albă": "White-box (unfinished)",
+    "necunoscut": "Not specified"
+  }
+};
+const titleCase = s => s.replace(/\b\w/g, c => c.toUpperCase());
+
+function fillSelect(id, values) {
+  const sel = document.getElementById(id);
+  values.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = (NICE[id] && NICE[id][v]) || titleCase(v);
+    sel.appendChild(opt);
+  });
+}
+
+// load the dropdown options from the model
+fetch("/options").then(r => r.json()).then(opts => {
+  fillSelect("sector", opts.sector);
+  fillSelect("building_fund", opts.building_fund);
+  fillSelect("condition", opts.condition);
+  // default sector to centru if present
+  const s = document.getElementById("sector");
+  if (opts.sector.includes("centru")) s.value = "centru";
+});
+
+const num = id => Number(document.getElementById(id).value);
+const chk = id => document.getElementById(id).checked ? 1 : 0;
+
+document.getElementById("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true; btn.textContent = "Estimating…";
+
+  const floor = num("floor"), total = num("total_floors");
+  const body = {
+    rooms: num("rooms"), area: num("area"), floor: floor, total_floors: total,
+    sector: document.getElementById("sector").value,
+    building_fund: document.getElementById("building_fund").value,
+    condition: document.getElementById("condition").value,
+    autonomous_heating: chk("autonomous_heating"),
+    furnished: chk("furnished"),
+    elevator: chk("elevator"),
+    parking: chk("parking"),
+    price: num("price") > 0 ? num("price") : null
+  };
+
+  try {
+    const res = await fetch("/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    render(data);
+  } catch (err) {
+    document.getElementById("result").style.display = "block";
+    document.getElementById("result").innerHTML =
+      '<div class="card result-card">Something went wrong. Is the server running?</div>';
+  } finally {
+    btn.disabled = false; btn.textContent = "Estimate fair rent";
+  }
+});
+
+function render(data) {
+  const fair = data.fair_price.toLocaleString();
+  let verdictHtml = "";
+  if (data.verdict) {
+    const cls = data.verdict === "overpriced" ? "overpriced"
+              : data.verdict === "good deal" ? "good" : "fair";
+    const label = data.verdict === "overpriced" ? "Overpriced"
+                : data.verdict === "good deal" ? "Good deal" : "Fair price";
+    const dev = data.deviation_pct;
+    const devText = dev > 0
+      ? `The listing is about ${dev.toFixed(0)}% above the estimated market rent.`
+      : `The listing is about ${Math.abs(dev).toFixed(0)}% below the estimated market rent.`;
+    verdictHtml = `<div class="badge ${cls}">${label}</div>
+                   <div class="dev-text">${Math.abs(dev) < 0.5 ? "Right on the market rate." : devText}</div>`;
+  }
+
+  let driversHtml = "";
+  if (data.drivers && data.drivers.length) {
+    driversHtml = '<div class="drivers"><h3>What drove this estimate</h3>' +
+      data.drivers.map(d => {
+        const up = d.effect === "raises price";
+        return `<div class="driver">
+                  <span class="arrow ${up ? "up" : "down"}">${up ? "▲" : "▼"}</span>
+                  <span>${d.feature}</span>
+                  <span style="margin-left:auto;color:var(--muted);font-size:0.82rem;">
+                    ${up ? "raises rent" : "lowers rent"}</span>
+                </div>`;
+      }).join("") + "</div>";
+  }
+
+  const r = document.getElementById("result");
+  r.style.display = "block";
+  r.innerHTML = `<div class="card result-card">
+      <div class="fair-label">Estimated fair rent</div>
+      <div class="fair-price">€${fair}<span style="font-size:1rem;color:var(--muted);font-weight:400;"> / month</span></div>
+      ${verdictHtml}
+      ${driversHtml}
+    </div>`;
+  r.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+</script>
+</body>
+</html>
