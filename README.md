@@ -1,19 +1,19 @@
 # Is this Chișinău apartment overpriced?
 
 My first machine learning project. I scraped ~4500 real apartment **rental** listings from a 
-Moldovan classifieds, trained a model on them, and built a small app that estimates a 
+Moldovan classifieds site, trained a model on them, and built a small app that estimates a 
 **fair monthly rent** for an apartment and tells you if a listing is **overpriced** or 
 **a good deal**.
 
 The idea is: when you look for a flat to rent in Chișinău you never really know if the price is 
-normal, too high or too low. (unless you are a real estate agent or an analyst). So I made a tool 
+normal, too high or too low (unless you are a real estate agent or an analyst). So I made a tool 
 that compares a listing against the whole market and explains *why* it thinks the rent is fair or not. 
 
 --- 
 
-## What it predicts? 
+## What does it predict? 
 
-You give it an apartment (rooms, area, sector, floor, heating, furnishing, etc/) and it returns:
+You give it an apartment (rooms, area, sector, floor, heating, furnishing, etc.) and it returns:
 - an estimated **fair monthly rent** in EUR
 - whether the asking rent is **overpriced / fair / a good deal**
 - the top 5 reasons behind that number, so it's not just a black box spitting out a figure
@@ -35,6 +35,38 @@ You give it an apartment (rooms, area, sector, floor, heating, furnishing, etc/)
 - **Currency:** ~95% are quoted in EUR, the rest in MDL/USD - I normalize everything to EUR at a
   fixed rate (19.5 MDL/EUR, BNM mid-2026).
 - Collected July 2026.
+
+---
+
+## What the market actually looks like
+
+Before training anything I spent some time just looking at the data
+([`notebooks/eda.ipynb`](notebooks/eda.ipynb) has the full tour). A few things worth showing:
+
+**Rent is heavily skewed.** Lots of normal flats, a long tail of expensive ones. Taking the log
+makes it symmetric - that's the whole reason the model trains on `log(price)`:
+
+![rent distribution](images/rent_distribution.png)
+
+**Location matters most.** Centru goes for ~13.9 EUR/m² while the outer sectors sit around
+9.4-10.2, with a clean centre-outward gradient in between:
+
+![price per sector](images/price_per_sector.png)
+
+**New build vs old Soviet stock is the biggest single gap: +41% per m²** (13.5 vs 9.6 EUR/m²):
+
+![new build gap](images/newbuild_gap.png)
+
+**And my favourite finding: autonomous heating is not actually a price driver.** Moldova went
+through an energy crisis recently, so everyone assumes flats with their own heating rent for more -
+and raw numbers agree (+9.5%). But autonomous heating is standard in new buildings, and new
+buildings are expensive for other reasons too. Compare inside each building fund and the premium
+vanishes completely. It was the new-building premium all along:
+
+![heating premium](images/heating_premium.png)
+
+Smaller stuff: each extra m² is worth ~13 EUR/month (small flats are pricier per m²), ground floor
+is a real discount (-12%), and furnishing adds nothing - it's simply expected here.
 
 ---
 
