@@ -123,7 +123,6 @@ def clean_balcony(value):
     return min(n, 4.0)
 
 def clean_photos(value):
-    n = first_number(value)
     if not isinstance(value, str):
         return 0
     return value.count(".jpg") + value.count(".png") + value.count(".webp")

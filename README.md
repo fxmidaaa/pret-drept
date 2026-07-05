@@ -120,6 +120,13 @@ that's roughly ±20%. Not amazing, but every model crushes the dumb baseline and
 explains 71% of the variance, which told me the features were pulling their weight before I ever
 touched a tree.
 
+One honest footnote about where these numbers come from: the table above is 5-fold cross-validation
+from the notebook - that's what picked the model and its settings. The model I actually ship is then
+retrained by `train.py` on a fresh 80/20 split, and *its own* holdout scores get stamped into
+`model.joblib` (RMSE 253, MAE 163, MAPE 18.3%, R² 0.79 right now - printed every time the API loads
+the model). The two agree within a couple of EUR, which is what you'd hope, but they are not the
+same measurement.
+
 The tuned XGBoost settings (found by random search in the notebook):
 
 ```
@@ -203,6 +210,10 @@ never type (GPS coordinates, ceiling height, photo count) from just the sector y
 
 ## Still on the list
 
+- A live demo. Everything is containerised and ready, it just needs a free-tier host so people can
+  try it without cloning anything.
+- Unit-tests.
+- Github Actions (CI).
 - A wider hyperparameter search - the current one was only 10 random tries, so 251 is more of a
   ceiling than the real best.
 - Some kind of confidence range instead of a single number.
