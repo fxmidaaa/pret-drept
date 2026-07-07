@@ -12,6 +12,7 @@ GOOD_FLAT = {
     "floor": 3,
     "total_floors": 9,
     "sector": "centru",
+    "author": "persoană fizică",
     "building_fund": "construcţii noi",
     "condition": "euroreparație",
     "autonomous_heating": 1,
@@ -37,6 +38,25 @@ def test_options_has_the_dropdown_values():
     opts = r.json()
     assert "centru" in opts["sector"]
     assert "secundar" in opts["building_fund"]
+    assert "agenție" in opts["author"]
+    # sector/author are never legitimately unknown - they must not be offered
+    assert "necunoscut" not in opts["sector"]
+    assert "necunoscut" not in opts["author"]
+
+def test_predict_rejects_missing_author():
+    flat = {k: v for k, v in GOOD_FLAT.items() if k != "author"}
+    r = client.post("/predict", json=flat)
+    assert r.status_code == 422
+
+def test_drivers_never_show_absent_or_unset_features():
+    # the explanation must only mention what the flat actually has: no "necunoscut"
+    # category and no amenity the user left unchecked.
+    flat = {**GOOD_FLAT, "air_conditioning": 0, "terrace": 0}
+    data = client.post("/predict", json=flat).json()
+    feats = [d["feature"] for d in data["drivers"]]
+    assert not any("necunoscut" in f for f in feats)
+    assert not any("air conditioning" in f for f in feats)
+    assert not any("terrace" in f for f in feats)
 
 def test_predict_a_normal_flat():
     r = client.post("/predict", json=GOOD_FLAT)

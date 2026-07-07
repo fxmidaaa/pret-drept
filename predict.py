@@ -3,7 +3,14 @@ import joblib
 import os
 import shap
 
-from features import floor_flags, latlon_to_km, LON_SCALE, categorical
+from features import floor_flags, latlon_to_km, LON_SCALE, categorical, binary
+
+BINARY_SET = set(binary)
+# real model inputs that just aren't meaningful to show as a "driver": raw
+# coordinates, a listing-quality proxy, and distance (redundant with sector).
+DRIVER_HIDDEN = {"lat", "lon", "photo_count", "dist_to_center"}
+# friendlier labels for a few opaque feature names
+DRIVER_LABELS = {"knn_ppm": "nearby rents"}
 
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model.joblib')
 
@@ -48,6 +55,12 @@ def nice_name(raw_name):
     # dictvectorizer makes names like 'sector=centru' or 'area'
     # i will make them a bit nicer to read in the explanation
     return raw_name.replace('=', ': ').replace('_', ' ')
+
+def driver_label(raw_name):
+    base = raw_name.split('=', 1)[0]
+    if '=' not in raw_name and base in DRIVER_LABELS:
+        return DRIVER_LABELS[base]
+    return nice_name(raw_name)
 
 def build_features(apartment, bund):
     # turn a request into exactly the feature dict the model was trained on.
@@ -108,14 +121,26 @@ def run(apartment):
 
     shap_values = bund["explainer"].shap_values(X)[0]
     names = dv.get_feature_names_out()
+    row = X[0]  # the encoded feature values, aligned with names/shap_values
 
     drivers = []
-    for name, val in zip(names, shap_values):
-        if abs(val) > 0.001:
-            drivers.append((nice_name(name), float(val)))
+    for name, val, present in zip(names, shap_values, row):
+        if abs(val) <= 0.001:
+            continue
+        base = name.split('=', 1)[0]
+        if base in DRIVER_HIDDEN:
+            continue
+        # for a one-hot category, only explain the value the flat actually has;
+        # for a yes/no, only explain it when it's present. otherwise the
+        # box fills with things the user never entered ("author: necunoscut") or
+        # the confusing zero side of a one-hot ("building fund: new build lowers
+        # rent" when they picked secondary).
+        if ('=' in name or base in BINARY_SET) and present != 1:
+            continue
+        drivers.append((driver_label(name), float(val)))
 
     # sort by how much they moved the price (biggest first)
-    drivers.sort(key=lambda x: abs(x[1]), reverse=True)
+    drivers.sort(key=lambda d: abs(d[1]), reverse=True)
 
     result["drivers"] = [
         {"feature": n, "effect": "raises price" if v > 0 else "lowers price"}
@@ -134,6 +159,7 @@ if __name__ == "__main__":
         "elevator": 1,
         "parking": 0,
         "sector": "centru",
+        "author": "persoană fizică",
         "building_fund": "construcţii noi",
         "condition": "euroreparație",
         "price": 700,

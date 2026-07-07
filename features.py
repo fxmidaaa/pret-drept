@@ -250,6 +250,8 @@ def clean_data(df):
     from_text = df.loc[blank, TEXT_COL].apply(condition_from_text)
     df.loc[blank, "condition"] = from_text.fillna("necunoscut")
 
+    df = df[(df["sector"] != "necunoscut") & (df["author"] != "necunoscut")]
+
     # drop rows that lack the most important features
     df = df.dropna(subset=["price", "area", "rooms"])
 

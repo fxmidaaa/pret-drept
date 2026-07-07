@@ -14,7 +14,7 @@ HOMEPAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app")
 @app.get("/options")
 def options():
     # the dropdown values, read straight from the trained model so they always match
-    return {c: predict.known_values(c) for c in ["sector", "building_fund", "condition"]}
+    return {c: predict.known_values(c) for c in ["sector", "building_fund", "condition", "author"]}
 
 @app.get("/")
 def home():
@@ -31,6 +31,7 @@ class Apartment(BaseModel):
     floor: float = Field(ge=1, le=50)
     total_floors: float = Field(ge=1, le=50)
     sector: str
+    author: str  # agency / owner / developer - always known to the user
     building_fund: str = "secundar"
     condition: str = "necunoscut"
     autonomous_heating: int = Field(0, ge=0, le=1)
@@ -53,7 +54,7 @@ class Apartment(BaseModel):
     lat: Optional[float] = Field(None, ge=46.9, le=47.1)
     lon: Optional[float] = Field(None, ge=28.74, le=28.95)
 
-    @field_validator("sector", "building_fund", "condition")
+    @field_validator("sector", "author", "building_fund", "condition")
     @classmethod
     def category_the_model_knows(cls, value, info):
         # a category the model never saw would silently one-hot to all zeros and
