@@ -161,7 +161,7 @@ def test_clean_data():
     rows = [
         make_listing(), # just a normal rent
         make_listing(), # exact duplicate of the first
-        make_listing(**{features.AREA_COL: None}) # should be dropped if no area
+        make_listing(**{features.AREA_COL: None}), # should be dropped if no area
         make_listing(price_value=5),
         make_listing(price_value=14040, price_unit='UNIT_MDL', **{features.AREA_COL: '60'}),
         make_listing(**{features.CONDITION_COL: None,
