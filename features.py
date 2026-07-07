@@ -3,6 +3,7 @@ import json
 import re
 
 MDL_PER_EUR = 19.5
+EUR_PER_USD = 0.92  # rough USD -> EUR, very few listings use USD
 ROOMS_COL = "Număr de camere"
 AREA_COL = "Suprafață totală"
 FLOOR_COL = "Etaj"
@@ -197,7 +198,7 @@ def clean_price(row):
         return value / MDL_PER_EUR
     
     if unit == "UNIT_USD":
-        return value * 0.92 # roughly USD to EUR, very few of these
+        return value * EUR_PER_USD
     return value
 
 def clean_data(df):
@@ -268,26 +269,40 @@ def clean_data(df):
     df = df[(df["area"] >= 10) & (df["area"] <= 400)]
     df = df[(df["rooms"] >= 1) & (df["rooms"] <= 6)]
 
-    # drop the worst 1% on each end of "rent-per-m2". these are almost always some data issues.
-    # i.e, wrong area, prices includes utilities and etc.
-    # this step alone is one of the biggest R^2 improvements i found so far.
-
-    ppm = df['price'] / df['area']
-    lo, hi = ppm.quantile(0.01), ppm.quantile(0.99)
-    df = df[(ppm >= lo) & (ppm <= hi)]
-
-    # fill with median some numerical variables
-
-    for column in ["floor", "total_floors", "dist_to_center", 
-                   "lat", "lon", "kitchen_area", "ceiling_height"]:
-        df[column] = df[column].fillna(df[column].median())
-
-    # two cheap derived flags, computed by the shared rule above 
+    # two cheap derived flags, computed by the shared rule above
     flags = [floor_flags(f, t) for f, t in zip(df["floor"], df["total_floors"])]
     df["is_ground"] = [g for g, _ in flags]
     df["is_top"] = [t for _, t in flags]
 
     return df
+
+# the columns whose missing values get filled with a median. the medians are FIT
+# on the training split only and then reused everywhere else - fitting them on
+# the full dataset would leak validation rows into the training features.
+IMPUTE_COLS = ["floor", "total_floors", "dist_to_center",
+               "lat", "lon", "kitchen_area", "ceiling_height"]
+
+def trim_ppm_outliers(df, bounds=None):
+    # drop the worst 1% on each end of "rent-per-m2". these are almost always some data issues.
+    # i.e, wrong area, prices includes utilities and etc.
+    # this step alone is one of the biggest R^2 improvements i found so far.
+    # pass bounds=None to fit them (train split), or reuse train bounds for validation
+    # so that validation rows never decide which training rows survive.
+    ppm = df["price"] / df["area"]
+    if bounds is None:
+        bounds = (float(ppm.quantile(0.01)), float(ppm.quantile(0.99)))
+    lo, hi = bounds
+    return df[(ppm >= lo) & (ppm <= hi)], bounds
+
+def impute_medians(df, medians=None):
+    # fill missing numerics with medians. pass medians=None to fit them (train
+    # split), or reuse the train medians for validation / new data.
+    df = df.copy()
+    if medians is None:
+        medians = {c: float(df[c].median()) for c in IMPUTE_COLS}
+    for column, median in medians.items():
+        df[column] = df[column].fillna(median)
+    return df, medians
 
 def knn_market_rate(df_fit, df_target, k=15, exclude_self = False):
     # "what do the neighbors charge?"

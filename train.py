@@ -10,7 +10,8 @@ import joblib
 from datetime import date
 import os
 
-from features import clean_data, knn_market_rate, FEATURES, numerical, LON_SCALE
+from features import (clean_data, knn_market_rate, trim_ppm_outliers,
+                      impute_medians, FEATURES, numerical, LON_SCALE)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 
@@ -25,9 +26,16 @@ def main():
     print("rows after cleaning:", len(df))
 
     # split the data into train and validation first:
-    # the knn feature must look only at train, or the data will leak
+    # everything fitted below (outlier bounds, imputation medians, the knn
+    # feature) must look only at train, or the data will leak
     df_train, df_val = train_test_split(df, test_size=0.2, random_state=42)
     df_train, df_val = df_train.copy(), df_val.copy()
+
+    df_train, ppm_bounds = trim_ppm_outliers(df_train)
+    df_val, _ = trim_ppm_outliers(df_val, ppm_bounds)
+    df_train, medians = impute_medians(df_train)
+    df_val, _ = impute_medians(df_val, medians)
+    print("train/val after outlier trim:", len(df_train), "/", len(df_val))
 
     df_train['knn_ppm'] = knn_market_rate(df_train, df_train, exclude_self=True)
     df_val['knn_ppm'] = knn_market_rate(df_train, df_val)
@@ -50,7 +58,7 @@ def main():
     print('linear regression RMSE: ')
     print(round(rmse(np.expm1(y_val), base_pred)), "EUR")
 
-    # to understand why exactly these hyperparameters, check model_comparison.ipynb.
+    # to understand why exactly these hyperparameters, check model_selection.ipynb.
     model = XGBRegressor(
         n_estimators = 600,
         max_depth = 6,
@@ -84,18 +92,18 @@ def main():
     #    web user can't type: typical coordinates per sector, the training listings'
     #    coordinates + EUR/m2 (for the knn feature), and median defaults for the
     #    numeric fields nobody fills in by hand (photo count, ceiling height, blablabla).
-    sector_dist = df.groupby("sector")["dist_to_center"].median().to_dict()
-    sector_latlon = {s: [float(g["lat"].median()), 
+    sector_dist = df_train.groupby("sector")["dist_to_center"].median().to_dict()
+    sector_latlon = {s: [float(g["lat"].median()),
                          float(g["lon"].median())]
-                     for s, g in df.groupby("sector")} 
+                     for s, g in df_train.groupby("sector")}
     joblib.dump({
         "dv": dv,
         "model": model,
         "features": features,
         "sector_dist": sector_dist,
-        "median_dist": float(df["dist_to_center"].median()),
+        "median_dist": float(df_train["dist_to_center"].median()),
         "sector_latlon": sector_latlon,
-        "median_latlon": [float(df["lat"].median()), float(df["lon"].median())],
+        "median_latlon": [float(df_train["lat"].median()), float(df_train["lon"].median())],
         "numeric_defaults": {c: float(df_train[c].median()) for c in numerical},
         "knn_points": np.column_stack([df_train["lat"].values,
                                        df_train["lon"].values * LON_SCALE]),

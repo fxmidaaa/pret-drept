@@ -49,10 +49,10 @@ def nice_name(raw_name):
     # i will make them a bit nicer to read in the explanation
     return raw_name.replace('=', ': ').replace('_', ' ')
 
-def run(apartment):
-    bund = get_bundle()
-    dv = bund['dv']
-    listed_price = apartment.get('price')
+def build_features(apartment, bund):
+    # turn a request into exactly the feature dict the model was trained on.
+    # every key here MUST be one of bund['features'] - anything else the
+    # vectorizer silently drops, and the real feature falls back to a default.
 
     # keep only the columns the model knows, turn into the vectorizer format
     x_dict = {f: apartment.get(f) for f in bund['features']}
@@ -68,8 +68,8 @@ def run(apartment):
         sector = str(apartment.get("sector", "")).strip().lower()
         x_dict["lat"], x_dict["lon"] = bund["sector_latlon"].get(sector, bund["median_latlon"])
 
-    if x_dict.get("dist_center") is None:
-        x_dict["dist_center"] = latlon_to_km(x_dict["lat"], x_dict["lon"])
+    if x_dict.get("dist_to_center") is None:
+        x_dict["dist_to_center"] = latlon_to_km(x_dict["lat"], x_dict["lon"])
     if x_dict.get("knn_ppm") is None:
         x_dict["knn_ppm"] = knn_ppm_at(bund, x_dict["lat"], x_dict["lon"])
 
@@ -82,6 +82,14 @@ def run(apartment):
             else:
                 x_dict[feature] = 0
 
+    return x_dict
+
+def run(apartment):
+    bund = get_bundle()
+    dv = bund['dv']
+    listed_price = apartment.get('price')
+
+    x_dict = build_features(apartment, bund)
     X = dv.transform([x_dict])
 
     fair_price = float(np.expm1(bund['model'].predict(X)[0]))
