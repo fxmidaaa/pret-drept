@@ -122,3 +122,94 @@ def test_clean_price():
     assert clean_price({"price_value": 100, "price_unit": "UNIT_USD"}) == 92.0
     assert clean_price({"price_value": None, "price_unit": "UNIT_EUR"}) is None
     assert clean_price({"price_value": float("nan"), "price_unit": "UNIT_EUR"}) is None
+
+# --- clean_data end to end
+# a tiny fake scrape with known problems in it, and we check that each problem gets handled:
+# the duplicate, missing area, ...
+
+def make_listing(**overrides):
+    row = {
+        "price_value": 500, "price_unit": "UNIT_EUR",
+        features.ROOMS_COL: "Apartament cu 2 camere",
+        features.AREA_COL: "50",
+        features.FLOOR_COL: "3",
+        features.TOTAL_FLOORS_COL: "9",
+        features.MAP_COL: '{"lat": 47.02, "lon": 28.83}',
+        features.KITCHEN_COL: "10",
+        features.CEILING_COL: "2.8",
+        features.BALCONY_COL: "1",
+        features.PHOTOS_COL: "a.jpg,b.jpg",
+        features.HEATING_COL: True,
+        features.FURNISHED_COL: True,
+        features.ELEVATOR_COL: True,
+        features.PARKING_COL: None,
+        features.AC_COL: None,
+        features.FLOOR_HEATING_COL: None,
+        features.TERRACE_COL: None,
+        features.PANORAMIC_COL: None,
+        features.TEXT_COL: "apartament frumos in centru",
+        features.SECTOR_COL: "Centru",
+        features.FUND_COL: "Construcţii noi",
+        features.CONDITION_COL: "Euroreparație",
+        features.AUTHOR_COL: "Agenție",
+        features.BUILDING_TYPE_COL: "Bloc nou",
+    }
+    row.update(overrides)
+    return row
+
+def test_clean_data():
+    rows = [
+        make_listing(), # just a normal rent
+        make_listing(), # exact duplicate of the first
+        make_listing(**{features.AREA_COL: None}) # should be dropped if no area
+        make_listing(price_value=5),
+        make_listing(price_value=14040, price_unit='UNIT_MDL', **{features.AREA_COL: '60'}),
+        make_listing(**{features.CONDITION_COL: None,
+                        features.TEXT_COL: "квартира с евроремонтом",
+                        features.AREA_COL: "41.7", "price_value": 500})
+    ]
+
+    # keep eur/m2 same across surviving rows, otherwise the 1% percentile trimming
+    # behaves unpredictably on a dataset of five rows 
+    rows[0]["price_value"] = 600
+    rows[1]["price_value"] = 600
+    rows[5]["price_value"] = 500.4 # 500.4 / 41.7 = 12.0
+
+    df = clean_data(pd.DataFrame(rows))
+
+    assert len(df) == 3
+
+    # checking if mdl -> eur (14040 mdl -> 720 eur)
+    assert any(math.isclose(p, 720.0) for p in df['price'])
+
+# --- KNN --- 
+
+def knn_df(lats, ppms, area = 50.0):
+    # listings in a straight north-south line with chosen eur/m2 values
+    return pd.DataFrame({
+        "lat": lats,
+        "lon": [features.CENTER_LON] * len(lats),
+        "area": [area] * len(lats),
+        "price": [p * area for p in ppms]
+    })
+
+def test_knn_market_rate():
+    # three cheap flats close to the target, two expensive far away.
+    # with k=3 the median must come from the close ones only
+    df_fit = knn_df(
+        lats = [47.000, 47.001, 47.002, 47.050, 47.060],
+        ppms = [8.0, 10.0, 12.0, 30.0, 40.0]
+    )
+
+    df_target = knn_df(lats=[47.000], ppms=[10.0])
+    result = knn_market_rate(df_fit, df_target, k=3)
+    assert result[0] == 10.0 # median of 8, 10, 12
+
+def test_knn_exclude_self():
+    # when a listing looks up its own neighbors during training
+    # it should not see itself, or the feature leaks the answer.
+    # with two flats and k=1 each one should get other one's rate.
+    df = knn_df(lats=[47.000, 47.010], ppms=[10.0, 20.0])
+    result = knn_market_rate(df, df, k=1, exclude_self=True)
+    assert result[0] == 20.0
+    assert result[1] == 10.0
