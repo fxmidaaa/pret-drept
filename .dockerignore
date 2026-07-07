@@ -1,4 +1,6 @@
-data/
+data/*
+!data/raw/
+!data/raw/listings.csv
 notebooks/
 images/
 __pycache__/

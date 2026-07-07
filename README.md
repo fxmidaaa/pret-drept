@@ -175,12 +175,29 @@ python train.py     # cleans, trains, writes model.joblib
 Or just try one prediction from the terminal - `python predict.py` runs the example apartment at the
 bottom of that file.
 
-If you'd rather not install Python at all, there's a Dockerfile:
+If you'd rather not install Python at all, there's a Dockerfile - it trains the model itself during
+the build, so there's nothing to prepare beforehand:
 
 ```bash
 docker build -t chisinau-rent .
 docker run -p 8000:8000 chisinau-rent
 ```
+
+---
+
+## Trying the live API
+
+Once it's deployed, this is the request to run against it:
+
+```bash
+curl -X POST "https://yourapp.onrender.com/predict" \
+  -H "Content-Type: application/json" \
+  -d '{"rooms": 2, "area": 50, "floor": 3, "total_floors": 9, "sector": "centru"}'
+# expect: {"fair_price": 480, "listed_price": null, "drivers": [...]}
+# add "price": <listed rent> to also get "deviation_pct" and a "verdict"
+```
+
+Free-tier host - first request after idle can take ~30-60s to wake up.
 
 ---
 
@@ -198,6 +215,7 @@ notebooks/eda.ipynb        exploratory analysis
 notebooks/model_selection.ipynb   the "why XGBoost" comparison
 data/raw/listings.csv      the scraped data
 images/                    charts from the EDA
+tests/                     unit tests for features.py
 ```
 
 One thing I'm a little proud of: `features.py` is the only place the cleaning rules live, and
@@ -212,7 +230,6 @@ never type (GPS coordinates, ceiling height, photo count) from just the sector y
 
 - A live demo. Everything is containerised and ready, it just needs a free-tier host so people can
   try it without cloning anything.
-- Unit-tests.
 - Github Actions (CI).
 - A wider hyperparameter search - the current one was only 10 random tries, so 251 is more of a
   ceiling than the real best.
