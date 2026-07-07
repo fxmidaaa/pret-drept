@@ -32,7 +32,7 @@ You give it an apartment (rooms, area, sector, floor, heating, furnishing, etc.)
   my scraper (`scrape.py`) just queries that API directly. No HTML parsing, no headless browser.
 - **Responsibly:** I filter to exactly what I need server-side (monthly rent + Chișinău), use the
   API's built-in duplicate collapsing, add a short pause between requests, and save incrementally.
-- **Size:** **4,528** listings scraped, **3,767 after cleaning** (drop the ones missing area/price/rooms,
+- **Size:** **4,528** listings scraped, **3,719 after cleaning** (drop the ones missing area/price/rooms,
   drop reposted duplicates, keep rent between 100 and 3000 EUR). On top of that, the worst 1% of
   rent-per-m² on each end gets cut - those are basically always someone fat-fingering the area or
   the price. The cutoffs (and the medians used to fill missing values) are computed on the training
@@ -53,8 +53,8 @@ makes it symmetric - that's the whole reason the model trains on `log(price)`:
 
 ![rent distribution](images/rent_distribution.png)
 
-**Location matters most.** Centru goes for ~13.9 EUR/m² while the outer sectors sit around
-9.4-10.2, with a clean centre-outward gradient in between:
+**Location matters most.** Centru goes for ~14.0 EUR/m² while the outer sectors sit around
+9.2-10.8, with a clean centre-outward gradient in between:
 
 ![price per sector](images/price_per_sector.png)
 
@@ -64,14 +64,14 @@ makes it symmetric - that's the whole reason the model trains on `log(price)`:
 
 **And my favourite finding: autonomous heating is not actually a price driver.** Moldova went
 through an energy crisis recently, so everyone assumes flats with their own heating rent for more -
-and raw numbers agree (+9.5%). But autonomous heating is standard in new buildings, and new
+and raw numbers agree (+9.9%). But autonomous heating is standard in new buildings, and new
 buildings are expensive for other reasons too. Compare inside each building fund and the premium
 vanishes completely. It was the new-building premium all along:
 
 ![heating premium](images/heating_premium.png)
 
 Smaller stuff: each extra m² is worth ~13 EUR/month (small flats are pricier per m²), ground floor
-is a real discount (-12%), and furnishing adds nothing - it's simply expected here.
+is a real discount (-13%), and furnishing adds nothing - it's simply expected here.
 
 ---
 
@@ -114,23 +114,25 @@ cross-validation and tune the two best. Here's roughly where they land (RMSE in 
 
 | model | CV RMSE |
 |---|---|
-| dumb baseline (one price per m², times area) | ~369 |
-| linear regression | 296 |
-| gradient boosting | 270 |
+| dumb baseline (one price per m², times area) | ~387 |
+| linear regression | 295 |
+| gradient boosting | 272 |
 | random forest, tuned | 258 |
-| **XGBoost, tuned** | **251** |
+| **XGBoost, tuned** | **252** |
 
-So the model I ship is off by ~250 EUR on average. Rent in the dataset averages around 900, so
-that's roughly ±20%. Not amazing, but every model crushes the dumb baseline and even a straight line
-explains 71% of the variance, which told me the features were pulling their weight before I ever
-touched a tree.
+So the model I ship is off by ~250 EUR RMSE - or about 170 EUR (~19% MAPE) on a typical listing,
+since RMSE is inflated by the expensive tail. Rent in the dataset averages around 900. Not amazing,
+but every model crushes the dumb baseline and even a straight line explains 71% of the variance,
+which told me the features were pulling their weight before I ever touched a tree.
 
 One honest footnote about where these numbers come from: the table above is 5-fold cross-validation
 from the notebook - that's what picked the model and its settings. The model I actually ship is then
-retrained by `train.py` on a fresh 80/20 split, and *its own* holdout scores get stamped into
-`model.joblib` (RMSE 246, MAE 157, MAPE 18.5%, R² 0.77 right now - printed every time the API loads
-the model). The two agree within a few EUR, which is what you'd hope, but they are not the
-same measurement.
+retrained by `train.py` on a single fixed 80/20 split (`random_state=42`, the same split the notebook
+uses), and *its own* holdout scores get stamped into `model.joblib` (RMSE 271, MAE 169, MAPE 18.6%,
+R² 0.75 - printed every time the API loads the model). Don't read too much into that exact 271: on a
+~740-row holdout the RMSE swings by split, while the notebook's 5-fold CV puts the tuned model at
+252 ± 13 EUR. This particular split is just a slightly unlucky one; the CV figure is the honest
+headline.
 
 The tuned XGBoost settings (found by random search in the notebook):
 
@@ -204,8 +206,8 @@ a JSON API you can hit directly:
 ```bash
 curl -X POST "https://pret-drept.onrender.com/predict" \
   -H "Content-Type: application/json" \
-  -d '{"rooms": 2, "area": 50, "floor": 3, "total_floors": 9, "sector": "centru"}'
-# expect: {"fair_price": 480, "listed_price": null, "drivers": [...]}
+  -d '{"rooms": 2, "area": 50, "floor": 3, "total_floors": 9, "sector": "centru", "author": "agenție"}'
+# expect: {"fair_price": 638, "listed_price": null, "drivers": [...]}
 # add "price": <listed rent> to also get "deviation_pct" and a "verdict"
 ```
 
@@ -239,7 +241,7 @@ never type (GPS coordinates, ceiling height, photo count) from just the sector y
 ## Still on the list
 
 - Github Actions (CI).
-- A wider hyperparameter search - the current one was only 10 random tries, so 251 is more of a
+- A wider hyperparameter search - the current one was only 10 random tries, so 252 is more of a
   ceiling than the real best.
 - Some kind of confidence range instead of a single number.
 - Re-scraping on a schedule so it doesn't go stale.

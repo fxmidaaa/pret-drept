@@ -124,13 +124,17 @@
         <div><label>Area (m²)</label><input type="number" id="area" min="10" max="400" value="55"></div>
         <div><label>Floor</label><input type="number" id="floor" min="1" max="30" value="3"></div>
         <div><label>Floors in building</label><input type="number" id="total_floors" min="1" max="30" value="9"></div>
+        <div><label>Balconies</label><input type="number" id="balcony_count" min="0" max="4" value="0"></div>
+        <div><label>Kitchen area (m²) — optional</label><input type="number" id="kitchen_area" min="3" max="60" placeholder="optional"></div>
+        <div style="grid-column: 1 / -1;"><label>Ceiling height (m) — optional</label><input type="number" id="ceiling_height" min="2" max="4.5" step="0.1" placeholder="optional"></div>
       </div>
 
       <div class="section-title">Location & building</div>
       <div class="grid">
         <div><label>Sector</label><select id="sector"></select></div>
+        <div><label>Listing by</label><select id="author"></select></div>
         <div><label>Building fund</label><select id="building_fund"></select></div>
-        <div style="grid-column: 1 / -1;"><label>Condition</label><select id="condition"></select></div>
+        <div><label>Condition</label><select id="condition"></select></div>
       </div>
 
       <div class="section-title">Amenities</div>
@@ -139,6 +143,11 @@
         <label class="chk"><input type="checkbox" id="furnished" checked> Furnished</label>
         <label class="chk"><input type="checkbox" id="elevator"> Elevator</label>
         <label class="chk"><input type="checkbox" id="parking"> Parking</label>
+        <label class="chk"><input type="checkbox" id="air_conditioning"> Air conditioning</label>
+        <label class="chk"><input type="checkbox" id="floor_heating"> Floor heating</label>
+        <label class="chk"><input type="checkbox" id="terrace"> Terrace</label>
+        <label class="chk"><input type="checkbox" id="panoramic_windows"> Panoramic windows</label>
+        <label class="chk"><input type="checkbox" id="utilities_included"> Utilities included in rent</label>
       </div>
 
       <div class="section-title">Asking rent</div>
@@ -162,6 +171,11 @@
 // nicer labels for the romanian option values, while still submitting the raw value
 const NICE = {
   building_fund: { "construcţii noi": "New build", "secundar": "Secondary (older stock)" },
+  author: {
+    "agenție": "Real-estate agency",
+    "persoană fizică": "Owner (private person)",
+    "dezvoltator imobiliar": "Developer"
+  },
   condition: {
     "euroreparație": "Euro-renovation",
     "reparație cosmetică": "Cosmetic renovation",
@@ -188,6 +202,7 @@ function fillSelect(id, values) {
 // load the dropdown options from the model
 fetch("/options").then(r => r.json()).then(opts => {
   fillSelect("sector", opts.sector);
+  fillSelect("author", opts.author);
   fillSelect("building_fund", opts.building_fund);
   fillSelect("condition", opts.condition);
   // default sector to centru if present
@@ -196,6 +211,11 @@ fetch("/options").then(r => r.json()).then(opts => {
 });
 
 const num = id => Number(document.getElementById(id).value);
+// optional numeric: blank -> null (so the API imputes it instead of getting 0)
+const numOrNull = id => {
+  const v = document.getElementById(id).value;
+  return v === "" ? null : Number(v);
+};
 const chk = id => document.getElementById(id).checked ? 1 : 0;
 
 document.getElementById("form").addEventListener("submit", async (e) => {
@@ -206,13 +226,22 @@ document.getElementById("form").addEventListener("submit", async (e) => {
   const floor = num("floor"), total = num("total_floors");
   const body = {
     rooms: num("rooms"), area: num("area"), floor: floor, total_floors: total,
+    balcony_count: num("balcony_count"),
+    kitchen_area: numOrNull("kitchen_area"),
+    ceiling_height: numOrNull("ceiling_height"),
     sector: document.getElementById("sector").value,
+    author: document.getElementById("author").value,
     building_fund: document.getElementById("building_fund").value,
     condition: document.getElementById("condition").value,
     autonomous_heating: chk("autonomous_heating"),
     furnished: chk("furnished"),
     elevator: chk("elevator"),
     parking: chk("parking"),
+    air_conditioning: chk("air_conditioning"),
+    floor_heating: chk("floor_heating"),
+    terrace: chk("terrace"),
+    panoramic_windows: chk("panoramic_windows"),
+    utilities_included: chk("utilities_included"),
     price: num("price") > 0 ? num("price") : null
   };
 
