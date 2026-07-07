@@ -38,7 +38,7 @@ def test_options_has_the_dropdown_values():
     assert "centru" in opts["sector"]
     assert "secundar" in opts["building_fund"]
 
-def predict_a_normal_flat():
+def test_predict_a_normal_flat():
     r = client.post("/predict", json=GOOD_FLAT)
     assert r.status_code == 200
     data = r.json()
@@ -72,6 +72,19 @@ def test_sector_is_case_insensitive():
     r = client.post("/predict", json={**GOOD_FLAT, "sector": "Centru"})
     assert r.status_code == 200
 
+
+def test_feature_dict_matches_the_model():
+    # guards against building a feature under the wrong key (say "dist_center"
+    # instead of "dist_to_center"): the vectorizer silently drops unknown keys
+    # and the real feature falls back to a median default, so nothing crashes
+    # and the bug is invisible. here the keys must match the model exactly.
+    from features import latlon_to_km
+    bund = predict.get_bundle()
+    x = predict.build_features(dict(GOOD_FLAT), bund)
+    assert set(x) == set(bund["features"])
+    assert all(v is not None for v in x.values())
+    # and the distance must really come from the coordinates, not from a default
+    assert x["dist_to_center"] == latlon_to_km(x["lat"], x["lon"])
 
 def test_golden_prediction_directly():
     # calling predict.run directly (no http): the flags get derived, the price

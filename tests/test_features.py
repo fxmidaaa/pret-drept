@@ -13,7 +13,7 @@ from features import (
     floor_flags, parse_latlon, latlon_to_km, first_number, clean_rooms,
     clean_text, to_flag, clean_parking, clean_balcony, clean_photos,
     clean_kitchen, clean_ceiling, condition_from_text, utilities_from_text,
-    clean_price, clean_data, knn_market_rate
+    clean_price, clean_data, knn_market_rate, trim_ppm_outliers, impute_medians
 )
 
 def test_first_number():
@@ -169,8 +169,6 @@ def test_clean_data():
                         features.AREA_COL: "41.7", "price_value": 500})
     ]
 
-    # keep eur/m2 same across surviving rows, otherwise the 1% percentile trimming
-    # behaves unpredictably on a dataset of five rows 
     rows[0]["price_value"] = 600
     rows[1]["price_value"] = 600
     rows[5]["price_value"] = 500.4 # 500.4 / 41.7 = 12.0
@@ -182,7 +180,34 @@ def test_clean_data():
     # checking if mdl -> eur (14040 mdl -> 720 eur)
     assert any(math.isclose(p, 720.0) for p in df['price'])
 
-# --- KNN --- 
+# --- outlier trimming and imputation (fit on train, reuse on val) ---
+
+def test_trim_ppm_outliers_reuses_train_bounds():
+    # 100 ordinary flats + one absurdly expensive one: fitting must drop the
+    # extremes, and a second dataframe must be judged by the SAME bounds
+    # (not its own), otherwise validation rows leak into the decision.
+    train = pd.DataFrame({"price": [500.0] * 100 + [5000.0], "area": [50.0] * 101})
+    trimmed, bounds = trim_ppm_outliers(train)
+    assert len(trimmed) < len(train)
+
+    val = pd.DataFrame({"price": [500.0, 5000.0], "area": [50.0, 50.0]})
+    val_trimmed, _ = trim_ppm_outliers(val, bounds)
+    assert list(val_trimmed["price"]) == [500.0]
+
+def test_impute_medians_reuses_train_medians():
+    cols = ["floor", "total_floors", "dist_to_center",
+            "lat", "lon", "kitchen_area", "ceiling_height"]
+    train = pd.DataFrame({c: [1.0, 3.0, np.nan] for c in cols})
+    train_filled, medians = impute_medians(train)
+    assert not train_filled.isna().any().any()
+    assert medians["floor"] == 2.0  # median of 1 and 3
+
+    # a validation row with a hole gets the TRAIN median, not its own
+    val = pd.DataFrame({c: [np.nan] for c in cols})
+    val_filled, _ = impute_medians(val, medians)
+    assert val_filled["floor"].iloc[0] == 2.0
+
+# --- KNN ---
 
 def knn_df(lats, ppms, area = 50.0):
     # listings in a straight north-south line with chosen eur/m2 values
