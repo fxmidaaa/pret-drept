@@ -65,7 +65,8 @@ def main():
         learning_rate = 0.05,
         subsample = 0.83,
         colsample_bytree = 0.77,
-        min_child_weight = 7
+        min_child_weight = 7,
+        random_state = 42  # reproducible, and matches the notebook's tuned config
     )
 
     model.fit(X_train, y_train)
