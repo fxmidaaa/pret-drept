@@ -9,6 +9,9 @@ The idea is: when you look for a flat to rent in Chișinău you never really kno
 normal, too high or too low (unless you are a real estate agent or an analyst). So I made a tool 
 that compares a listing against the whole market and explains *why* it thinks the rent is fair or not. 
 
+**Live demo:** [pret-drept.onrender.com](https://pret-drept.onrender.com) (free-tier host, the first
+request after idle can take ~30-60s to wake up).
+
 --- 
 
 ## What does it predict? 
@@ -29,9 +32,11 @@ You give it an apartment (rooms, area, sector, floor, heating, furnishing, etc.)
   my scraper (`scrape.py`) just queries that API directly. No HTML parsing, no headless browser.
 - **Responsibly:** I filter to exactly what I need server-side (monthly rent + Chișinău), use the
   API's built-in duplicate collapsing, add a short pause between requests, and save incrementally.
-- **Size:** **4,463** listings scraped, **3,693 after cleaning** (drop the ones missing area/price/rooms,
-  drop reposted duplicates, keep rent between 100 and 3000 EUR, and cut the worst 1% of rent-per-m²
-  on each end - those are basically always someone fat-fingering the area or the price).
+- **Size:** **4,528** listings scraped, **3,767 after cleaning** (drop the ones missing area/price/rooms,
+  drop reposted duplicates, keep rent between 100 and 3000 EUR). On top of that, the worst 1% of
+  rent-per-m² on each end gets cut - those are basically always someone fat-fingering the area or
+  the price. The cutoffs (and the medians used to fill missing values) are computed on the training
+  split only, so the validation rows never influence what the model trains on.
 - **Currency:** ~95% are quoted in EUR, the rest in MDL/USD - I normalize everything to EUR at a
   fixed rate (19.5 MDL/EUR, BNM mid-2026).
 - Collected July 2026.
@@ -123,8 +128,8 @@ touched a tree.
 One honest footnote about where these numbers come from: the table above is 5-fold cross-validation
 from the notebook - that's what picked the model and its settings. The model I actually ship is then
 retrained by `train.py` on a fresh 80/20 split, and *its own* holdout scores get stamped into
-`model.joblib` (RMSE 253, MAE 163, MAPE 18.3%, R² 0.79 right now - printed every time the API loads
-the model). The two agree within a couple of EUR, which is what you'd hope, but they are not the
+`model.joblib` (RMSE 246, MAE 157, MAPE 18.5%, R² 0.77 right now - printed every time the API loads
+the model). The two agree within a few EUR, which is what you'd hope, but they are not the
 same measurement.
 
 The tuned XGBoost settings (found by random search in the notebook):
@@ -175,6 +180,12 @@ python train.py     # cleans, trains, writes model.joblib
 Or just try one prediction from the terminal - `python predict.py` runs the example apartment at the
 bottom of that file.
 
+Run the tests (they cover the cleaning rules, the features and the API):
+
+```bash
+python -m pytest
+```
+
 If you'd rather not install Python at all, there's a Dockerfile - it trains the model itself during
 the build, so there's nothing to prepare beforehand:
 
@@ -187,17 +198,16 @@ docker run -p 8000:8000 chisinau-rent
 
 ## Trying the live API
 
-Once it's deployed, this is the request to run against it:
+It's deployed at [pret-drept.onrender.com](https://pret-drept.onrender.com) - the site itself, plus
+a JSON API you can hit directly:
 
 ```bash
-curl -X POST "https://yourapp.onrender.com/predict" \
+curl -X POST "https://pret-drept.onrender.com/predict" \
   -H "Content-Type: application/json" \
   -d '{"rooms": 2, "area": 50, "floor": 3, "total_floors": 9, "sector": "centru"}'
 # expect: {"fair_price": 480, "listed_price": null, "drivers": [...]}
 # add "price": <listed rent> to also get "deviation_pct" and a "verdict"
 ```
-
-Free-tier host - first request after idle can take ~30-60s to wake up.
 
 ---
 
@@ -215,7 +225,7 @@ notebooks/eda.ipynb        exploratory analysis
 notebooks/model_selection.ipynb   the "why XGBoost" comparison
 data/raw/listings.csv      the scraped data
 images/                    charts from the EDA
-tests/                     unit tests for features.py
+tests/                     unit tests for the cleaning rules, features and the API
 ```
 
 One thing I'm a little proud of: `features.py` is the only place the cleaning rules live, and
@@ -228,8 +238,6 @@ never type (GPS coordinates, ceiling height, photo count) from just the sector y
 
 ## Still on the list
 
-- A live demo. Everything is containerised and ready, it just needs a free-tier host so people can
-  try it without cloning anything.
 - Github Actions (CI).
 - A wider hyperparameter search - the current one was only 10 random tries, so 251 is more of a
   ceiling than the real best.
