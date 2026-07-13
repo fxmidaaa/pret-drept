@@ -9,8 +9,9 @@ price is normal, too high, or too low, unless you happen to be an agent or an an
 built a tool that compares a listing against the whole market and explains *why* it thinks the rent
 is fair or not.
 
-There's a live demo at [pret-drept.onrender.com](https://pret-drept.onrender.com). It runs on a free
-host, so the first request after it's been idle for a while can take 30 to 60 seconds to wake up.
+There's a live demo at [pret-drept-tm6owb5eka-ew.a.run.app](https://pret-drept-tm6owb5eka-ew.a.run.app).
+It runs on Google Cloud Run, which spins the container down when nobody's using it, so the first
+request after a quiet spell takes a few seconds to wake up.
 
 ---
 
@@ -202,11 +203,11 @@ docker run -p 8000:8000 chisinau-rent
 
 ## Trying the live API
 
-It's deployed at [pret-drept.onrender.com](https://pret-drept.onrender.com): the site itself, plus a
+It's deployed at [pret-drept-tm6owb5eka-ew.a.run.app](https://pret-drept-tm6owb5eka-ew.a.run.app): the site itself, plus a
 JSON API you can hit directly:
 
 ```bash
-curl -X POST "https://pret-drept.onrender.com/predict" \
+curl -X POST "https://pret-drept-tm6owb5eka-ew.a.run.app/predict" \
   -H "Content-Type: application/json" \
   -d '{"rooms": 2, "area": 50, "floor": 3, "total_floors": 9, "sector": "centru", "author": "agenție"}'
 # expect: {"fair_price": 638, "listed_price": null, "drivers": [...]}
