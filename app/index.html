@@ -125,6 +125,7 @@
         <div><label>Floor</label><input type="number" id="floor" min="1" max="30" value="3"></div>
         <div><label>Floors in building</label><input type="number" id="total_floors" min="1" max="30" value="9"></div>
         <div><label>Balconies</label><input type="number" id="balcony_count" min="0" max="4" value="0"></div>
+        <div><label>Bathrooms</label><input type="number" id="bathrooms" min="1" max="4" value="1"></div>
         <div><label>Kitchen area (m²) — optional</label><input type="number" id="kitchen_area" min="3" max="60" placeholder="optional"></div>
         <div style="grid-column: 1 / -1;"><label>Ceiling height (m) — optional</label><input type="number" id="ceiling_height" min="2" max="4.5" step="0.1" placeholder="optional"></div>
       </div>
@@ -148,6 +149,7 @@
         <label class="chk"><input type="checkbox" id="terrace"> Terrace</label>
         <label class="chk"><input type="checkbox" id="panoramic_windows"> Panoramic windows</label>
         <label class="chk"><input type="checkbox" id="utilities_included"> Utilities included in rent</label>
+        <label class="chk"><input type="checkbox" id="lux"> Premium building / finishes</label>
       </div>
 
       <div class="section-title">Asking rent</div>
@@ -227,6 +229,7 @@ document.getElementById("form").addEventListener("submit", async (e) => {
   const body = {
     rooms: num("rooms"), area: num("area"), floor: floor, total_floors: total,
     balcony_count: num("balcony_count"),
+    bathrooms: num("bathrooms"),
     kitchen_area: numOrNull("kitchen_area"),
     ceiling_height: numOrNull("ceiling_height"),
     sector: document.getElementById("sector").value,
@@ -242,6 +245,7 @@ document.getElementById("form").addEventListener("submit", async (e) => {
     terrace: chk("terrace"),
     panoramic_windows: chk("panoramic_windows"),
     utilities_included: chk("utilities_included"),
+    lux: chk("lux"),
     price: num("price") > 0 ? num("price") : null
   };
 

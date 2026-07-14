@@ -35,13 +35,18 @@ its currency, area, rooms, floor, sector, heating type, furnishing, even GPS coo
 guest about it too: I filter server-side to exactly what I need, lean on the API's own duplicate
 collapsing, pause between requests, and save as I go.
 
-That gives 4,528 listings, or 3,719 after cleaning. Cleaning drops rows missing area, price, or
-rooms, drops reposted duplicates, and keeps rent between 100 and 3000 EUR. Then I cut the worst 1% of
-rent-per-m² on each end, which is almost always someone fat-fingering the area or the price. The
-cutoffs, and the medians I use to fill in missing values, are computed on the training split only, so
-validation rows never sneak into what the model learns from. About 95% of listings are priced in EUR
-and the rest in MDL or USD; I convert everything to EUR at a fixed 19.5 MDL/EUR (BNM, mid-2026). The
-snapshot was collected in July 2026.
+That gives 4,528 listings, or 3,557 after cleaning (the two trims below take it to about 3,400).
+Cleaning drops rows missing area, price, or rooms, drops reposted duplicates, and keeps rent between
+100 and 2000 EUR - normal flats, which is what this tool is for (more on the cap in "Where it falls
+short"). Then two more trims. I cut the worst 1% of rent-per-m² on each end, which is almost always
+someone fat-fingering the area or the price. And I drop any listing asking less than half or more
+than double what its own 15 GPS neighbours charge: if everyone around you rents at 10 EUR/m² and you
+want 25, that's not a price, that's a wish, and the app's job is to catch listings like that, not to
+learn from them. The 1% cutoffs and the medians I use to fill in missing values are computed on the
+training split only, so validation rows never sneak into what the model learns from. The neighbour
+rule is just two fixed numbers (0.5x and 2x), so there's nothing to leak there. About 95% of
+listings are priced in EUR and the rest in MDL or USD; I convert everything to EUR at a fixed
+19.5 MDL/EUR (BNM, mid-2026). The snapshot was collected in July 2026.
 
 ---
 
@@ -55,25 +60,26 @@ makes it roughly symmetric, which is the whole reason the model trains on `log(p
 
 ![rent distribution](images/rent_distribution.png)
 
-Location does most of the work. Centru goes for about 14.0 EUR/m² while the outer sectors sit around
-9.2 to 10.8, with a clean centre-outward gradient in between.
+Location does most of the work. Centru goes for about 13.6 EUR/m² while the outer sectors sit around
+8.5 to 10.9, with a clean centre-outward gradient in between.
 
 ![price per sector](images/price_per_sector.png)
 
-The biggest single gap is new build versus old Soviet stock: +41% per m², 13.5 against 9.6 EUR/m².
+The biggest single gap is new build versus old Soviet stock: +32% per m², 13.1 against 9.9 EUR/m².
 
 ![new build gap](images/newbuild_gap.png)
 
 My favourite finding is that autonomous heating turns out not to be a price driver at all. Moldova
 went through an energy crisis recently, so everyone assumes flats with their own heating rent for
-more, and the raw numbers agree (+9.9%). But autonomous heating is standard in new buildings, and new
+more, and the raw numbers agree (+7%). But autonomous heating is standard in new buildings, and new
 buildings cost more for other reasons anyway. Compare inside each building fund and the premium
 disappears completely. It was the new-building effect all along.
 
 ![heating premium](images/heating_premium.png)
 
-Smaller stuff: each extra m² is worth about 13 EUR/month (small flats are pricier per m²), the ground
-floor is a real discount (-13%), and furnishing adds nothing, since here it's simply expected.
+Smaller stuff: each extra m² is worth about 11 EUR/month (small flats are pricier per m²), the ground
+floor is a real discount (-10%), furnishing adds nothing since here it's simply expected, and ads
+that brag about a penthouse or a jacuzzi really do ask ~19% more per m².
 
 ---
 
@@ -99,7 +105,11 @@ Three of them took actual thought:
 - Reading the ad text. Around a third of listings leave the condition field empty but describe it in
   words ("euroreparație", "евроремонт"). I pull those back out with keyword matching in both
   languages. Same trick for spotting when the rent already includes utilities, which otherwise
-  quietly throws the price off.
+  quietly throws the price off. The text is also the only place a flat admits it's fancy: in the
+  structured fields a penthouse and a regular flat of the same size look identical (both just say
+  "euroreparație"), so I also pull out a bathroom count ("2 blocuri sanitare", "2 санузла") and a
+  premium flag for words like penthouse, jacuzzi or "clasă premium". Before that, the model priced
+  every big flat in Centru like an average one.
 - Training on log(price) instead of price. Rent skews hard toward the cheap end, so I fit on the log
   and convert back at the end. Without that, the handful of expensive flats dominate the error and
   the model basically ignores everything under 1000 EUR.
@@ -116,26 +126,33 @@ the two best. Roughly where they land (RMSE in real EUR of rent):
 
 | model | CV RMSE |
 |---|---|
-| dumb baseline (one price per m², times area) | ~387 |
-| linear regression | 295 |
-| gradient boosting | 272 |
-| random forest, tuned | 258 |
-| **XGBoost, tuned** | **252** |
+| dumb baseline (one price per m², times area) | ~290 |
+| linear regression | 231 |
+| gradient boosting | 196 |
+| random forest, tuned | 188 |
+| **XGBoost, tuned** | **186** |
 
-So the shipped model is off by about 250 EUR RMSE, or roughly 170 EUR (~19% MAPE) on a typical
-listing, since RMSE gets inflated by the expensive tail. Average rent in the data is around 900. Not
-amazing, but every model beats the dumb baseline by a mile, and even a plain straight line explains
-71% of the variance, which told me the features were pulling their weight before I ever touched a
-tree.
+So the shipped model is off by about 130 EUR (15.7% MAPE) on a typical listing. Median rent in the
+data is 750. Not amazing, but every model beats the dumb baseline by a mile, and even a plain
+straight line explains 64% of the variance, which told me the features were pulling their weight
+before I ever touched a tree.
 
-One honest note about where these numbers come from. The table above is 5-fold cross-validation from
-the notebook, which is what picked the model and its settings. The model I actually ship then gets
-retrained by `train.py` on a single fixed 80/20 split (`random_state=42`, the same split the notebook
-uses), and its own holdout scores go into `model.joblib`: RMSE 271, MAE 169, MAPE 18.6%, R² 0.75,
-printed every time the API loads the model. Don't read too much into that exact 271. On a ~740-row
-holdout the RMSE wobbles from split to split, and the notebook's 5-fold CV puts the tuned model at
-252 ± 13 EUR. This particular split just happens to be a slightly unlucky one, so I treat the CV
-figure as the honest headline.
+One honest note about where these numbers come from. The table above is 5-fold cross-validation
+from the notebook. The model I actually ship gets retrained by `train.py` on a single fixed 80/20
+split (`random_state=42`), and its own holdout scores go into `model.joblib` and get printed every
+time the API loads it: MAE 130 EUR, MAPE 15.7%, RMSE 183, R² 0.80. The holdout agrees with the CV
+(183 vs 186 ± 5), so this split isn't a lucky one. A detail I like from the notebook: untuned,
+random forest was actually a hair ahead of XGBoost. XGBoost only takes the lead after both get a
+proper search, so it earns its spot, barely.
+
+Also, the headline number is MAE now, not RMSE. I spent a while chasing the gap between the two
+(183 vs 130), convinced something was broken in the data. It wasn't. The model misses by roughly
+the same percentage everywhere (~16%), but 16% of a 1,600 EUR flat is four times 16% of a 400 EUR
+one, and RMSE squares every miss, so a handful of expensive flats end up deciding the whole number.
+I even checked by shuffling the percentage errors between listings: a model that missed everyone by
+the same percentage would show an even *bigger* gap than mine does. So the gap is just what rent
+prices look like, not a bug. MAE tells you what happens on a typical listing, RMSE tells you how
+rough the expensive end gets, and I keep both around.
 
 The tuned XGBoost settings (found by random search in the notebook):
 
@@ -150,9 +167,12 @@ subsample=0.83, colsample_bytree=0.77, min_child_weight=7
 
 Worth being upfront about a few things:
 
-- It's built for normal flats, not luxury. I cap rent at 3000 EUR/month on purpose. The stuff above
-  that is rare and all over the place, and it wrecked the metrics without teaching the model anything
-  useful about ordinary apartments.
+- It's built for normal flats, not luxury. I cap rent at 2000 EUR/month on purpose (it used to be
+  3000). The ~4% above that are premium places whose price sits in things my fields simply don't
+  have: which residence it is, the finishes, the view. The model can't see any of that, so it
+  priced them all like ordinary flats, missed by 600-1000 EUR, and those few misses were quietly
+  deciding my metrics. So they're out. The catch: give it a genuinely premium apartment and it will
+  lowball the rent and cry "overpriced" at a listing that might just be expensive for a reason.
 - It only knows what the listing says. A beautiful flat with a lazy description, or a scam with a
   great one, will fool it exactly the way it would fool you.
 - It's a July 2026 snapshot. Prices move, so it needs re-scraping and re-training now and then to
@@ -244,8 +264,8 @@ never type (GPS coordinates, ceiling height, photo count) from just the sector y
 ## Still on the list
 
 - Github Actions (CI).
-- A wider hyperparameter search. The current one is only 10 random draws, so 252 is more of a ceiling
-  than the real best.
+- A wider hyperparameter search. The current one is only 10 random draws, so 186 is more of a
+  ceiling than the real best.
 - Some kind of confidence range instead of a single number.
 - Re-scraping on a schedule so it doesn't go stale.
 - Eventually: sale prices too.
