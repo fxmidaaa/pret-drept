@@ -9,7 +9,7 @@ price is normal, too high, or too low, unless you happen to be an agent or an an
 built a tool that compares a listing against the whole market and explains *why* it thinks the rent
 is fair or not.
 
-There's a live demo at [pret-drept-tm6owb5eka-ew.a.run.app](https://pret-drept-tm6owb5eka-ew.a.run.app).
+There's a live demo at [https://pret-drept-928904793888.europe-west1.run.app/](pret-drept-928904793888.europe-west1.run.app/).
 It runs on Google Cloud Run, which spins the container down when nobody's using it, so the first
 request after a quiet spell takes a few seconds to wake up.
 
