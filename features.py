@@ -34,10 +34,10 @@ LON_SCALE = 0.682   # cos(47 deg): 1 deg of longitude is shorter than 1 deg of l
 
 numerical = ["rooms", "area", "floor", "total_floors", "dist_to_center",
               "lat", "lon", "kitchen_area", "ceiling_height",
-                "balcony_count", "photo_count"]
+                "balcony_count", "photo_count", "bathrooms"]
 binary = ["autonomous_heating", "furnished", "elevator", "parking", "is_ground", "is_top",
           "air_conditioning", "floor_heating", "terrace", "panoramic_windows",
-          "utilities_included"]
+          "utilities_included", "lux"]
 categorical = ["sector", "building_fund", "condition", "author", "building_type"]
 FEATURES = numerical + binary + categorical
 
@@ -184,6 +184,28 @@ def utilities_from_text(text):
     t = text.lower()
     return int(any(k in t for k in UTILITIES_KEYS))
 
+# the structured fields can't tell a premium flat from an ordinary one - both say
+# "euroreparație". but the ads can: penthouses, jacuzzis, "clasa premium" and so on.
+# without this the model prices every big centru flat at the neighborhood average.
+LUX_KEYS = ["premium", "penthouse", "de lux", "люкс", "exclusiv", "jacuzzi",
+            "джакузи", "saun", "саун", "smart home", "клубн", "мансард", "mansard"]
+
+def lux_from_text(text):
+    if not isinstance(text, str):
+        return 0
+    t = text.lower()
+    return int(any(k in t for k in LUX_KEYS))
+
+def bathrooms_from_text(text):
+    # "2 blocuri sanitare" / "3 санузла" -> 2.0 / 3.0. a second bathroom is one of
+    # the strongest premium signals an ad can carry. no mention -> assume 1.
+    if not isinstance(text, str):
+        return 1.0
+    m = re.search(r"(\d)\s*(?:blocuri sanitare|санузл)", text.lower())
+    if m is None:
+        return 1.0
+    return min(float(m.group(1)), 4.0)
+
 def clean_price(row):
     # building the monthly rent in EUR from the value + its current unit
     value = row.get("price_value")
@@ -225,6 +247,7 @@ def clean_data(df):
     df["ceiling_height"] = df[CEILING_COL].apply(clean_ceiling)
     df["balcony_count"] = df[BALCONY_COL].apply(clean_balcony)
     df["photo_count"] = df[PHOTOS_COL].apply(clean_photos)
+    df["bathrooms"] = df[TEXT_COL].apply(bathrooms_from_text)
 
     # --- BINARY FEATURES --- 
     df["autonomous_heating"] = df[HEATING_COL].apply(to_flag)
@@ -236,6 +259,7 @@ def clean_data(df):
     df["terrace"] = df[TERRACE_COL].apply(to_flag)
     df["panoramic_windows"] = df[PANORAMIC_COL].apply(to_flag)
     df["utilities_included"] = df[TEXT_COL].apply(utilities_from_text)
+    df["lux"] = df[TEXT_COL].apply(lux_from_text)
 
     # --- CATEGORICAL FEATURES ---
     df["sector"] = df[SECTOR_COL].apply(clean_text)
@@ -264,10 +288,12 @@ def clean_data(df):
     )
 
     # remove obvious outliers (typos, daily-rate leftovers, bad areas)
-    # the price cap is 3000 EUR/month on purpose: this model is for the mass
-    # segment. the ~3% luxury tail above that is rare, wildly heterogeneous and
-    # wrecks every squared metric while telling us nothing about ordinary flats.
-    df = df[(df["price"] >= 100) & (df["price"] <= 3000)] # in euros
+    # the price cap is 2000 EUR/month on purpose: this model is for the mass
+    # segment. the ~4% above it are premium flats whose price lives in things no
+    # structured field captures (the residential complex, the finishes, the view),
+    # so the model can only underprice them - and squared metrics then report
+    # little else. pricing them is out of scope, and the README says so.
+    df = df[(df["price"] >= 100) & (df["price"] <= 2000)] # in euros
     df = df[(df["area"] >= 10) & (df["area"] <= 400)]
     df = df[(df["rooms"] >= 1) & (df["rooms"] <= 6)]
 
@@ -295,6 +321,16 @@ def trim_ppm_outliers(df, bounds=None):
         bounds = (float(ppm.quantile(0.01)), float(ppm.quantile(0.99)))
     lo, hi = bounds
     return df[(ppm >= lo) & (ppm <= hi)], bounds
+
+def trim_knn_outliers(df, lo=0.5, hi=2.0):
+    # drop listings asking under half or over double their own neighborhood's
+    # going rate (the knn_ppm column, which must already be computed). those are
+    # mostly aspirational asks and mislabeled ads, not the market - and the app's
+    # whole job is to FLAG such listings, not to learn the market from them.
+    # the thresholds are fixed constants, nothing is fitted, so train and
+    # validation get exactly the same rule and nothing can leak.
+    ratio = (df["price"] / df["area"]) / df["knn_ppm"]
+    return df[(ratio >= lo) & (ratio <= hi)]
 
 def impute_medians(df, medians=None):
     # fill missing numerics with medians. pass medians=None to fit them (train

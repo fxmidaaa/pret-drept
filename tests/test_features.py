@@ -13,7 +13,8 @@ from features import (
     floor_flags, parse_latlon, latlon_to_km, first_number, clean_rooms,
     clean_text, to_flag, clean_parking, clean_balcony, clean_photos,
     clean_kitchen, clean_ceiling, condition_from_text, utilities_from_text,
-    clean_price, clean_data, knn_market_rate, trim_ppm_outliers, impute_medians
+    lux_from_text, bathrooms_from_text, clean_price, clean_data,
+    knn_market_rate, trim_ppm_outliers, trim_knn_outliers, impute_medians
 )
 
 def test_first_number():
@@ -113,6 +114,20 @@ def test_utilities_from_text():
     assert utilities_from_text("chirie 300 euro + comunale") == 0
     assert utilities_from_text(float("nan")) == 0
 
+def test_lux_from_text():
+    assert lux_from_text("Penthouse spațios cu jacuzzi") == 1
+    assert lux_from_text("Amplasat în bloc de clasă Premium") == 1
+    assert lux_from_text("квартира люкс с сауной") == 1
+    assert lux_from_text("apartament obișnuit lângă parc") == 0
+    assert lux_from_text(float("nan")) == 0
+
+def test_bathrooms_from_text():
+    assert bathrooms_from_text("2 dormitoare, 2 blocuri sanitare, antreu") == 2.0
+    assert bathrooms_from_text("гостиная, 3 санузла") == 3.0
+    # no mention of bathrooms -> assume the usual one
+    assert bathrooms_from_text("apartament frumos in centru") == 1.0
+    assert bathrooms_from_text(None) == 1.0
+
 # --- price: usd/mdl -> eur ---
 
 def test_clean_price():
@@ -193,6 +208,17 @@ def test_trim_ppm_outliers_reuses_train_bounds():
     val = pd.DataFrame({"price": [500.0, 5000.0], "area": [50.0, 50.0]})
     val_trimmed, _ = trim_ppm_outliers(val, bounds)
     assert list(val_trimmed["price"]) == [500.0]
+
+def test_trim_knn_outliers():
+    # 10 EUR/m2 next to 10 EUR/m2 neighbors stays; asking 4x the neighborhood
+    # rate (or a fifth of it) is not a market price and must go
+    df = pd.DataFrame({
+        "price": [500.0, 2000.0, 100.0],
+        "area": [50.0, 50.0, 50.0],
+        "knn_ppm": [10.0, 10.0, 10.0],
+    })
+    out = trim_knn_outliers(df)
+    assert list(out["price"]) == [500.0]
 
 def test_impute_medians_reuses_train_medians():
     cols = ["floor", "total_floors", "dist_to_center",

@@ -46,7 +46,9 @@ class Apartment(BaseModel):
     terrace: int = Field(0, ge=0, le=1)
     panoramic_windows: int = Field(0, ge=0, le=1)
     utilities_included: int = Field(0, ge=0, le=1) # rent includes utilities
+    lux: int = Field(0, ge=0, le=1) # premium building / finishes (penthouse, jacuzzi...)
     balcony_count: int = Field(0, ge=0, le=4)
+    bathrooms: int = Field(1, ge=1, le=4)
     kitchen_area: Optional[float] = Field(None, ge=3, le=60)
     ceiling_height: Optional[float] = Field(None, ge=2, le=4.5)
 

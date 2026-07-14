@@ -10,7 +10,7 @@ BINARY_SET = set(binary)
 # coordinates, a listing-quality proxy, and distance (redundant with sector).
 DRIVER_HIDDEN = {"lat", "lon", "photo_count", "dist_to_center"}
 # friendlier labels for a few opaque feature names
-DRIVER_LABELS = {"knn_ppm": "nearby rents"}
+DRIVER_LABELS = {"knn_ppm": "nearby rents", "lux": "premium finishes"}
 
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model.joblib')
 
@@ -31,7 +31,7 @@ def get_bundle():
         if meta:
             print(f'loaded model trained {meta.get("trained_at")} '
                   f'on {meta.get("n_listings")} listings '
-                  f'(val RMSE {meta.get('rmse_eur')} EUR, MAPE {meta.get('mape_pct')}%)')
+                  f'(val MAE {meta.get('mae_eur')} EUR, MAPE {meta.get('mape_pct')}%)')
     return _bundle
 
 def known_values(column):
