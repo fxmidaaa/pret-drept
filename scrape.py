@@ -12,6 +12,7 @@ import pandas as pd
 import os
 import json
 import time
+import hashlib
 from datetime import date
 
 GRAPHQL_URL = "https://999.md/graphql"
@@ -118,15 +119,42 @@ def simplify_feature_value(value):
         return json.dumps(value, ensure_ascii=False)
     return value
 
+# --- explicit persistence allowlist -----------------------------------------
+# The scraper NEVER writes a field that is not on this list. Contacts, phone
+# numbers, the seller's name and every other control the API returns are dropped
+# at collection time. Listing ids are stored only as a short non-reversible hash
+# so a saved row can't be walked back to the live ad. Map and ad text stay
+# because the model derives coarse features from them, and the raw file is
+# private: gitignored, never shipped in the image, never committed to the repo.
+FEATURE_FIELDS = [
+    "Număr de camere", "Suprafață totală", "Etaj", "Număr de etaje",
+    "Fond locativ", "Starea apartamentului", "Sector", "Încălzire autonomă",
+    "Mobilat", "Ascensor", "Loc de parcare", "Harta", "Autorul anunțului",
+    "Tip clădire", "Balcon/ lojie", "Fotografii", "Suprafață bucătărie",
+    "Inălțimea tavanelor", "Terasă", "Aparat de aer condiționat",
+    "Încălzire prin pardoseală", "Geamuri panoramice", "Textul anunțului",
+]
+# fields used only to filter down to "monthly rent in Chisinau"
+FILTER_FIELDS = ["Tipul ofertei", "Regiune", "Localitate"]
+ALLOWED_FIELDS = set(FEATURE_FIELDS + FILTER_FIELDS)
+
+def listing_key(listing_id):
+    # short, non-reversible id so we can dedupe/resume without persisting the
+    # real 999.md listing id (which links straight back to the live ad).
+    return hashlib.sha1(str(listing_id).encode("utf-8")).hexdigest()[:16]
+
 def fetch_listing_details(listing_id):
-    # download a single listing and transforms into a flat dict. keys are romanian field names just 
-    data = gql(DETAIL_QUERY, {"i": 
+    # download a single listing and transform it into a flat dict, keeping ONLY
+    # the reviewed allowlist fields. the id becomes a non-reversible hash, and any
+    # control not on the allowlist (contacts, phone, seller name, ...) is dropped
+    # at collection time and never touches disk.
+    data = gql(DETAIL_QUERY, {"i":
                               {"id": str(listing_id)}
                               })
     if data is None or data.get("advert") is None:
         return None
-    
-    row = {"id": listing_id}
+
+    row = {"listing_key": listing_key(listing_id)}
 
     for group in (data["advert"].get("groups") or []):
         for control in (group.get("controls") or []):
@@ -134,16 +162,20 @@ def fetch_listing_details(listing_id):
 
             if not name:
                 continue
-            
+
             raw_value = control.get("feature", {}).get("value")
 
             # price needs special care: the value is a dict that carries both
             # the amount and the currency, and listings mix EUR / MDL / USD.
             # losing the currency would wreck the model, so keep it explicitly.
-
             if name == "Preț" and isinstance(raw_value, dict):
                 row["price_value"] = raw_value.get("value")
-                row["price_unit"] = raw_value.get("unit") # e.g. UNIT_EUR / UNIT_MDL
+                row["price_unit"] = raw_value.get("unit")  # e.g. UNIT_EUR / UNIT_MDL
+                continue
+
+            # drop everything not explicitly reviewed and needed by the model
+            if name not in ALLOWED_FIELDS:
+                continue
 
             value = simplify_feature_value(raw_value)
 
@@ -169,7 +201,12 @@ def load_checkpoint():
     if os.path.exists(CSV_PATH) and os.path.getsize(CSV_PATH) > 0:
         old_df = pd.read_csv(CSV_PATH)
 
-        rows_by_id = {str(row["id"]): row for row in old_df.to_dict(orient="records")}
+        rows_by_id = {}
+        for r in old_df.to_dict(orient="records"):
+            key = r.get("listing_key")
+            if key is None or (isinstance(key, float) and pd.isna(key)):
+                continue  # pre-allowlist rows had no hash key; re-scrape those fresh
+            rows_by_id[str(key)] = r
         print("loaded", len(rows_by_id), "listings i already had", flush=True)
     else:
         os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
@@ -193,12 +230,12 @@ def main():
         kept = 0
 
         for listing_id in ids:
-            sid = str(listing_id)
+            sid = listing_key(listing_id)
 
             if sid in rows_by_id:
                 rows_by_id[sid]["last_seen"] = TODAY
                 continue
-            
+
             try:
                 row = fetch_listing_details(listing_id)
 
@@ -209,13 +246,13 @@ def main():
                     kept += 1
                 else:
                     rows_by_id[sid] = {
-                        "id": listing_id,
+                        "listing_key": sid,
                         "first_seen": TODAY,
                         "last_seen": TODAY,
                         "Tipul ofertei": "rejected"
                     }
             except Exception as e:
-                print("skipped", listing_id, "-", e, flush=True)
+                print("skipped", sid, "-", e, flush=True)
 
             time.sleep(SLEEP)
         

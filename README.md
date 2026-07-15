@@ -9,7 +9,7 @@ price is normal, too high, or too low, unless you happen to be an agent or an an
 built a tool that compares a listing against the whole market and explains *why* it thinks the rent
 is fair or not.
 
-There's a live demo at [https://pret-drept-tm6owb5eka-ew.a.run.app](pret-drept-tm6owb5eka-ew.a.run.app).
+There's a live demo at [https://pret-drept-tm6owb5eka-ew.a.run.app](https://pret-drept-tm6owb5eka-ew.a.run.app).
 It runs on Google Cloud Run, which spins the container down when nobody's using it, so the first
 request after a quiet spell takes a few seconds to wake up.
 
@@ -35,12 +35,19 @@ its currency, area, rooms, floor, sector, heating type, furnishing, even GPS coo
 guest about it too: I filter server-side to exactly what I need, lean on the API's own duplicate
 collapsing, pause between requests, and save as I go.
 
+One thing on privacy, since this scrapes real ads. `scrape.py` keeps only a reviewed list of fields,
+never contacts or the seller's name, and it stores the listing id as a one-way hash. The raw file it
+writes stays on my machine: gitignored, never committed, never baked into the Docker image, never
+published. What's public is a small synthetic sample plus the column schema in
+[`data/sample/`](data/sample/), and a model that only ever holds coarse aggregates, never a single
+listing's coordinates or price.
+
 That gives 4,528 listings, or 3,557 after cleaning (the two trims below take it to about 3,400).
 Cleaning drops rows missing area, price, or rooms, drops reposted duplicates, and keeps rent between
 100 and 2000 EUR - normal flats, which is what this tool is for (more on the cap in "Where it falls
 short"). Then two more trims. I cut the worst 1% of rent-per-m² on each end, which is almost always
 someone fat-fingering the area or the price. And I drop any listing asking less than half or more
-than double what its own 15 GPS neighbours charge: if everyone around you rents at 10 EUR/m² and you
+than double its local market rate, the median EUR/m² of the flats in its own ~1 km grid cell: if everyone around you rents at 10 EUR/m² and you
 want 25, that's not a price, that's a wish, and the app's job is to catch listings like that, not to
 learn from them. The 1% cutoffs and the medians I use to fill in missing values are computed on the
 training split only, so validation rows never sneak into what the model learns from. The neighbour
@@ -52,8 +59,7 @@ listings are priced in EUR and the rest in MDL or USD; I convert everything to E
 
 ## What the market actually looks like
 
-Before training anything I spent a while just looking at the data
-([`notebooks/eda.ipynb`](notebooks/eda.ipynb) has the full tour). A few things stood out.
+Before training anything I spent a while just looking at the data. A few things stood out.
 
 Rent is heavily skewed: lots of ordinary flats and a long tail of expensive ones. Taking the log
 makes it roughly symmetric, which is the whole reason the model trains on `log(price)`.
@@ -98,10 +104,12 @@ parking, AC, terrace, and so on).
 
 Three of them took actual thought:
 
-- The neighbour price. For each apartment I find its 15 closest listings by GPS and take their median
-  EUR/m². That's basically what a person does when sizing up a price: you look around. It turned out
-  to be the strongest single signal in the model. I compute it from the training rows only, though,
-  or a listing would get to peek at its own neighbours and the scores would come out fake-good.
+- The local market rate. For each apartment I take the median EUR/m² of the flats in its own coarse
+  (~1 km) grid cell, and fall back to the sector, then the whole city, when a cell is thin. That's
+  basically what a person does when sizing up a price: you look around. It's one of the strongest
+  signals in the model. I compute it from the training rows only, and the shipped model keeps just
+  these cell and sector aggregates, each one an average over at least 15 listings. It never stores the
+  individual coordinates or prices, so no single listing can be pulled back out of it.
 - Reading the ad text. Around a third of listings leave the condition field empty but describe it in
   words ("euroreparație", "евроремонт"). I pull those back out with keyword matching in both
   languages. Same trick for spotting when the rent already includes utilities, which otherwise
@@ -118,8 +126,8 @@ Three of them took actual thought:
 
 ## Picking the model
 
-`train.py` uses XGBoost, and not just because XGBoost is the fashionable pick. The whole argument
-lives in [`notebooks/model_selection.ipynb`](notebooks/model_selection.ipynb). There I run a dumb
+`train.py` uses XGBoost, and not just because XGBoost is the fashionable pick. The whole argument is a
+model bake-off: I run a dumb
 baseline, linear regression, ridge, random forest, gradient boosting, and XGBoost over the same data
 and the same split, score them the same way, confirm the order with 5-fold cross-validation, and tune
 the two best. Roughly where they land (RMSE in real EUR of rent):
@@ -132,21 +140,21 @@ the two best. Roughly where they land (RMSE in real EUR of rent):
 | random forest, tuned | 188 |
 | **XGBoost, tuned** | **186** |
 
-So the shipped model is off by about 130 EUR (15.7% MAPE) on a typical listing. Median rent in the
-data is 750. Not amazing, but every model beats the dumb baseline by a mile, and even a plain
+So the shipped model is off by about 134 EUR (16.1% MAPE) on a typical listing. Median rent in the
+data is around 750. Not amazing, but every model beats the dumb baseline by a mile, and even a plain
 straight line explains 64% of the variance, which told me the features were pulling their weight
 before I ever touched a tree.
 
 One honest note about where these numbers come from. The table above is 5-fold cross-validation
 from the notebook. The model I actually ship gets retrained by `train.py` on a single fixed 80/20
 split (`random_state=42`), and its own holdout scores go into `model.joblib` and get printed every
-time the API loads it: MAE 130 EUR, MAPE 15.7%, RMSE 183, R² 0.80. The holdout agrees with the CV
-(183 vs 186 ± 5), so this split isn't a lucky one. A detail I like from the notebook: untuned,
+time the API loads it: MAE 134 EUR, MAPE 16.1%, RMSE 188, R² 0.78. The holdout agrees with the CV
+(188 vs 186 ± 5), so this split isn't a lucky one. A detail I like from the notebook: untuned,
 random forest was actually a hair ahead of XGBoost. XGBoost only takes the lead after both get a
 proper search, so it earns its spot, barely.
 
 Also, the headline number is MAE now, not RMSE. I spent a while chasing the gap between the two
-(183 vs 130), convinced something was broken in the data. It wasn't. The model misses by roughly
+(188 vs 134), convinced something was broken in the data. It wasn't. The model misses by roughly
 the same percentage everywhere (~16%), but 16% of a 1,600 EUR flat is four times 16% of a 400 EUR
 one, and RMSE squares every miss, so a handful of expensive flats end up deciding the whole number.
 I even checked by shuffling the percentage errors between listings: a model that missed everyone by
@@ -211,10 +219,12 @@ Run the tests (they cover the cleaning rules, the features, and the API):
 python -m pytest
 ```
 
-If you'd rather not install Python at all, there's a Dockerfile. It trains the model itself during
-the build, so there's nothing to set up first:
+If you'd rather not install Python at all, there's a Dockerfile. It ships the inference code plus a
+privacy-reviewed, pre-trained `model.joblib`. Training happens privately, not during the build, so you
+need a trained model present first:
 
 ```bash
+python train.py            # writes a reviewed model.joblib from your private data
 docker build -t chisinau-rent .
 docker run -p 8000:8000 chisinau-rent
 ```
@@ -245,10 +255,8 @@ train.py                   trains XGBoost, saves model.joblib
 predict.py                 loads the model, makes one prediction + explanation
 api.py                     FastAPI - /predict, /options, /health, serves the page
 app/index.html             the one-page front end (form in, verdict out)
-Dockerfile                 containerised API
-notebooks/eda.ipynb        exploratory analysis
-notebooks/model_selection.ipynb   the "why XGBoost" comparison
-data/raw/listings.csv      the scraped data
+Dockerfile                 containerised API (inference code + reviewed model)
+data/sample/               synthetic sample + column schema (real data stays private)
 images/                    charts from the EDA
 tests/                     unit tests for the cleaning rules, features and the API
 ```
@@ -257,7 +265,9 @@ One thing I'm a little proud of: `features.py` is the only place the cleaning ru
 training, prediction, and the API all import from it, so they can't quietly disagree about what
 "ground floor" means or how a price gets converted. And `model.joblib` holds more than the model. It
 also stores sensible per-sector defaults, so the site can fill in the things a normal person would
-never type (GPS coordinates, ceiling height, photo count) from just the sector you picked.
+never type (typical coordinates, ceiling height, photo count) from just the sector you picked.
+Everything it stores is an aggregate: per-sector and coarse ~1 km grid medians, never a per-listing
+coordinate or price.
 
 ---
 

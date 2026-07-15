@@ -6,11 +6,9 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY features.py predict.py train.py api.py ./
+COPY features.py predict.py api.py ./
 COPY app/ ./app/
-COPY data/raw/listings.csv ./data/raw/listings.csv
-
-RUN python train.py
+COPY model.joblib ./model.joblib
 
 EXPOSE 8000
 

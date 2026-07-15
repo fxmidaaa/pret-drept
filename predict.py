@@ -3,7 +3,7 @@ import joblib
 import os
 import shap
 
-from features import floor_flags, latlon_to_km, LON_SCALE, categorical, binary
+from features import floor_flags, latlon_to_km, ppm_from_grid, categorical, binary
 
 BINARY_SET = set(binary)
 # real model inputs that just aren't meaningful to show as a "driver": raw
@@ -45,12 +45,6 @@ def known_values(column):
         if n.startswith(column + '=')
     )
 
-def knn_ppm_at(bundle, lat, lon, k=15):
-    points = bundle['knn_points']
-    diameter2 = (points[:, 0] - lat) ** 2 + (points[:, 1] - lon * LON_SCALE) ** 2
-    idx = np.argsort(diameter2)[:k]
-    return float(np.median(bundle['knn_ppm_values'][idx]))
-
 def nice_name(raw_name):
     # dictvectorizer makes names like 'sector=centru' or 'area'
     # i will make them a bit nicer to read in the explanation
@@ -84,7 +78,9 @@ def build_features(apartment, bund):
     if x_dict.get("dist_to_center") is None:
         x_dict["dist_to_center"] = latlon_to_km(x_dict["lat"], x_dict["lon"])
     if x_dict.get("knn_ppm") is None:
-        x_dict["knn_ppm"] = knn_ppm_at(bund, x_dict["lat"], x_dict["lon"])
+        x_dict["knn_ppm"] = ppm_from_grid(
+            bund["grid_ppm"], bund["sector_ppm"], bund["global_ppm"],
+            x_dict["lat"], x_dict["lon"], apartment.get("sector"))
 
     for feature, value in x_dict.items():
         if value is None:

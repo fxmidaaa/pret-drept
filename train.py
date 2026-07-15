@@ -10,9 +10,8 @@ import joblib
 from datetime import date
 import os
 
-from features import (clean_data, knn_market_rate, trim_ppm_outliers,
-                      trim_knn_outliers, impute_medians, FEATURES, numerical,
-                      LON_SCALE)
+from features import (clean_data, build_ppm_grid, assign_ppm, trim_ppm_outliers,
+                      trim_knn_outliers, impute_medians, FEATURES, numerical)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 
@@ -38,15 +37,18 @@ def main():
     df_val, _ = impute_medians(df_val, medians)
     print("train/val after outlier trim:", len(df_train), "/", len(df_val))
 
-    df_train['knn_ppm'] = knn_market_rate(df_train, df_train, exclude_self=True)
-    df_val['knn_ppm'] = knn_market_rate(df_train, df_val)
+    # local market rate as a coarse grid aggregate — no per-listing data ships
+    grid_ppm, sector_ppm, global_ppm = build_ppm_grid(df_train)
+    df_train['knn_ppm'] = assign_ppm(df_train, grid_ppm, sector_ppm, global_ppm)
+    df_val['knn_ppm'] = assign_ppm(df_val, grid_ppm, sector_ppm, global_ppm)
 
     # drop listings priced way off their own neighborhood (non-market asks),
-    # then recompute the neighbor rate from the cleaned market only
+    # then recompute the aggregate from the cleaned market only
     df_train = trim_knn_outliers(df_train).copy()
     df_val = trim_knn_outliers(df_val).copy()
-    df_train['knn_ppm'] = knn_market_rate(df_train, df_train, exclude_self=True)
-    df_val['knn_ppm'] = knn_market_rate(df_train, df_val)
+    grid_ppm, sector_ppm, global_ppm = build_ppm_grid(df_train)
+    df_train['knn_ppm'] = assign_ppm(df_train, grid_ppm, sector_ppm, global_ppm)
+    df_val['knn_ppm'] = assign_ppm(df_val, grid_ppm, sector_ppm, global_ppm)
     print("train/val after market-rate trim:", len(df_train), "/", len(df_val))
 
     features = FEATURES + ['knn_ppm']
@@ -105,8 +107,8 @@ def main():
     #    gets overwritten on every retrain, so without this there is no way to tell
     #    which model you are actually serving.
     #    the bundle also carries everything predict.py needs to fill in features a
-    #    web user can't type: typical coordinates per sector, the training listings'
-    #    coordinates + EUR/m2 (for the knn feature), and median defaults for the
+    #    web user can't type: typical coordinates per sector, the coarse grid/sector
+    #    EUR/m2 aggregates (for the knn_ppm feature), and median defaults for the
     #    numeric fields nobody fills in by hand (photo count, ceiling height, blablabla).
     sector_dist = df_train.groupby("sector")["dist_to_center"].median().to_dict()
     sector_latlon = {s: [float(g["lat"].median()),
@@ -121,9 +123,9 @@ def main():
         "sector_latlon": sector_latlon,
         "median_latlon": [float(df_train["lat"].median()), float(df_train["lon"].median())],
         "numeric_defaults": {c: float(df_train[c].median()) for c in numerical},
-        "knn_points": np.column_stack([df_train["lat"].values,
-                                       df_train["lon"].values * LON_SCALE]),
-        "knn_ppm_values": (df_train["price"] / df_train["area"]).values,
+        "grid_ppm": grid_ppm,
+        "sector_ppm": sector_ppm,
+        "global_ppm": global_ppm,
         "meta": {
             "trained_at": date.today().isoformat(),
             "n_listings": len(df),

@@ -2,8 +2,20 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.env
 
+# data — never track raw/private datasets; only the one reviewed synthetic sample
+*.csv
+data/*
+!data/sample
+data/sample/*
+!data/sample/listings_sample.csv
+!data/sample/README.md
+
+# model artifacts — trained privately, shipped into the image, never in git
 model.joblib
+*.joblib
+*.pkl
 
 .ipynb_checkpoints/
 .pytest_cache/

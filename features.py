@@ -342,20 +342,55 @@ def impute_medians(df, medians=None):
         df[column] = df[column].fillna(median)
     return df, medians
 
-def knn_market_rate(df_fit, df_target, k=15, exclude_self = False):
-    # "what do the neighbors charge?"
-    # median eur/m2 among the k nearest listings of df_fit for every df_target row.
-    # this is what we basically do when judge a price - look around.
+# --- local market rate as a COARSE AGGREGATE ---------------------------------
+# The model needs a "what do nearby flats charge per m2?" signal, but it must
+# never ship one coordinate + price per training listing. So instead of a per-row
+# KNN we publish medians over coarse ~1 km grid cells, and only for cells that
+# hold enough listings that no single flat can be recovered from the aggregate.
+GRID_PREC = 2          # decimals to round lat/lon to -> ~1 km cells
+GRID_MIN_GROUP = 15    # a cell / sector needs at least this many listings to publish
 
-    from sklearn.neighbors import NearestNeighbors
-    pts_fit = np.column_stack([df_fit["lat"].values, df_fit["lon"].values * LON_SCALE])
-    ppm_fit = (df_fit["price"] / df_fit["area"]).values
-    pts_target = np.column_stack([df_target["lat"].values, df_target["lon"].values * LON_SCALE])
+def grid_key(lat, lon):
+    return (round(float(lat), GRID_PREC), round(float(lon), GRID_PREC))
 
-    n = min(k + (1 if exclude_self else 0), len(df_fit))
-    nn = NearestNeighbors(n_neighbors=n)
-    nn.fit(pts_fit)
-    _, idx = nn.kneighbors(pts_target)
-    if exclude_self:
-        idx = idx[:, 1:]
-    return np.median(ppm_fit[idx], axis=1)
+def _has_coords(lat, lon):
+    return (lat is not None and lon is not None
+            and not (np.isnan(lat) or np.isnan(lon)))
+
+def build_ppm_grid(df, min_group=GRID_MIN_GROUP):
+    # returns (grid_ppm, sector_ppm, global_ppm): coarse cell -> median eur/m2,
+    # sector -> median eur/m2, and an overall fallback. only groups with at least
+    # min_group listings survive, so an aggregate can never expose a single flat.
+    ppm = (df["price"] / df["area"]).values
+    global_ppm = float(np.median(ppm))
+
+    grid_vals, sector_vals = {}, {}
+    for p, lat, lon, sec in zip(ppm, df["lat"], df["lon"], df["sector"]):
+        if _has_coords(lat, lon):
+            grid_vals.setdefault(grid_key(lat, lon), []).append(p)
+        sector_vals.setdefault(sec, []).append(p)
+
+    grid_ppm = {k: float(np.median(v)) for k, v in grid_vals.items()
+                if len(v) >= min_group}
+    sector_ppm = {k: float(np.median(v)) for k, v in sector_vals.items()
+                  if len(v) >= min_group}
+    return grid_ppm, sector_ppm, global_ppm
+
+def ppm_from_grid(grid_ppm, sector_ppm, global_ppm, lat, lon, sector):
+    # cell median -> sector median -> global median. same rule at train and serve.
+    if _has_coords(lat, lon):
+        cell = grid_key(lat, lon)
+        if cell in grid_ppm:
+            return grid_ppm[cell]
+    if sector is not None:
+        s = str(sector).strip().lower()
+        if s in sector_ppm:
+            return sector_ppm[s]
+    return global_ppm
+
+def assign_ppm(df, grid_ppm, sector_ppm, global_ppm):
+    # the knn_ppm feature value for every row, from the coarse aggregate only
+    return np.array([
+        ppm_from_grid(grid_ppm, sector_ppm, global_ppm, lat, lon, sec)
+        for lat, lon, sec in zip(df["lat"], df["lon"], df["sector"])
+    ])

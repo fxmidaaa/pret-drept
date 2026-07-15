@@ -1,11 +1,10 @@
-data/*
-!data/raw/
-!data/raw/listings.csv
-notebooks/
-images/
-__pycache__/
-.ipynb_checkpoints/
-.gitignore
-Dockerfile
-.dockerignore
-README.md
+# Minimal allowlist: exclude everything, then re-include only what the
+# inference image needs. Raw data, notebooks, tests and train.py never enter
+# the build context.
+*
+!requirements.txt
+!features.py
+!predict.py
+!api.py
+!model.joblib
+!app

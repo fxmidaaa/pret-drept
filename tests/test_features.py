@@ -14,7 +14,8 @@ from features import (
     clean_text, to_flag, clean_parking, clean_balcony, clean_photos,
     clean_kitchen, clean_ceiling, condition_from_text, utilities_from_text,
     lux_from_text, bathrooms_from_text, clean_price, clean_data,
-    knn_market_rate, trim_ppm_outliers, trim_knn_outliers, impute_medians
+    build_ppm_grid, ppm_from_grid, trim_ppm_outliers, trim_knn_outliers,
+    impute_medians
 )
 
 def test_first_number():
@@ -233,34 +234,38 @@ def test_impute_medians_reuses_train_medians():
     val_filled, _ = impute_medians(val, medians)
     assert val_filled["floor"].iloc[0] == 2.0
 
-# --- KNN ---
+# --- market rate as a coarse grid aggregate ---
 
-def knn_df(lats, ppms, area = 50.0):
-    # listings in a straight north-south line with chosen eur/m2 values
+def ppm_df(lats, lons, ppms, sectors=None, area=50.0):
+    n = len(lats)
     return pd.DataFrame({
         "lat": lats,
-        "lon": [features.CENTER_LON] * len(lats),
-        "area": [area] * len(lats),
-        "price": [p * area for p in ppms]
+        "lon": lons,
+        "sector": sectors if sectors is not None else ["centru"] * n,
+        "area": [area] * n,
+        "price": [p * area for p in ppms],
     })
 
-def test_knn_market_rate():
-    # three cheap flats close to the target, two expensive far away.
-    # with k=3 the median must come from the close ones only
-    df_fit = knn_df(
-        lats = [47.000, 47.001, 47.002, 47.050, 47.060],
-        ppms = [8.0, 10.0, 12.0, 30.0, 40.0]
+def test_build_ppm_grid_only_keeps_big_groups():
+    # 20 flats in one ~1 km cell (kept) + 3 flats far away (dropped: < min_group).
+    # the aggregate must expose the dense cell only, never the sparse one.
+    df = ppm_df(
+        lats=[47.02] * 20 + [47.08, 47.08, 47.08],
+        lons=[28.83] * 20 + [28.90, 28.90, 28.90],
+        ppms=[10.0] * 20 + [99.0, 99.0, 99.0],
     )
+    grid_ppm, sector_ppm, global_ppm = build_ppm_grid(df, min_group=15)
+    assert len(grid_ppm) == 1                     # only the dense cell survives
+    assert list(grid_ppm.values())[0] == 10.0     # median of the dense cell
+    assert 99.0 not in grid_ppm.values()          # the sparse cell is not published
 
-    df_target = knn_df(lats=[47.000], ppms=[10.0])
-    result = knn_market_rate(df_fit, df_target, k=3)
-    assert result[0] == 10.0 # median of 8, 10, 12
-
-def test_knn_exclude_self():
-    # when a listing looks up its own neighbors during training
-    # it should not see itself, or the feature leaks the answer.
-    # with two flats and k=1 each one should get other one's rate.
-    df = knn_df(lats=[47.000, 47.010], ppms=[10.0, 20.0])
-    result = knn_market_rate(df, df, k=1, exclude_self=True)
-    assert result[0] == 20.0
-    assert result[1] == 10.0
+def test_ppm_from_grid_falls_back_cell_then_sector_then_global():
+    grid_ppm = {(47.02, 28.83): 10.0}
+    sector_ppm = {"centru": 12.0}
+    global_ppm = 15.0
+    # a known cell -> cell median
+    assert ppm_from_grid(grid_ppm, sector_ppm, global_ppm, 47.02, 28.83, "centru") == 10.0
+    # unknown cell but known sector -> sector median
+    assert ppm_from_grid(grid_ppm, sector_ppm, global_ppm, 46.95, 28.99, "centru") == 12.0
+    # no coords, unknown sector -> global median
+    assert ppm_from_grid(grid_ppm, sector_ppm, global_ppm, None, None, "necunoscut") == 15.0

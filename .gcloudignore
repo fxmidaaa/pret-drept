@@ -1,0 +1,15 @@
+# Keep raw/private material out of any source-based Cloud Run upload.
+.git/**
+.gitignore
+data/**
+*.csv
+notebooks/**
+*.ipynb
+.ipynb_checkpoints/**
+.pytest_cache/**
+__pycache__/**
+.venv/**
+venv/**
+.env
+train.py
+tests/**
