@@ -59,7 +59,8 @@ listings are priced in EUR and the rest in MDL or USD; I convert everything to E
 
 ## What the market actually looks like
 
-Before training anything I spent a while just looking at the data. A few things stood out.
+Before training anything I spent a while just looking at the data
+([`notebooks/eda.ipynb`](notebooks/eda.ipynb) has the full tour). A few things stood out.
 
 Rent is heavily skewed: lots of ordinary flats and a long tail of expensive ones. Taking the log
 makes it roughly symmetric, which is the whole reason the model trains on `log(price)`.
@@ -127,7 +128,7 @@ Three of them took actual thought:
 ## Picking the model
 
 `train.py` uses XGBoost, and not just because XGBoost is the fashionable pick. The whole argument is a
-model bake-off: I run a dumb
+model bake-off in [`notebooks/model_selection.ipynb`](notebooks/model_selection.ipynb): I run a dumb
 baseline, linear regression, ridge, random forest, gradient boosting, and XGBoost over the same data
 and the same split, score them the same way, confirm the order with 5-fold cross-validation, and tune
 the two best. Roughly where they land (RMSE in real EUR of rent):
@@ -135,23 +136,23 @@ the two best. Roughly where they land (RMSE in real EUR of rent):
 | model | CV RMSE |
 |---|---|
 | dumb baseline (one price per m², times area) | ~290 |
-| linear regression | 231 |
-| gradient boosting | 196 |
-| random forest, tuned | 188 |
-| **XGBoost, tuned** | **186** |
+| linear regression | 249 |
+| gradient boosting | 214 |
+| random forest, tuned | 200 |
+| **XGBoost, tuned** | **192** |
 
 So the shipped model is off by about 134 EUR (16.1% MAPE) on a typical listing. Median rent in the
 data is around 750. Not amazing, but every model beats the dumb baseline by a mile, and even a plain
-straight line explains 64% of the variance, which told me the features were pulling their weight
+straight line explains 60% of the variance, which told me the features were pulling their weight
 before I ever touched a tree.
 
 One honest note about where these numbers come from. The table above is 5-fold cross-validation
 from the notebook. The model I actually ship gets retrained by `train.py` on a single fixed 80/20
 split (`random_state=42`), and its own holdout scores go into `model.joblib` and get printed every
 time the API loads it: MAE 134 EUR, MAPE 16.1%, RMSE 188, R² 0.78. The holdout agrees with the CV
-(188 vs 186 ± 5), so this split isn't a lucky one. A detail I like from the notebook: untuned,
-random forest was actually a hair ahead of XGBoost. XGBoost only takes the lead after both get a
-proper search, so it earns its spot, barely.
+(188 vs 192 ± 6), so this split isn't a lucky one. A detail I like from the notebook: untuned,
+XGBoost and random forest come out essentially tied. The search then opens a ~7 EUR gap in XGBoost's
+favour, so it earns its spot.
 
 Also, the headline number is MAE now, not RMSE. I spent a while chasing the gap between the two
 (188 vs 134), convinced something was broken in the data. It wasn't. The model misses by roughly
@@ -256,6 +257,8 @@ predict.py                 loads the model, makes one prediction + explanation
 api.py                     FastAPI - /predict, /options, /health, serves the page
 app/index.html             the one-page front end (form in, verdict out)
 Dockerfile                 containerised API (inference code + reviewed model)
+notebooks/eda.ipynb        exploratory analysis (aggregate views only)
+notebooks/model_selection.ipynb   the "why XGBoost" model comparison
 data/sample/               synthetic sample + column schema (real data stays private)
 images/                    charts from the EDA
 tests/                     unit tests for the cleaning rules, features and the API
@@ -274,7 +277,7 @@ coordinate or price.
 ## Still on the list
 
 - Github Actions (CI).
-- A wider hyperparameter search. The current one is only 10 random draws, so 186 is more of a
+- A wider hyperparameter search. The current one is only 10 random draws, so 192 is more of a
   ceiling than the real best.
 - Some kind of confidence range instead of a single number.
 - Re-scraping on a schedule so it doesn't go stale.
