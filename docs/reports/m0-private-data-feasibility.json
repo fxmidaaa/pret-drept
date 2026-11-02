@@ -1,0 +1,43 @@
+{
+  "status": "inspected_private_historical_snapshot_not_released",
+  "source_location": "data/raw/listings.csv (original local checkout; excluded from Git)",
+  "source_sha256": "sha256:d189c040cf143109dbabbdde9031727914c83f8484c862a9f15ad7d9a8de27be",
+  "size_bytes": 7571622,
+  "row_count": 4528,
+  "column_count": 60,
+  "source_id_nonempty_count": 4528,
+  "source_id_unique_count": 4528,
+  "currency_counts": {
+    "UNIT_EUR": 4294,
+    "UNIT_MDL": 218,
+    "MISSING_OR_UNKNOWN": 9,
+    "UNIT_USD": 7
+  },
+  "missing_counts_for_relevant_inputs": {
+    "Suprafață bucătărie": 4121,
+    "Inălțimea tavanelor": 4000,
+    "Starea apartamentului": 1404,
+    "Autorul anunțului": 61,
+    "Etaj": 27,
+    "Sector": 3,
+    "Harta": 50,
+    "Număr de etaje": 39,
+    "price_value": 9,
+    "price_unit": 9,
+    "Număr de camere": 6,
+    "Suprafață totală": 6
+  },
+  "timestamp_columns_present": [],
+  "sensitive_columns_present": [
+    "Contacte",
+    "Stradă",
+    "Casă",
+    "Textul anunțului",
+    "Harta",
+    "Fotografii"
+  ],
+  "acquisition_period_evidence": "User reports July or August 2026; README says July 2026; no row-level dates or collection logs available",
+  "temporal_evaluation": "BLOCKED under specification 9.3",
+  "property_identity": "UNVERIFIED: source listing ID exists; physical-property matching is not reviewed",
+  "raw_data_copied_to_implementation": false
+}

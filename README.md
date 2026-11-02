@@ -1,5 +1,11 @@
 # Is this Chișinău apartment overpriced?
 
+Engineering migration is underway against the frozen [architecture v1](docs/architecture/specification-v1.md).
+The [alignment audit](docs/reports/m0-alignment.md) distinguishes historical functionality from
+verified new foundations. See the [development guide](docs/development.md) for contract checks,
+tests and current limitations. The original app/workflows described below are preserved; their
+historical scores do not certify the new temporal/unseen-property evaluation protocol.
+
 My first machine learning project. I scraped about 4,500 real apartment rental listings from a
 Moldovan classifieds site, trained a model on them, and built a small app that estimates a fair
 monthly rent and tells you whether a given listing is overpriced or a good deal.

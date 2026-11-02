@@ -1,0 +1,140 @@
+{
+  "acceptance_criteria": [
+    "Versioned contracts reject malformed requests and population changes",
+    "Task context survives reload and failed replacement",
+    "Forbidden dependency fixtures fail without executing source",
+    "Legacy feature behavior preserved",
+    "Source/static/package checks pass with explicit artifact skips"
+  ],
+  "affected_modules": [
+    "rent_contracts",
+    "rent_prediction adapter interface",
+    "rent_agent",
+    "rent_checks",
+    "tests",
+    "packaging",
+    "CI source",
+    "documentation"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "M0 audit and timestamp feasibility investigation recorded",
+    "M1 source applied to the original checkout; audited Git HEAD unchanged; no commit or push",
+    "137 combined tests passed with the real model: zero failures/skips; one deprecation warning",
+    "Architecture, static, formatting and package/resource checks passed",
+    "Private data and model identities unchanged; legacy application code preserved"
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "M1 source ready for review and locally verified; overall architecture incomplete. No model accepted or deployed.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-02T17:23:36.484664+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-02T17:23:36.508629+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-02T17:23:36.508937+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-02T17:23:36.509236+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-02T17:23:36.509555+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-02T17:40:23.902755+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "See docs/tasks/2026-11-02-foundations/plan.md"
+  ],
+  "important_decisions": [
+    "Preserve root ML/application implementation",
+    "No concrete model adapter or operational ML CLI claimed in M1",
+    "History timestamps record task-record creation/transitions, not reconstructed work start times",
+    "Initial protected review/activation remains external",
+    "Current GraphQL date availability confirmed; do not weaken frozen temporal requirements",
+    "Private-ID probe rejected before execution; successful timestamp probe used only independently public data"
+  ],
+  "known_blockers": [
+    "Historical observation chronology and physical-property identity remain unverified",
+    "Docker daemon unavailable; isolation enforcement unverified",
+    "Protected CI and trusted runtime activation require independent review"
+  ],
+  "next_recovery_action": "Reconcile Git and final evidence, then scope M2 timestamp-aware ingestion/data lineage; preserve historical snapshot and require explicit authorization before private-ID egress. Independent protected review/activation remains pending.",
+  "objective": "Align the existing repository and implement M1 source foundations without changing active protected policy",
+  "original_authorized_request": "docs/tasks/2026-11-02-foundations/request.md",
+  "pending_approvals": [
+    "Independent review/activation of protected CI policy outside this source task"
+  ],
+  "protected_invariants": [
+    "Frozen specification v1.0",
+    "ML/harness/platform boundaries",
+    "Task records are context, not authorization",
+    "No fabricated temporal dates or model verification"
+  ],
+  "risk_level": "L2",
+  "scope_boundaries": [
+    "M0 audit and M1 source proposal; preserve legacy ML and API behavior",
+    "Investigate publication timestamp feasibility through public read-only metadata; no bulk acquisition",
+    "No protected policy activation, model promotion, deployment or paid resources"
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261102-M1",
+  "verification_evidence": [
+    {
+      "check": "contracts-and-tasks",
+      "reference": "docs/reports/m1-verification.md#final-original-checkout-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "architecture",
+      "reference": "docs/reports/m1-verification.md#final-original-checkout-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "legacy-features",
+      "reference": "docs/reports/m1-verification.md#final-original-checkout-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "static",
+      "reference": "docs/reports/m1-verification.md#final-original-checkout-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "package",
+      "reference": "docs/reports/m1-verification.md#final-original-checkout-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "docs/operations/ci-activation.md",
+      "required": false,
+      "status": "unavailable"
+    }
+  ],
+  "verification_requirements": [
+    "contracts-and-tasks",
+    "architecture",
+    "legacy-features",
+    "static",
+    "package"
+  ]
+}

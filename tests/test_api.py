@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 
+import pytest
+
 import predict
 from api import app
 
@@ -32,6 +34,7 @@ def test_home_serves_the_site():
     assert r.status_code == 200
     assert "overpriced" in r.text
 
+@pytest.mark.legacy_artifact
 def test_options_has_the_dropdown_values():
     r = client.get('/options')
     assert r.status_code == 200
@@ -43,11 +46,13 @@ def test_options_has_the_dropdown_values():
     assert "necunoscut" not in opts["sector"]
     assert "necunoscut" not in opts["author"]
 
+@pytest.mark.legacy_artifact
 def test_predict_rejects_missing_author():
     flat = {k: v for k, v in GOOD_FLAT.items() if k != "author"}
     r = client.post("/predict", json=flat)
     assert r.status_code == 422
 
+@pytest.mark.legacy_artifact
 def test_drivers_never_show_absent_or_unset_features():
     # the explanation must only mention what the flat actually has: no "necunoscut"
     # category and no amenity the user left unchecked.
@@ -58,6 +63,7 @@ def test_drivers_never_show_absent_or_unset_features():
     assert not any("air conditioning" in f for f in feats)
     assert not any("terrace" in f for f in feats)
 
+@pytest.mark.legacy_artifact
 def test_predict_a_normal_flat():
     r = client.post("/predict", json=GOOD_FLAT)
     assert r.status_code == 200
@@ -67,6 +73,7 @@ def test_predict_a_normal_flat():
     assert data["verdict"] in ("overpriced", "fair price", "good deal")
     assert 1 <= len(data["drivers"]) <= 5
 
+@pytest.mark.legacy_artifact
 def test_predict_without_asking_price_gives_no_verdict():
     flat = {k: v for k, v in GOOD_FLAT.items() if k != "price"}
     r = client.post("/predict", json=flat)
@@ -74,25 +81,30 @@ def test_predict_without_asking_price_gives_no_verdict():
     assert "verdict" not in r.json()
 
 
+@pytest.mark.legacy_artifact
 def test_predict_rejects_negative_area():
     r = client.post("/predict", json={**GOOD_FLAT, "area": -5})
     assert r.status_code == 422
 
+@pytest.mark.legacy_artifact
 def test_predict_rejects_absurd_rooms():
     r = client.post("/predict", json={**GOOD_FLAT, "rooms": 100})
     assert r.status_code == 422
 
+@pytest.mark.legacy_artifact
 def test_predict_rejects_unknown_sector():
     # an unknown category would silently one-hot to all zeros -> nonsense
     # prediction. the api must refuse it instead.
     r = client.post("/predict", json={**GOOD_FLAT, "sector": "london"})
     assert r.status_code == 422
 
+@pytest.mark.legacy_artifact
 def test_sector_is_case_insensitive():
     r = client.post("/predict", json={**GOOD_FLAT, "sector": "Centru"})
     assert r.status_code == 200
 
 
+@pytest.mark.legacy_artifact
 def test_feature_dict_matches_the_model():
     # guards against building a feature under the wrong key (say "dist_center"
     # instead of "dist_to_center"): the vectorizer silently drops unknown keys
@@ -106,6 +118,7 @@ def test_feature_dict_matches_the_model():
     # and the distance must really come from the coordinates, not from a default
     assert x["dist_to_center"] == latlon_to_km(x["lat"], x["lon"])
 
+@pytest.mark.legacy_artifact
 def test_golden_prediction_directly():
     # calling predict.run directly (no http): the flags get derived, the price
     # is sane, and the answer explains itself
@@ -114,6 +127,7 @@ def test_golden_prediction_directly():
     assert result["listed_price"] == 700
     assert "deviation_pct" in result
 
+@pytest.mark.legacy_artifact
 def test_bundle_ships_no_row_level_data():
     # privacy gate: the published model must contain only aggregates, never a
     # per-listing coordinate, price, id, or raw text. if any of these keys ever

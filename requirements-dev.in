@@ -1,0 +1,9 @@
+# Legacy pins remain authoritative until the ML migration is verified.
+-r requirements.txt
+jsonschema==4.26.0
+pytest>=8,<10
+ruff>=0.14,<1
+httpx==0.28.1
+build>=1.3,<2
+setuptools==82.0.1
+pyyaml>=6,<7

@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:apartment:1.0.0",
+  "type": "object",
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "rooms": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 6
+    },
+    "area": {
+      "type": "number",
+      "minimum": 10,
+      "maximum": 400
+    },
+    "floor": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 50
+    },
+    "total_floors": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 50
+    },
+    "sector": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "building_fund": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "condition": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "building_type": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "autonomous_heating": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "furnished": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "elevator": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "parking": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "air_conditioning": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "floor_heating": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "terrace": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "panoramic_windows": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "utilities_included": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "lux": {
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "balcony_count": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "bathrooms": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 4
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "kitchen_area": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 60
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ceiling_height": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 4.5
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "lat": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 46.9,
+          "maximum": 47.1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "lon": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 28.74,
+          "maximum": 28.95
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "record_id",
+    "rooms",
+    "area",
+    "floor",
+    "total_floors",
+    "sector",
+    "author"
+  ],
+  "additionalProperties": false
+}

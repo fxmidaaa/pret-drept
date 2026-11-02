@@ -1,0 +1,23 @@
+"""Application error categories (§12.9); infrastructure authority stays with the runner."""
+
+from enum import StrEnum
+
+
+class ErrorCategory(StrEnum):
+    CONTRACT_ERROR = "CONTRACT_ERROR"
+    VALIDATION_ERROR = "VALIDATION_ERROR"
+    AUTHORIZATION_ERROR = "AUTHORIZATION_ERROR"
+    DATA_NOT_FOUND = "DATA_NOT_FOUND"
+    ARTIFACT_INTEGRITY_ERROR = "ARTIFACT_INTEGRITY_ERROR"
+    MODEL_COMPATIBILITY_ERROR = "MODEL_COMPATIBILITY_ERROR"
+    TRAINING_ERROR = "TRAINING_ERROR"
+    PREDICTION_ERROR = "PREDICTION_ERROR"
+    RESOURCE_EXHAUSTED = "RESOURCE_EXHAUSTED"
+    TIMEOUT = "TIMEOUT"
+    CANCELLED = "CANCELLED"
+    INFRASTRUCTURE_ERROR = "INFRASTRUCTURE_ERROR"
+    INTERNAL_ERROR = "INTERNAL_ERROR"
+
+
+# Stable process mapping for the future application CLI; success is 0.
+EXIT_CODES = dict(zip(ErrorCategory, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 70], strict=True))

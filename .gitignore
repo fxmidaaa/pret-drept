@@ -20,3 +20,10 @@ model.joblib
 .ipynb_checkpoints/
 .pytest_cache/
 .jupyter/
+
+# Local engineering/build outputs
+.DS_Store
+.ruff_cache/
+build/
+dist/
+*.egg-info/

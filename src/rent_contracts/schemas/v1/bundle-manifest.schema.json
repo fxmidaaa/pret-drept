@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:bundle-manifest:1.0.0",
+  "type": "object",
+  "properties": {
+    "bundle_format_version": {
+      "const": "1.0.0"
+    },
+    "bundle_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "model_family": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "source_snapshot": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "reviewed_commit": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dataset_ref": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "split_ref": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "training_run": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+        },
+        "configuration_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "random_seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      },
+      "required": [
+        "source_snapshot",
+        "reviewed_commit",
+        "dataset_ref",
+        "split_ref",
+        "training_run",
+        "configuration_digest",
+        "random_seed"
+      ],
+      "additionalProperties": false
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "format": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "path",
+          "format",
+          "size_bytes",
+          "digest"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "preprocessing": {
+      "type": "object",
+      "properties": {
+        "artifact_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "state_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "compatibility_version": {
+          "const": "1.0.0"
+        }
+      },
+      "required": [
+        "artifact_path",
+        "state_digest",
+        "compatibility_version"
+      ],
+      "additionalProperties": false
+    },
+    "domain_contract": {
+      "type": "object",
+      "properties": {
+        "input_schema_version": {
+          "const": "1.0.0"
+        },
+        "output_protocol_version": {
+          "const": "1.0.0"
+        },
+        "target_unit": {
+          "const": "EUR/month"
+        }
+      },
+      "required": [
+        "input_schema_version",
+        "output_protocol_version",
+        "target_unit"
+      ],
+      "additionalProperties": false
+    },
+    "adapter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+        },
+        "interface_version": {
+          "const": "1.0.0"
+        }
+      },
+      "required": [
+        "name",
+        "interface_version"
+      ],
+      "additionalProperties": false
+    },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            },
+            "required": [
+              "name",
+              "version"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "platform_constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      },
+      "required": [
+        "dependencies",
+        "platform_constraints"
+      ],
+      "additionalProperties": false
+    },
+    "checkpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "checkpoint_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          },
+          "license_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "checkpoint_id",
+          "digest",
+          "license_ref"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "license_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "data_handling_restrictions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      },
+      "required": [
+        "license_ref",
+        "data_handling_restrictions"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "bundle_format_version",
+    "bundle_digest",
+    "model_family",
+    "provenance",
+    "artifacts",
+    "preprocessing",
+    "domain_contract",
+    "adapter",
+    "runtime",
+    "checkpoints",
+    "governance"
+  ],
+  "additionalProperties": false
+}

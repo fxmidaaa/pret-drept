@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:task-record:1.0.0",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "const": "1.0.0"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "original_authorized_request": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "risk_level": {
+      "enum": [
+        "L0",
+        "L1",
+        "L2"
+      ]
+    },
+    "state": {
+      "enum": [
+        "PROPOSED",
+        "CLASSIFIED",
+        "PLANNED",
+        "ACTIVE",
+        "VERIFYING",
+        "READY_FOR_REVIEW",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED",
+        "CANCELLED"
+      ]
+    },
+    "scope_boundaries": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    },
+    "protected_invariants": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    },
+    "implementation_plan": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    },
+    "affected_modules": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    },
+    "current_progress": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    },
+    "important_decisions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    },
+    "verification_requirements": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    },
+    "verification_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "check": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed",
+              "skipped",
+              "unavailable"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "check",
+          "status",
+          "required",
+          "reference"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "execution_identifiers": {
+      "type": "object",
+      "properties": {
+        "runner": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "mlflow": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "ci": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      },
+      "required": [
+        "runner",
+        "mlflow",
+        "ci"
+      ],
+      "additionalProperties": false
+    },
+    "pending_approvals": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    },
+    "known_blockers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    },
+    "next_recovery_action": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "final_outcome": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "history": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "enum": [
+              "PROPOSED",
+              "CLASSIFIED",
+              "PLANNED",
+              "ACTIVE",
+              "VERIFYING",
+              "READY_FOR_REVIEW",
+              "COMPLETED",
+              "BLOCKED",
+              "FAILED",
+              "CANCELLED"
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "state",
+          "timestamp"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "contract_version",
+    "task_id",
+    "objective",
+    "original_authorized_request",
+    "risk_level",
+    "state",
+    "scope_boundaries",
+    "protected_invariants",
+    "acceptance_criteria",
+    "implementation_plan",
+    "affected_modules",
+    "current_progress",
+    "important_decisions",
+    "verification_requirements",
+    "verification_evidence",
+    "execution_identifiers",
+    "pending_approvals",
+    "known_blockers",
+    "next_recovery_action",
+    "final_outcome",
+    "history"
+  ],
+  "additionalProperties": false
+}

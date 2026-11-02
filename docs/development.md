@@ -1,0 +1,26 @@
+# Development and verification
+
+Use Python 3.13. The M1 evidence uses CPython 3.13.16 on macOS ARM64. The original application's direct pins remain in `requirements.txt`; `requirements-dev.lock` pins their transitive closure plus test/build tools with hashes, resolved universally for Python 3.13 with platform markers for Mac/Linux/Windows. Local installation is verified; a Linux CI run is still required. This is a development/test environment lock, not a certified inference image.
+
+On macOS, the existing XGBoost wheel also needs the native OpenMP library (`brew install libomp`). Discovery reached the real model and demonstrated a missing `libomp.dylib`; libomp **23.1.4** was installed to resolve this environment prerequisite without changing ML code or Python pins. Python package hashes do not cover native libraries. A future certified inference image must preserve and verify its complete runtime. See [XGBoost installation guidance](https://xgboost.readthedocs.io/en/stable/install.html).
+
+```bash
+python3.13 -m venv .venv
+.venv/bin/python -m pip install --require-hashes -r requirements-dev.lock
+.venv/bin/python -m pip install --no-deps --no-build-isolation -e .
+.venv/bin/python -m ruff check src tests/foundations tests/conftest.py
+.venv/bin/python -m ruff format --check src tests/foundations tests/conftest.py
+.venv/bin/rent-check-architecture --root .
+.venv/bin/python -m pytest -q -ra
+.venv/bin/python -m build --no-isolation
+```
+
+The legacy feature suite runs without private data. `/health` and homepage tests run without a model. Twelve legacy prediction/options/privacy checks are marked `legacy_artifact`; they execute normally when the private `model.joblib` exists and are explicitly skipped otherwise. Missing artifacts are never replaced with fake models. A skipped private-artifact check cannot certify model behavior, privacy or runtime compatibility. Protected model acceptance must fail if its required artifact/evidence is missing; these development skips are not an acceptance policy.
+
+New deterministic tests cover public request rejection, registered configuration validation, no remote schema resolution, prediction identity/population checks, manifest identities/paths, task transitions/recovery/failed writes and dependency violations. No model training, scraping, protected holdout access, promotion or deployment is performed by these tests. Contract fixtures do not simulate successful model integrations.
+
+To intentionally refresh the lock, use `uv pip compile requirements-dev.in --python-version 3.13 --universal --generate-hashes --output-file requirements-dev.lock` in an authorized dependency-resolution environment, review the diff and rerun checks. Do not silently update legacy pins merely to make tests pass.
+
+The workflow in `.github/workflows/validate.yml` is unprivileged PR validation source: read-only content token, no persisted checkout credentials, no secrets/OIDC, no shared package cache, pinned action commits and a timeout. It does not run protected rebuild, data access or promotion. Its source tests do not prove that GitHub rulesets, reviewer requirements or host permissions are configured. See [CI activation](operations/ci-activation.md).
+
+Current implementation/evidence: [M1 verification](reports/m1-verification.md). Data limitations: [M0 audit](reports/m0-alignment.md), including the user-provided historical snapshot addendum. The full system is not production-ready. `train` and `predict-batch` wire contracts exist; their new operational implementations, DVC/MLflow, trusted runner, native model adapters, protected verification and deployment remain subsequent milestones.
