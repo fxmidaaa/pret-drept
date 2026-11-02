@@ -210,17 +210,29 @@ uvicorn api:app --reload
 # then open http://127.0.0.1:8000
 ```
 
-Rebuild everything from scratch:
+Train from the existing private snapshot:
 
 ```bash
-python scrape.py    # grabs fresh listings into data/raw/listings.csv
 python train.py     # cleans, trains, writes model.joblib
 ```
+
+For separately authorized collection, choose a working checkpoint distinct from the historical dataset:
+
+```bash
+python scrape.py --checkpoint data/checkpoints/listings.csv
+```
+
+The legacy `python scrape.py` command retains its default path, but now rejects incompatible files
+before making requests. The historical snapshot uses `id` rather than the scraper's `listing_key`;
+it requires a separately reviewed migration to a new destination, retaining the original. No
+automatic conversion occurs. Compatible working checkpoints are saved atomically, and invalid,
+duplicate, or missing listing keys cause an error instead of silently losing rows. The separate
+checkpoint is not automatically used by `train.py` and is not an immutable dataset release.
 
 Or try a single prediction from the terminal: `python predict.py` runs the example apartment at the
 bottom of that file.
 
-Run the tests (they cover the cleaning rules, the features, and the API):
+Run the tests (they cover the cleaning rules, features, API, and checkpoint preservation):
 
 ```bash
 python -m pytest
@@ -256,7 +268,7 @@ curl -X POST "https://pret-drept-tm6owb5eka-ew.a.run.app/predict" \
 ## What's where
 
 ```
-scrape.py                  999.md GraphQL scraper -> data/raw/listings.csv
+scrape.py                  999.md GraphQL scraper with validated atomic working checkpoints
 features.py                all the cleaning and feature engineering
 train.py                   trains XGBoost, saves model.joblib
 predict.py                 loads the model, makes one prediction + explanation
@@ -267,7 +279,7 @@ notebooks/eda.ipynb        exploratory analysis (aggregate views only)
 notebooks/model_selection.ipynb   the "why XGBoost" model comparison
 data/sample/               synthetic sample + column schema (real data stays private)
 images/                    charts from the EDA
-tests/                     unit tests for the cleaning rules, features and the API
+tests/                     tests for cleaning, features, the API and checkpoint preservation
 ```
 
 One thing I'm a little proud of: `features.py` is the only place the cleaning rules live, and
