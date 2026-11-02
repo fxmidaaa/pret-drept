@@ -8,12 +8,18 @@ On macOS, the existing XGBoost wheel also needs the native OpenMP library (`brew
 python3.13 -m venv .venv
 .venv/bin/python -m pip install --require-hashes -r requirements-dev.lock
 .venv/bin/python -m pip install --no-deps --no-build-isolation -e .
-.venv/bin/python -m ruff check src tests/foundations tests/conftest.py
-.venv/bin/python -m ruff format --check src tests/foundations tests/conftest.py
+.venv/bin/python scripts/install_actionlint.py --directory .venv/bin
+.venv/bin/actionlint -shellcheck= -pyflakes=
+.venv/bin/python -m ruff check src scripts tests/foundations tests/conftest.py
+.venv/bin/python -m ruff format --check src scripts tests/foundations tests/conftest.py
 .venv/bin/rent-check-architecture --root .
 .venv/bin/python -m pytest -q -ra
 .venv/bin/python -m build --no-isolation
 ```
+
+Workflow validation uses development-only **actionlint 1.7.12**. The explicit installer supports macOS/Linux on ARM64 and x86-64, downloads the maintainer's release archive, and checks its pinned SHA-256 before installing the executable. It replaces no Python dependencies. Installation needs network access; subsequent semantic checks and regression tests run offline. Optional shellcheck/pyflakes integrations are disabled to keep the semantic tool set identical locally and in CI. Review version/checksum changes together against the [maintainer release](https://github.com/rhysd/actionlint/releases/tag/v1.7.12).
+
+The tests require that pinned executable beside the Python interpreter, or at an explicitly supplied `ACTIONLINT` path. A missing/wrong validator fails with setup instructions rather than silently skipping. Regression fixtures move each runner-dependent directory back to job-level `env` and require a semantic error. Run the standalone actionlint command **before publication**: a GitHub-rejected workflow cannot start its own validation. These checks establish workflow semantics, not successful remote execution or protected policy enforcement.
 
 The legacy feature suite runs without private data. `/health` and homepage tests run without a model. Twelve legacy prediction/options/privacy checks are marked `legacy_artifact`; they execute normally when the private `model.joblib` exists and are explicitly skipped otherwise. Missing artifacts are never replaced with fake models. A skipped private-artifact check cannot certify model behavior, privacy or runtime compatibility. Protected model acceptance must fail if its required artifact/evidence is missing; these development skips are not an acceptance policy.
 

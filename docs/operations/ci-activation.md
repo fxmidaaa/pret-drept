@@ -4,6 +4,8 @@ Specification §§5.4, 15.1–15.3 and 19 govern activation. This document recor
 
 M1 provides Level 1 validation source only. A repository administrator/reviewer must independently review the workflow and contract/checker changes, configure protected branches/rulesets and required checks, and prevent ordinary task changes from bypassing protected gates. Exact settings, authenticated review evidence and a real CI run must be recorded before claiming enforcement. A local green run is insufficient.
 
+A01 option 1 moves runner-dependent directory settings to the test step, where GitHub permits the runner context. The workflow also installs checksum-pinned actionlint 1.7.12 and validates workflow semantics. Use the independent [local validation command](../development.md) before publishing; the CI step cannot rescue a workflow GitHub rejects before scheduling jobs. The [A01 task](../tasks/2026-11-02-ci-workflow/plan.md) tracks local evidence and the outstanding real GitHub run. This correction preserves Level 1 permissions and does not configure host protection or activate protected CI.
+
 The action references were resolved on 2026-11-02 using GitHub's repository API:
 
 * [checkout v4 commit 11d5960](https://github.com/actions/checkout/commit/11d5960a326750d5838078e36cf38b85af677262)

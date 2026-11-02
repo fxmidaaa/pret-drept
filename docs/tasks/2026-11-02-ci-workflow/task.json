@@ -1,0 +1,151 @@
+{
+  "acceptance_criteria": [
+    "See plan.md criteria 1-6: correct setting scope, real semantic regression checks, verified tool integrity, preserved trust boundaries, executed verification and recovery evidence"
+  ],
+  "affected_modules": [
+    ".github/workflows/validate.yml",
+    "scripts/install_actionlint.py",
+    "tests/foundations/test_ci_source.py",
+    "tests/foundations/test_actionlint_install.py",
+    "docs/development.md",
+    "docs/operations/ci-activation.md",
+    "docs/tasks/2026-11-02-ci-workflow",
+    "docs/reports/a01-ci-workflow.md"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Read audit, alignment report, current M1 record and relevant architecture",
+    "Confirmed clean audited baseline and reproduced two workflow context errors",
+    "Persisted approved scope and implementation plan; maintainer checksums retrieved",
+    "Implemented test-step directory settings and explicit checksum-pinned validator setup in CI",
+    "Added real semantic regression fixtures and corrupt-download/unsupported-platform checks",
+    "Updated local verification instructions; initial lint/format and task-record validation passed",
+    "Created CPython 3.13.16 environment with unchanged hash-locked Python dependencies; offline cache was incomplete, authorized installation succeeded",
+    "Pinned real actionlint installation and six focused semantic/integrity checks passed",
+    "Full local suite: 142 passed, zero failed/skipped; one existing deprecation warning",
+    "Lint/format, architecture, 58-package compatibility, wheel/sdist build and payload exclusion checks passed",
+    "Both private-input digests and protected source/requirements remain unchanged",
+    "Completed architectural and engineering review; documented exact evidence and remote-execution limits",
+    "Created and checked out fix/repository-audit at the unchanged baseline; existing A01 changes preserved; nothing committed or pushed",
+    "User approved the presented branch and commit message and requested the A01 push; publication is authorized and pending execution"
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A01 option 1 implemented and locally verified. User approved publication; commit/push and exact-commit GitHub verification are the next steps. No active trusted policy, model or deployment changed.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-02T20:19:18.571171+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-02T20:19:18.571293+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-02T20:19:18.571295+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-02T20:19:18.571297+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-02T20:22:05.167596+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-02T20:26:32.129686+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Persist request/plan/task record",
+    "Reproduce A01 and prepare pinned tooling/environment",
+    "Implement step-level settings and semantic/integrity checks",
+    "Update instructions and run final verification",
+    "Review architecture alignment and persist evidence/recovery"
+  ],
+  "important_decisions": [
+    "Option 1 explicitly approved in the live conversation",
+    "actionlint 1.7.12 is development-only tooling; installation explicit and tests offline",
+    "Record transitions reflect current task-record creation, not reconstructed work start",
+    "Retain step-local settings and explicit local workflow validation; no shared environment preparation needed",
+    "Disable unpinned shellcheck/pyflakes integrations; missing or wrong actionlint fails tests rather than skipping",
+    "Other audit findings, actual Linux execution and protected enforcement remain unresolved outside A01 local source scope",
+    "Working branch: fix/repository-audit; focus on existing audited defects with minimal necessary changes",
+    "Present the branch name and proposed commit message for user approval before any push; further fix choices still require approval",
+    "Approved publication: fix/repository-audit; commit message: fix(ci): correct runner context scope and validate workflows"
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Commit the reviewed A01 files with the approved message and push fix/repository-audit without force. Inspect the exact published commit workflow, record its URL/conclusion and investigate any failure before claiming remote CI success. Other fixes require their own approval.",
+  "objective": "Correct audit A01 option 1 and add reproducible unprivileged workflow-semantic validation",
+  "original_authorized_request": "docs/tasks/2026-11-02-ci-workflow/request.md",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Frozen architecture v1.0; independent ML and preserved legacy interfaces",
+    "Level 1 CI permissions, immutable actions, no persisted credentials or protected inputs",
+    "Task records and local checks are context/evidence, never authorization or model acceptance"
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "A01 only: workflow settings, pinned development validator, regression checks, documentation and evidence",
+    "User approved publication of the reviewed A01 patch to fix/repository-audit; no host rules, effective trusted policies, model/data changes or other audit fixes"
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261102-A01",
+  "verification_evidence": [
+    {
+      "check": "workflow-semantics-and-regressions",
+      "reference": "docs/reports/a01-ci-workflow.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "local-suite",
+      "reference": "docs/reports/a01-ci-workflow.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "lint-format",
+      "reference": "docs/reports/a01-ci-workflow.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "architecture",
+      "reference": "docs/reports/a01-ci-workflow.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "diff-and-task-records",
+      "reference": "docs/reports/a01-ci-workflow.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "distribution-build",
+      "reference": "docs/reports/a01-ci-workflow.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "docs/reports/a01-ci-workflow.md#exact-next-recovery-action",
+      "required": false,
+      "status": "unavailable"
+    }
+  ],
+  "verification_requirements": [
+    "workflow-semantics-and-regressions",
+    "local-suite",
+    "lint-format",
+    "architecture",
+    "diff-and-task-records",
+    "distribution-build"
+  ]
+}
