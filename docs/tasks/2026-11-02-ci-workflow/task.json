@@ -27,14 +27,20 @@
     "Both private-input digests and protected source/requirements remain unchanged",
     "Completed architectural and engineering review; documented exact evidence and remote-execution limits",
     "Created and checked out fix/repository-audit at the unchanged baseline; existing A01 changes preserved; nothing committed or pushed",
-    "User approved the presented branch and commit message and requested the A01 push; publication is authorized and pending execution"
+    "User approved the presented branch and commit message and requested the A01 push; publication is authorized and pending execution",
+    "Committed the reviewed 10-file patch as 2a5beefc74ff51f3c962156a1cf6eaf2f1ae287e with the approved message; pushed fix/repository-audit without force; remote and upstream SHA matched",
+    "Exact-commit GitHub run 41520470597 and foundations job 125534882330 succeeded on Ubuntu 24.04/Python 3.13.17 x86-64; actionlint, installation, lint/format, architecture, tests and build all passed",
+    "CI logs: 130 passed, 12 explicitly skipped for the absent private model, one pytest warning in 4.11 seconds; additional Node runtime deprecation warning noted without changing pins",
+    "Recorded post-CI evidence locally; only the originally approved source commit was pushed"
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41520470597"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "A01 option 1 implemented and locally verified. User approved publication; commit/push and exact-commit GitHub verification are the next steps. No active trusted policy, model or deployment changed.",
+  "final_outcome": "A01 option 1 completed: approved source commit 2a5beef published to fix/repository-audit, local suite 142 passed and exact-commit GitHub CI succeeded with 130 passed/12 explicit private-artifact skips. Other audit findings and protected operations are not accepted or changed.",
   "history": [
     {
       "state": "PROPOSED",
@@ -59,6 +65,10 @@
     {
       "state": "READY_FOR_REVIEW",
       "timestamp": "2026-11-02T20:26:32.129686+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-02T20:37:40.833330+00:00"
     }
   ],
   "implementation_plan": [
@@ -77,10 +87,11 @@
     "Other audit findings, actual Linux execution and protected enforcement remain unresolved outside A01 local source scope",
     "Working branch: fix/repository-audit; focus on existing audited defects with minimal necessary changes",
     "Present the branch name and proposed commit message for user approval before any push; further fix choices still require approval",
-    "Approved publication: fix/repository-audit; commit message: fix(ci): correct runner context scope and validate workflows"
+    "Approved publication: fix/repository-audit; commit message: fix(ci): correct runner context scope and validate workflows",
+    "Publication approval covered the presented A01 commit; later evidence updates remain local until branch and new commit message receive approval"
   ],
   "known_blockers": [],
-  "next_recovery_action": "Commit the reviewed A01 files with the approved message and push fix/repository-audit without force. Inspect the exact published commit workflow, record its URL/conclusion and investigate any failure before claiming remote CI success. Other fixes require their own approval.",
+  "next_recovery_action": "Continue on fix/repository-audit at published commit 2a5beefc74ff51f3c962156a1cf6eaf2f1ae287e; GitHub run 41520470597 passed. Review the two local post-CI evidence updates and present the branch/new message for approval before publishing them. Obtain a solution decision and approval before implementing A02 or another audit finding.",
   "objective": "Correct audit A01 option 1 and add reproducible unprivileged workflow-semantic validation",
   "original_authorized_request": "docs/tasks/2026-11-02-ci-workflow/request.md",
   "pending_approvals": [],
@@ -94,7 +105,7 @@
     "A01 only: workflow settings, pinned development validator, regression checks, documentation and evidence",
     "User approved publication of the reviewed A01 patch to fix/repository-audit; no host rules, effective trusted policies, model/data changes or other audit fixes"
   ],
-  "state": "READY_FOR_REVIEW",
+  "state": "COMPLETED",
   "task_id": "RP-20261102-A01",
   "verification_evidence": [
     {
@@ -135,9 +146,9 @@
     },
     {
       "check": "remote-ci",
-      "reference": "docs/reports/a01-ci-workflow.md#exact-next-recovery-action",
-      "required": false,
-      "status": "unavailable"
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41520470597",
+      "required": true,
+      "status": "passed"
     }
   ],
   "verification_requirements": [
@@ -146,6 +157,7 @@
     "lint-format",
     "architecture",
     "diff-and-task-records",
-    "distribution-build"
+    "distribution-build",
+    "remote-ci"
   ]
 }
