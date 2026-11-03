@@ -135,6 +135,132 @@ def test_checkpoint_round_trip_preserves_keys_population_and_cell_text(checkpoin
     assert set(checkpoint.parent.iterdir()) == {checkpoint}
 
 
+@pytest.mark.parametrize("column", ["Contacte", "sector"])
+@pytest.mark.parametrize("has_row", [False, True], ids=["header-only", "with-row"])
+def test_unexpected_checkpoint_columns_are_rejected_without_modification(
+    checkpoint, column, has_row
+):
+    original = f"listing_key,{column}\n"
+    if has_row:
+        original += f"{FIRST},synthetic-private-value\n"
+    original = original.encode()
+    checkpoint.write_bytes(original)
+    with pytest.raises(scrape.CheckpointError, match="unexpected columns") as error:
+        scrape.load_checkpoint()
+    assert checkpoint.read_bytes() == original
+    assert column not in str(error.value)
+    assert "synthetic-private-value" not in str(error.value)
+
+
+@pytest.mark.parametrize("existing", [False, True], ids=["new-path", "existing-checkpoint"])
+def test_unexpected_save_fields_are_rejected_before_creating_output(checkpoint, tmp_path, existing):
+    path = checkpoint if existing else tmp_path / "not-created" / "listings.csv"
+    rows = {FIRST: row(FIRST)}
+    if existing:
+        write_csv(path, rows)
+    original = path.read_bytes() if existing else None
+    rows[SECOND] = {**row(SECOND), "Contacte": "synthetic-private-value"}
+    with pytest.raises(scrape.CheckpointError, match="unexpected columns") as error:
+        scrape.save_checkpoint(rows, path)
+    assert rows[SECOND]["Contacte"] == "synthetic-private-value"
+    assert "Contacte" not in str(error.value)
+    assert "synthetic-private-value" not in str(error.value)
+    if existing:
+        assert path.read_bytes() == original
+        assert set(path.parent.iterdir()) == {path}
+    else:
+        assert not path.parent.exists()
+
+
+def test_unexpected_checkpoint_columns_stop_collection_before_fetch(checkpoint, monkeypatch):
+    original = f"listing_key,Contacte\n{FIRST},synthetic-private-value\n".encode()
+    checkpoint.write_bytes(original)
+
+    def reject_fetch(*args, **kwargs):
+        pytest.fail("column validation must happen before collection")
+
+    monkeypatch.setattr(scrape, "fetch_ids_on_page", reject_fetch)
+    with pytest.raises(scrape.CheckpointError, match="unexpected columns"):
+        scrape.main()
+    assert checkpoint.read_bytes() == original
+
+
+@pytest.mark.parametrize("has_row", [False, True], ids=["header-only", "with-row"])
+def test_save_refuses_unexpected_columns_in_existing_destination(checkpoint, has_row):
+    original = "listing_key,Contacte\n"
+    if has_row:
+        original += f"{FIRST},synthetic-private-value\n"
+    original = original.encode()
+    checkpoint.write_bytes(original)
+    with pytest.raises(scrape.CheckpointError, match="unexpected columns"):
+        scrape.save_checkpoint({FIRST: row(FIRST)})
+    assert checkpoint.read_bytes() == original
+    assert set(checkpoint.parent.iterdir()) == {checkpoint}
+
+
+def test_all_approved_columns_round_trip_without_loss(checkpoint):
+    approved = {
+        name: f"synthetic-{index}"
+        for index, name in enumerate(scrape.FEATURE_FIELDS + scrape.FILTER_FIELDS)
+    }
+    approved.update(row(FIRST), price_unit="UNIT_EUR")
+    write_csv(checkpoint, {FIRST: approved})
+    assert scrape.load_checkpoint() == {FIRST: approved}
+    scrape.save_checkpoint({FIRST: approved})
+    assert scrape.load_checkpoint() == {FIRST: approved}
+
+
+def test_serialized_unexpected_column_cannot_replace_checkpoint(checkpoint, monkeypatch):
+    write_csv(checkpoint, {FIRST: row(FIRST)})
+    original = checkpoint.read_bytes()
+    writer = pd.DataFrame.to_csv
+
+    def inject_column(frame, stream, **kwargs):
+        writer(frame.assign(Contacte="synthetic-private-value"), stream, **kwargs)
+
+    monkeypatch.setattr(pd.DataFrame, "to_csv", inject_column)
+    with pytest.raises(scrape.CheckpointError, match="unexpected columns"):
+        scrape.save_checkpoint({FIRST: row(FIRST), SECOND: row(SECOND)})
+    assert checkpoint.read_bytes() == original
+    assert set(checkpoint.parent.iterdir()) == {checkpoint}
+
+
+def test_collection_drops_unapproved_controls_before_persistence(checkpoint, monkeypatch):
+    identifier = "synthetic-approved"
+
+    def query(query, variables):
+        if query == scrape.SEARCH_QUERY:
+            return {"searchAds": {"count": 1, "ads": [{"id": identifier}]}}
+        return advert(
+            identifier,
+            **{
+                "Tipul ofertei": "De închiriat lunar",
+                "Regiune": "Chișinău",
+                "Preț": {"value": "500.00", "unit": "UNIT_EUR"},
+                "Contacte": "synthetic-private-value",
+                "unreviewed-field": "unneeded",
+                "listing_key": "untrusted-source-key",
+            },
+        )
+
+    monkeypatch.setattr(scrape, "gql", query)
+    monkeypatch.setattr(scrape.time, "sleep", lambda seconds: None)
+    scrape.main()
+    restored = scrape.load_checkpoint()
+    assert restored == {
+        scrape.listing_key(identifier): {
+            "listing_key": scrape.listing_key(identifier),
+            "first_seen": scrape.TODAY,
+            "last_seen": scrape.TODAY,
+            "Tipul ofertei": "De închiriat lunar",
+            "Regiune": "Chișinău",
+            "price_value": "500.00",
+            "price_unit": "UNIT_EUR",
+        }
+    }
+    assert "synthetic-private-value" not in checkpoint.read_text(encoding="utf-8-sig")
+
+
 def test_explicit_checkpoint_path_does_not_write_the_default(checkpoint, tmp_path):
     path = tmp_path / "separate" / "progress.csv"
     rows = {FIRST: row(FIRST)}

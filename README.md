@@ -229,6 +229,13 @@ automatic conversion occurs. Compatible working checkpoints are saved atomically
 duplicate, or missing listing keys cause an error instead of silently losing rows. The separate
 checkpoint is not automatically used by `train.py` and is not an immutable dataset release.
 
+Checkpoints accept only the reviewed feature/filter columns plus `listing_key`, `price_value`,
+`price_unit`, `first_seen` and `last_seen`. Unexpected columns cause an error before collection or
+saving; the existing file is preserved, including when it contains only a header. Names must match
+exactly. Such files require a separately reviewed, versioned migration to a new destination, retaining
+the original. Unapproved controls in fetched advertisements continue to be ignored. This column rule
+does not detect personal information inside permitted text fields.
+
 Failed or unavailable listing retrievals stay outside completed checkpoint state, so a later run
 can retry them if they appear in search again. Rejection is saved only after retrieving and checking
 the listing. Search failures stop collection; any unresolved retrieval makes the command exit with
