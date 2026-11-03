@@ -39,4 +39,6 @@ The architecture checker inventories Python source in the checkout and classifie
 
 The checker parses each source once and reports a shortest forbidden import chain with its first import location. It resolves ordinary absolute and relative imports against the root and `src/` layout, including package initializers. Recognized dynamic loaders require one literal absolute module name. The checker rejects indirect use of those loader references and wildcard imports from local packages or loader modules. Custom import hooks, arbitrary reflection, notebooks and runtime isolation are outside the analysis.
 
+Task record reads and saves share a 1 MiB limit on the stored UTF-8 JSON, including indentation and the final newline. A save that exceeds the limit fails before creating output. Store large execution logs separately and reference them from the task record.
+
 Current implementation/evidence: [M1 verification](reports/m1-verification.md). Data limitations: [M0 audit](reports/m0-alignment.md), including the user-provided historical snapshot addendum. The full system is not production-ready. `train` and `predict-batch` wire contracts exist; their new operational implementations, DVC/MLflow, trusted runner, native model adapters, protected verification and deployment remain subsequent milestones.

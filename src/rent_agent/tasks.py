@@ -9,7 +9,7 @@ from enum import StrEnum
 from pathlib import Path
 
 from rent_contracts import ContractError, load_document, validate_document
-from rent_contracts.validation import canonical_json
+from rent_contracts.validation import MAX_DOCUMENT_BYTES, canonical_json
 
 
 class TaskState(StrEnum):
@@ -135,7 +135,7 @@ class TaskRecord:
     @classmethod
     def read(cls, path: Path) -> "TaskRecord":
         with path.open("rb") as stream:
-            raw = stream.read(1_048_577)
+            raw = stream.read(MAX_DOCUMENT_BYTES + 1)
         return cls.from_document(load_document(raw))
 
     def to_document(self) -> dict:
@@ -157,15 +157,17 @@ class TaskRecord:
         """Replace one context file atomically; a failed write leaves its prior version intact."""
         document = self.to_document()
         _validate_task(document)
+        payload = (json.dumps(document, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+        if len(payload) > MAX_DOCUMENT_BYTES:
+            raise ContractError("task record size limit exceeded")
         path = Path(path)
         if path.is_symlink():
             raise ContractError("task record destination must not be a symlink")
         path.parent.mkdir(parents=True, exist_ok=True)
         descriptor, temporary = tempfile.mkstemp(prefix=".task-", suffix=".tmp", dir=path.parent)
         try:
-            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
-                json.dump(document, stream, ensure_ascii=False, indent=2)
-                stream.write("\n")
+            with os.fdopen(descriptor, "wb") as stream:
+                stream.write(payload)
                 stream.flush()
                 os.fsync(stream.fileno())
             os.replace(temporary, path)
