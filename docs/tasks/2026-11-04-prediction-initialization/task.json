@@ -1,0 +1,115 @@
+{
+  "acceptance_criteria": [
+    "Concurrent callers receive one complete bundle. Initialization failure leaves the next call free to retry."
+  ],
+  "affected_modules": [
+    "predict.py",
+    "tests/foundations/test_prediction_initialization.py"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Two-thread probe returned a bundle without explainer while its construction was paused.",
+    "Both synthetic tests failed before the patch because the cache contained a partial bundle.",
+    "Implemented locked lazy initialization. The completed bundle is published after the explainer is constructed.",
+    "All 235 tests passed, including both new regressions. Source and architecture checks passed. All eight prior evidence digests match.",
+    "User authorized publishing the reviewed A07 patch by asking to push to remote."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A07 option 1 implemented and locally verified. Concurrent callers share one complete bundle and explainer failure allows retry. All 235 tests passed.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-03T22:20:38.018786+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-03T22:20:38.047511+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-03T22:20:38.047770+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-03T22:20:38.048028+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-03T22:21:33.313345+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-03T22:21:33.314040+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-03T22:21:33.314391+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Add synthetic regressions",
+    "Implement locked lazy initialization",
+    "Run checks and record results"
+  ],
+  "important_decisions": [
+    "Use a process-local lock and publish after construction succeeds.",
+    "Use the same lock on cache hits. Release it before feature or prediction work."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Commit the four reviewed A07 files, push fix/repository-audit and verify CI.",
+  "objective": "Publish a complete prediction bundle under concurrent first access",
+  "original_authorized_request": "User approved A07 option 1 in conversation. See plan.md.",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Preserve the API, CLI, model format, frozen architecture and earlier evidence."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Legacy prediction loader, focused tests and task evidence",
+    "Publish the four reviewed A07 files and verify GitHub CI."
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261104-A07",
+  "verification_evidence": [
+    {
+      "check": "initialization-tests",
+      "reference": "docs/tasks/2026-11-04-prediction-initialization/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "full-suite",
+      "reference": "docs/tasks/2026-11-04-prediction-initialization/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-checks",
+      "reference": "docs/tasks/2026-11-04-prediction-initialization/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-04-prediction-initialization/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "docs/tasks/2026-11-04-prediction-initialization/plan.md#verification",
+      "required": false,
+      "status": "unavailable"
+    }
+  ],
+  "verification_requirements": [
+    "initialization-tests",
+    "full-suite",
+    "source-checks",
+    "preservation"
+  ]
+}
