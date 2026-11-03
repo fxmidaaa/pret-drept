@@ -229,6 +229,13 @@ automatic conversion occurs. Compatible working checkpoints are saved atomically
 duplicate, or missing listing keys cause an error instead of silently losing rows. The separate
 checkpoint is not automatically used by `train.py` and is not an immutable dataset release.
 
+Failed or unavailable listing retrievals stay outside completed checkpoint state, so a later run
+can retry them if they appear in search again. Rejection is saved only after retrieving and checking
+the listing. Search failures stop collection; any unresolved retrieval makes the command exit with
+status 1 after saving completed page progress. Error messages omit response bodies. Existing rejection
+markers remain unchanged because their original cause cannot be recovered. There is no persistent
+retry queue or guarantee that a listing will appear in a later search.
+
 Or try a single prediction from the terminal: `python predict.py` runs the example apartment at the
 bottom of that file.
 

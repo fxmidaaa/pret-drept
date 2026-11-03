@@ -1,7 +1,9 @@
 import csv
+import json
 import runpy
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
@@ -25,6 +27,22 @@ def row(key):
 
 def write_csv(path, rows):
     pd.DataFrame(rows.values()).to_csv(path, index=False, encoding="utf-8-sig")
+
+
+def advert(identifier, **fields):
+    return {
+        "advert": {
+            "id": identifier,
+            "groups": [
+                {
+                    "controls": [
+                        {"title": name, "feature": {"value": value}}
+                        for name, value in fields.items()
+                    ]
+                }
+            ],
+        }
+    }
 
 
 @pytest.fixture(autouse=True)
@@ -278,3 +296,242 @@ def test_cli_help_documents_the_path_without_reading_a_checkpoint(monkeypatch, c
         runpy.run_path(scrape.__file__, run_name="__main__")
     assert result.value.code == 0
     assert "--checkpoint" in capsys.readouterr().out
+
+
+def test_failed_listing_is_retried_on_the_next_run(checkpoint, monkeypatch):
+    identifier = "synthetic-retry"
+    outcomes = iter(
+        [
+            {"errors": [{"message": "sensitive synthetic error"}]},
+            {
+                "data": advert(
+                    identifier,
+                    **{
+                        "Tipul ofertei": "De închiriat lunar",
+                        "Regiune": "Chișinău",
+                        "Preț": {"value": "500.00", "unit": "UNIT_EUR"},
+                    },
+                )
+            },
+        ]
+    )
+    fetched = []
+
+    def post(*args, **kwargs):
+        request = json.loads(kwargs["data"])
+        if request["query"] == scrape.SEARCH_QUERY:
+            payload = {"data": {"searchAds": {"count": 1, "ads": [{"id": identifier}]}}}
+        else:
+            fetched.append(request["variables"]["i"]["id"])
+            payload = next(outcomes)
+        return SimpleNamespace(raise_for_status=lambda: None, json=lambda: payload)
+
+    monkeypatch.setattr(scrape.requests, "post", post)
+    monkeypatch.setattr(scrape.time, "sleep", lambda seconds: None)
+    with pytest.raises(scrape.AcquisitionError, match="Collection incomplete: 1"):
+        scrape.main()
+    assert scrape.load_checkpoint() == {}
+
+    scrape.main()
+    assert fetched == [identifier, identifier]
+    assert scrape.load_checkpoint()[scrape.listing_key(identifier)]["price_value"] == "500.00"
+
+
+def test_failed_search_is_not_normal_exhaustion(monkeypatch):
+    monkeypatch.setattr(scrape, "gql", lambda *args: None)
+    with pytest.raises(scrape.AcquisitionError, match="Search"):
+        scrape.fetch_ids_on_page(0)
+
+
+@pytest.mark.parametrize("failure", ["transport", "http", "json"])
+def test_request_failures_are_bounded_and_do_not_echo_response_contents(
+    monkeypatch, capsys, failure
+):
+    calls, sleeps = [], []
+
+    def fail():
+        if failure == "transport":
+            raise scrape.requests.Timeout("sensitive synthetic exception")
+        if failure == "http":
+            raise scrape.requests.HTTPError("sensitive synthetic exception")
+        raise ValueError("sensitive synthetic JSON")
+
+    def post(*args, **kwargs):
+        calls.append(kwargs)
+        if failure == "transport":
+            fail()
+        return SimpleNamespace(
+            raise_for_status=fail if failure == "http" else lambda: None,
+            json=fail,
+        )
+
+    monkeypatch.setattr(scrape.requests, "post", post)
+    monkeypatch.setattr(scrape.time, "sleep", sleeps.append)
+    assert scrape.gql("synthetic query", {}) is None
+    assert len(calls) == 3
+    assert all(call["timeout"] == 25 for call in calls)
+    assert sleeps == [3, 3]
+    assert "sensitive" not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        None,
+        [],
+        {"data": None},
+        {"data": []},
+        {"data": {"advert": {}}, "errors": [{"message": "sensitive synthetic error"}]},
+    ],
+)
+def test_invalid_graphql_responses_are_failures(monkeypatch, capsys, payload):
+    monkeypatch.setattr(
+        scrape.requests,
+        "post",
+        lambda *args, **kwargs: SimpleNamespace(
+            raise_for_status=lambda: None,
+            json=lambda: payload,
+        ),
+    )
+    assert scrape.gql("synthetic query", {}) is None
+    assert "sensitive" not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "result",
+    [
+        None,
+        {},
+        {"count": True, "ads": []},
+        {"count": -1, "ads": []},
+        {"count": 1, "ads": None},
+        {"count": 1, "ads": [{}]},
+        {"count": 1, "ads": [{"id": None}]},
+        {"count": 1, "ads": []},
+        {"count": 0, "ads": [{"id": "synthetic"}]},
+    ],
+)
+def test_malformed_or_prematurely_empty_search_is_not_exhaustion(monkeypatch, result):
+    monkeypatch.setattr(scrape, "gql", lambda *args: {"searchAds": result})
+    with pytest.raises(scrape.AcquisitionError, match="Search"):
+        scrape.fetch_ids_on_page(0)
+
+
+def test_empty_successful_search_is_normal_exhaustion(checkpoint, monkeypatch, capsys):
+    monkeypatch.setattr(scrape, "gql", lambda *args: {"searchAds": {"count": 0, "ads": []}})
+    scrape.main()
+    assert "done. checkpoint records:" in capsys.readouterr().out
+    assert not checkpoint.exists()
+
+
+def test_search_failure_after_a_page_preserves_progress_and_stops(checkpoint, monkeypatch, capsys):
+    offsets = []
+
+    def search(query, variables):
+        offsets.append(variables["i"]["pagination"]["skip"])
+        if len(offsets) == 1:
+            return {"searchAds": {"count": 2, "ads": [{"id": "synthetic-kept"}]}}
+        return None
+
+    monkeypatch.setattr(scrape, "PAGE_SIZE", 1)
+    monkeypatch.setattr(scrape, "gql", search)
+    monkeypatch.setattr(
+        scrape,
+        "fetch_listing_details",
+        lambda identifier: {
+            **row(scrape.listing_key(identifier)),
+            "Tipul ofertei": "De închiriat lunar",
+            "Regiune": "Chișinău",
+        },
+    )
+    monkeypatch.setattr(scrape.time, "sleep", lambda seconds: None)
+    with pytest.raises(scrape.AcquisitionError, match="Collection incomplete: search"):
+        scrape.main()
+    assert offsets == [0, 1]
+    assert set(scrape.load_checkpoint()) == {scrape.listing_key("synthetic-kept")}
+    assert "done." not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("failure", ["missing", "malformed", "eligibility", "identity", "control"])
+def test_incomplete_detail_does_not_prevent_saving_other_rows(
+    checkpoint, monkeypatch, capsys, failure
+):
+    fetched = []
+    identifiers = ["synthetic-failed", "synthetic-kept", "synthetic-ineligible"]
+
+    def query(query, variables):
+        if query == scrape.SEARCH_QUERY:
+            return {"searchAds": {"count": 3, "ads": [{"id": value} for value in identifiers]}}
+        identifier = variables["i"]["id"]
+        fetched.append(identifier)
+        if identifier == "synthetic-failed":
+            if failure == "missing":
+                return {"advert": None}
+            if failure == "malformed":
+                return {"advert": {"id": identifier, "groups": "invalid"}}
+            if failure == "identity":
+                return advert("synthetic-wrong-listing")
+            if failure == "control":
+                return {"advert": {"id": identifier, "groups": [{"controls": [None]}]}}
+            return advert(identifier)
+        return advert(
+            identifier,
+            **{
+                "Tipul ofertei": "De vânzare"
+                if identifier.endswith("ineligible")
+                else "De închiriat lunar",
+                "Regiune": "Chișinău",
+            },
+        )
+
+    monkeypatch.setattr(scrape, "gql", query)
+    monkeypatch.setattr(scrape.time, "sleep", lambda seconds: None)
+    for _ in range(2):
+        with pytest.raises(scrape.AcquisitionError, match="Collection incomplete: 1"):
+            scrape.main()
+        restored = scrape.load_checkpoint()
+        assert set(restored) == {scrape.listing_key(value) for value in identifiers[1:]}
+        assert restored[scrape.listing_key("synthetic-ineligible")]["Tipul ofertei"] == "rejected"
+    assert fetched == identifiers + ["synthetic-failed"]
+    assert "done." not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {},
+        {"Tipul ofertei": None, "Regiune": "Chișinău"},
+        {"Tipul ofertei": "De închiriat lunar", "Regiune": None},
+        {"Tipul ofertei": "De închiriat lunar", "Regiune": {"invalid": "value"}},
+    ],
+)
+def test_missing_or_invalid_eligibility_is_unresolved(fields):
+    with pytest.raises(scrape.AcquisitionError, match="eligibility"):
+        scrape.target_valid(fields)
+
+
+@pytest.mark.parametrize("failure", ["search", "detail"])
+def test_incomplete_cli_exits_nonzero_with_safe_diagnostics(
+    checkpoint, monkeypatch, capsys, failure
+):
+    monkeypatch.setattr(sys, "argv", ["scrape.py", "--checkpoint", str(checkpoint)])
+
+    def post(*args, **kwargs):
+        request = json.loads(kwargs["data"])
+        payload = {"errors": [{"message": "sensitive synthetic payload"}]}
+        if failure == "detail" and request["query"] == scrape.SEARCH_QUERY:
+            payload = {"data": {"searchAds": {"count": 1, "ads": [{"id": "synthetic"}]}}}
+        return SimpleNamespace(raise_for_status=lambda: None, json=lambda: payload)
+
+    monkeypatch.setattr(scrape.requests, "post", post)
+    monkeypatch.setattr(scrape.time, "sleep", lambda seconds: None)
+    with pytest.raises(SystemExit) as result:
+        runpy.run_path(scrape.__file__, run_name="__main__")
+    assert result.value.code == 1
+    captured = capsys.readouterr()
+    assert "Collection incomplete:" in captured.err
+    assert "sensitive" not in captured.out + captured.err
+    if failure == "search":
+        assert not checkpoint.exists()
+    else:
+        assert scrape.load_checkpoint() == {}

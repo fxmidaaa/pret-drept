@@ -76,22 +76,32 @@ query($i: AdvertInput!) {
 """
 
 
+class AcquisitionError(RuntimeError):
+    """Retrieval failed or collection is incomplete; completed progress remains resumable."""
+
+
 def gql(query, variables):
     # send one graphql request, retry a couple of times if the connection drops
     payload = json.dumps({"query": query, "variables": variables})
     for attempt in range(3):
         try:
             r = requests.post(GRAPHQL_URL, headers=HEADERS, data=payload, timeout=25)
+            r.raise_for_status()
             data = r.json()
 
-            if "errors" in data:
-                print("graphql error:", data["errors"][:1], flush=True)
+            if (
+                not isinstance(data, dict)
+                or data.get("errors")
+                or not isinstance(data.get("data"), dict)
+            ):
+                print("GraphQL response failed validation.", flush=True)
                 return None
 
             return data["data"]
-        except Exception as e:
-            print("request failed, retrying...", e, flush=True)
-            time.sleep(3)
+        except (requests.RequestException, ValueError):
+            print("Request failed (attempt %d of 3)." % (attempt + 1), flush=True)
+            if attempt < 2:
+                time.sleep(3)
     return None
 
 
@@ -109,10 +119,21 @@ def fetch_ids_on_page(skip):
     data = gql(SEARCH_QUERY, variables)
 
     if data is None:
-        return 0, []
+        raise AcquisitionError("Search retrieval failed.")
 
-    search_results = data["searchAds"]
-    return search_results["count"], [ad["id"] for ad in search_results["ads"]]
+    try:
+        search_results = data["searchAds"]
+        total, ads = search_results["count"], search_results["ads"]
+        if type(total) is not int or total < 0 or not isinstance(ads, list):
+            raise ValueError
+        ids = [ad["id"] for ad in ads]
+        if any(type(value) not in (str, int) or not str(value).strip() for value in ids):
+            raise ValueError
+        if len(ids) > total or (not ids and skip < total):
+            raise ValueError
+    except (KeyError, TypeError, ValueError):
+        raise AcquisitionError("Search response is invalid or incomplete.") from None
+    return total, ids
 
 
 def simplify_feature_value(value):
@@ -180,16 +201,32 @@ def fetch_listing_details(listing_id):
     if data is None or data.get("advert") is None:
         return None
 
+    advert = data["advert"]
+    if (
+        not isinstance(advert, dict)
+        or str(advert.get("id")) != str(listing_id)
+        or not isinstance(advert.get("groups"), list)
+    ):
+        raise AcquisitionError("Listing response is invalid or incomplete.")
     row = {"listing_key": listing_key(listing_id)}
 
-    for group in data["advert"].get("groups") or []:
-        for control in group.get("controls") or []:
+    for group in advert["groups"]:
+        if not isinstance(group, dict) or not isinstance(group.get("controls"), list):
+            raise AcquisitionError("Listing controls are invalid or incomplete.")
+        for control in group["controls"]:
+            if not isinstance(control, dict):
+                raise AcquisitionError("Listing control is invalid.")
             name = control.get("title")
 
             if not name:
                 continue
+            if not isinstance(name, str):
+                raise AcquisitionError("Listing control title is invalid.")
 
-            raw_value = control.get("feature", {}).get("value")
+            feature = control.get("feature")
+            if feature is not None and not isinstance(feature, dict):
+                raise AcquisitionError("Listing feature is invalid.")
+            raw_value = (feature or {}).get("value")
 
             # price needs special care: the value is a dict that carries both
             # the amount and the currency, and listings mix EUR / MDL / USD.
@@ -215,10 +252,18 @@ def fetch_listing_details(listing_id):
 
 def target_valid(row):
     # checking that the listing explicitly matches monthly rent in Chisinau
-    offer = str(row.get("Tipul ofertei", "")).strip()
-    loc = (str(row.get("Regiune", "")) + " " + str(row.get("Localitate", ""))).lower()
+    offer = row.get("Tipul ofertei")
+    locations = [row.get("Regiune"), row.get("Localitate")]
+    if (
+        not isinstance(offer, str)
+        or not offer.strip()
+        or any(value is not None and not isinstance(value, str) for value in locations)
+        or not any(value and value.strip() for value in locations)
+    ):
+        raise AcquisitionError("Listing eligibility fields are missing or invalid.")
 
-    is_rent = offer == "De închiriat lunar"
+    loc = " ".join(value or "" for value in locations).lower()
+    is_rent = offer.strip() == "De închiriat lunar"
     is_chisinau = "chișinău" in loc or "chisinau" in loc
 
     return is_rent and is_chisinau
@@ -310,10 +355,16 @@ def main(checkpoint_path=None):
     checkpoint_path = Path(CSV_PATH if checkpoint_path is None else checkpoint_path)
     rows_by_id = load_checkpoint(checkpoint_path)
     skip = 0
+    failed = 0
 
     while len(rows_by_id) < MAX_LISTINGS:
-        total, ids = fetch_ids_on_page(skip=skip)
-        # print("page skip=%d -> %d ids (api says %d total)" % (skip, len(ids), total), flush=True)
+        try:
+            total, ids = fetch_ids_on_page(skip=skip)
+        except AcquisitionError:
+            raise AcquisitionError(
+                "Collection incomplete: search retrieval failed; %d listing retrieval(s) "
+                "also failed. Completed checkpoint rows retained. Retry collection later." % failed
+            ) from None
 
         if not ids:
             print("no more listings, stopping", flush=True)
@@ -330,8 +381,14 @@ def main(checkpoint_path=None):
 
             try:
                 row = fetch_listing_details(listing_id)
-
-                if row is not None and target_valid(row):
+                if row is None:
+                    raise AcquisitionError("Listing unavailable.")
+                eligible = target_valid(row)
+            except AcquisitionError:
+                failed += 1
+                print("Listing retrieval failed; left outside completed state.", flush=True)
+            else:
+                if eligible:
                     row["first_seen"] = TODAY
                     row["last_seen"] = TODAY
                     rows_by_id[sid] = row
@@ -343,8 +400,6 @@ def main(checkpoint_path=None):
                         "last_seen": TODAY,
                         "Tipul ofertei": "rejected",
                     }
-            except Exception as e:
-                print("skipped", sid, "-", e, flush=True)
 
             time.sleep(SLEEP)
 
@@ -356,7 +411,12 @@ def main(checkpoint_path=None):
             print("reached end of results (%d)" % total, flush=True)
             break
 
-    print("done. total chisinau rents: ", len(rows_by_id), flush=True)
+    if failed:
+        raise AcquisitionError(
+            "Collection incomplete: %d listing retrieval(s) failed; completed checkpoint "
+            "rows retained. Failed listings will be retried if encountered in a later run." % failed
+        )
+    print("done. checkpoint records: ", len(rows_by_id), flush=True)
 
 
 if __name__ == "__main__":
@@ -371,5 +431,7 @@ if __name__ == "__main__":
     )
     try:
         main(parser.parse_args().checkpoint)
+    except AcquisitionError as error:
+        parser.exit(1, f"Acquisition error: {error}\n")
     except (CheckpointError, OSError) as error:
         parser.exit(1, f"Checkpoint error: {error}\n")
