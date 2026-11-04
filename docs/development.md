@@ -10,6 +10,7 @@ python3.13 -m venv .venv
 .venv/bin/python -m pip install --no-deps --no-build-isolation -e .
 .venv/bin/python scripts/install_actionlint.py --directory .venv/bin
 .venv/bin/actionlint -shellcheck= -pyflakes=
+.venv/bin/python scripts/check_notebooks.py
 .venv/bin/python -m ruff check src scripts scrape.py tests/foundations tests/test_scrape.py tests/conftest.py
 .venv/bin/python -m ruff format --check src scripts scrape.py tests/foundations tests/test_scrape.py tests/conftest.py
 .venv/bin/rent-check-architecture --root .
@@ -24,6 +25,13 @@ tests that require the application, workflow files, or project task records in c
 suite twice from a temporary extraction. The source run imports from the extracted `src/` tree.
 The wheel run imports from the wheel and exercises all seven packaged schemas. Both runs bypass
 the checkout's editable install and use dependencies from the locked development environment.
+
+Tracked notebooks are published as source with cleared outputs. Keep executed copies that use
+private data outside the tracked tree. Before committing a notebook, clear its cell outputs and
+execution counts, remove embedded attachments and saved widget state, and run
+`.venv/bin/python scripts/check_notebooks.py`. Stage new notebooks first so the check sees them.
+CI runs the same check over all tracked `.ipynb` files without executing cells. Review notebook
+source and other published assets separately.
 
 Workflow validation uses development-only **actionlint 1.7.12**. The explicit installer supports macOS/Linux on ARM64 and x86-64, downloads the maintainer's release archive, and checks its pinned SHA-256 before installing the executable. It replaces no Python dependencies. Installation needs network access; subsequent semantic checks and regression tests run offline. Optional shellcheck/pyflakes integrations are disabled to keep the semantic tool set identical locally and in CI. Review version/checksum changes together against the [maintainer release](https://github.com/rhysd/actionlint/releases/tag/v1.7.12).
 

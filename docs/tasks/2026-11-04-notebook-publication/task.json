@@ -1,0 +1,125 @@
+{
+  "acceptance_criteria": [
+    "Both notebooks are output-free and unchanged outside saved state. The checker rejects saved notebook content with safe diagnostics."
+  ],
+  "affected_modules": [
+    "notebooks",
+    "scripts/check_notebooks.py",
+    "tests/foundations",
+    ".github/workflows/validate.yml",
+    "README.md",
+    "docs/development.md"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "The EDA notebook contains a saved five-row preview. The notebook was inspected without reproducing row values.",
+    "The checker rejected both baseline notebooks without including output content in diagnostics.",
+    "Cleared 26 saved outputs and reset execution counts across the two notebooks. Parsed JSON comparison preserved the rest of each notebook.",
+    "The publication check passed on both notebooks and all 10 synthetic checker tests passed.",
+    "Full checkout passed 295 tests. The extracted source archive and wheel each passed 142 tests.",
+    "Ruff, actionlint, architecture and whitespace checks passed. All 20 prior documentation edits match their starting digests."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "Local A13 patch verified and ready for review. Remote CI is pending push approval.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-04T14:19:09.660225+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-04T14:19:09.686292+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-04T14:19:09.686558+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-04T14:19:09.686810+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-04T14:22:03.336439+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-04T14:22:03.337613+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Add and test a read-only notebook checker.",
+    "Clear notebook outputs and execution counts without running the notebooks.",
+    "Wire the check into CI and verify the reviewed patch."
+  ],
+  "important_decisions": [
+    "Use source-only notebooks and a structural check for saved state.",
+    "Inspect the Git-tracked notebook paths in the working tree and reject structured saved state without classifying the contents."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Await user approval to push. After approval, commit only the reviewed A13 files, push to fix/repository-audit, and verify GitHub CI on the published revision. Preserve the 20 pre-existing edits.",
+  "objective": "Remove saved private listing previews from public notebook files and prevent saved output from returning",
+  "original_authorized_request": "User selected A13 option 1 and requires separate approval before push.",
+  "pending_approvals": [
+    "Approval to push the reviewed A13 patch to fix/repository-audit."
+  ],
+  "protected_invariants": [
+    "Preserve notebook source and metadata, existing CI privileges, historical Git revisions, and prior local evidence. Do not execute notebook cells or access the private CSV."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Tracked notebook saved state, its unprivileged CI check, synthetic tests, and publication documentation."
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261104-A13",
+  "verification_evidence": [
+    {
+      "check": "notebook-gate",
+      "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-preservation",
+      "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout-suite",
+      "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "distributions",
+      "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-checks",
+      "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "notebook-gate",
+    "source-preservation",
+    "checkout-suite",
+    "distributions",
+    "source-checks",
+    "preservation"
+  ]
+}

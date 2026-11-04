@@ -70,8 +70,10 @@ listings are priced in EUR and the rest in MDL or USD; I convert everything to E
 
 ## What the market actually looks like
 
-Before training anything I spent a while just looking at the data
-([`notebooks/eda.ipynb`](notebooks/eda.ipynb) has the full tour). A few things stood out.
+Before training anything I spent a while just looking at the data. The
+[`EDA notebook`](notebooks/eda.ipynb) contains the analysis code. Both public notebooks are
+stored with cleared outputs and use the private dataset when run locally. The charts and
+model comparison on this page summarize the results.
 
 Rent is heavily skewed: lots of ordinary flats and a long tail of expensive ones. Taking the log
 makes it roughly symmetric, which is the whole reason the model trains on `log(price)`.
@@ -294,8 +296,8 @@ predict.py                 loads the model, makes one prediction + explanation
 api.py                     FastAPI - /predict, /options, /health, serves the page
 app/index.html             the one-page front end (form in, verdict out)
 Dockerfile                 containerised API (inference code + reviewed model)
-notebooks/eda.ipynb        exploratory analysis (aggregate views only)
-notebooks/model_selection.ipynb   the "why XGBoost" model comparison
+notebooks/eda.ipynb        exploratory analysis source
+notebooks/model_selection.ipynb   model comparison source
 data/sample/               synthetic sample + column schema (real data stays private)
 images/                    charts from the EDA
 tests/                     tests for cleaning, features, the API and checkpoint preservation
