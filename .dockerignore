@@ -14,3 +14,7 @@ src/*
 src/rent_domain/*
 !src/rent_domain/__init__.py
 !src/rent_domain/apartment.py
+!src/rent_prediction/
+src/rent_prediction/*
+!src/rent_prediction/__init__.py
+!src/rent_prediction/xgboost_preprocessing.py

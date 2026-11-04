@@ -1,0 +1,132 @@
+{
+  "acceptance_criteria": [
+    "Synthetic legacy export saves the original fitted median and reproduces the encoded input after reload. Existing bundles load through the legacy path."
+  ],
+  "affected_modules": [
+    "train.py",
+    "predict.py",
+    "src/rent_prediction/xgboost_preprocessing.py",
+    "Dockerfile",
+    ".dockerignore",
+    "tests/foundations"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Synthetic median was 20 before the market-rate trim and 25 when recomputed afterward.",
+    "Synthetic regression through legacy export failed before the patch because the bundle contained 25 instead of the fitted 20.",
+    "Model-specific state now exports the original medians, feature names and vectorizer. Prediction restores the state and legacy bundles use their stored defaults.",
+    "All 257 tests passed. Wheel, source checks and Docker source-copy and import checks passed. All fourteen prior evidence digests match.",
+    "User approved publication by requesting the proposed patch be pushed."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A10 bounded option 2 increment implemented locally. Exact fitted medians and encoded inputs survive export and reload. 257 tests passed. Ready for publication review.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-04T10:04:32.821399+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-04T10:04:32.849321+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-04T10:04:32.849594+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-04T10:04:32.849841+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-04T10:08:08.903840+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-04T10:08:08.904649+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-04T10:08:08.905057+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Reproduce drift through synthetic export",
+    "Add the fitted XGBoost preprocessing component",
+    "Verify export, reload and legacy compatibility"
+  ],
+  "important_decisions": [
+    "Use the existing bundle with explicit fitted medians and preserve legacy keys. Keep adapter and native-payload migration separate.",
+    "Keep preprocessing state as an in-memory component and serialize legacy bundle values. Use an additive imputation_medians key and retain effective numeric_defaults for compatibility."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Commit the A10 files as fix(xgboost): preserve fitted preprocessing in legacy bundles, push fix/repository-audit and verify CI.",
+  "objective": "Preserve the original fitted XGBoost preprocessing across bundle export and prediction",
+  "original_authorized_request": "User approved option 2 and its bounded first increment in conversation.",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Preserve architecture v1, legacy API and bundle compatibility, existing dependencies and prior local evidence."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Legacy XGBoost fitted preprocessing component, training and prediction integration, packaging, tests and evidence",
+    "Publish the eight reviewed A10 files and verify GitHub CI."
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261104-A10",
+  "verification_evidence": [
+    {
+      "check": "preprocessing-roundtrip",
+      "reference": "docs/tasks/2026-11-04-xgboost-preprocessing/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "full-suite",
+      "reference": "docs/tasks/2026-11-04-xgboost-preprocessing/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-checks",
+      "reference": "docs/tasks/2026-11-04-xgboost-preprocessing/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "packaging",
+      "reference": "docs/tasks/2026-11-04-xgboost-preprocessing/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-04-xgboost-preprocessing/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "full-container-runtime",
+      "reference": "docs/tasks/2026-11-04-xgboost-preprocessing/plan.md#verification",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "docs/tasks/2026-11-04-xgboost-preprocessing/plan.md#verification",
+      "required": false,
+      "status": "unavailable"
+    }
+  ],
+  "verification_requirements": [
+    "preprocessing-roundtrip",
+    "full-suite",
+    "source-checks",
+    "packaging",
+    "preservation"
+  ]
+}

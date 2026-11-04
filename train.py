@@ -1,17 +1,25 @@
+import os
+from datetime import date
+
+import joblib
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
-import joblib
 
-from datetime import date
-import os
-
-from features import (clean_data, build_ppm_grid, assign_ppm, trim_ppm_outliers,
-                      trim_knn_outliers, impute_medians, FEATURES, numerical)
+from features import (
+    FEATURES,
+    assign_ppm,
+    build_ppm_grid,
+    clean_data,
+    impute_medians,
+    numerical,
+    trim_knn_outliers,
+    trim_ppm_outliers,
+)
+from src.rent_prediction.xgboost_preprocessing import XGBoostPreprocessing
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 
@@ -56,13 +64,10 @@ def main():
     y_train = np.log1p(df_train['price'].values)
     y_val = np.log1p(df_val['price'].values)
 
-    dicts_train = df_train[features].to_dict(orient='records')
-    dicts_val = df_val[features].to_dict(orient='records')
-
-    # one-hot encoding using dicts
-    dv = DictVectorizer(sparse=False)
-    X_train = dv.fit_transform(dicts_train)
-    X_val = dv.transform(dicts_val)
+    preprocessing, X_train = XGBoostPreprocessing.fit_transform(
+        df_train[features], imputation_medians=medians, numeric_fields=numerical
+    )
+    X_val = preprocessing.transform(df_val[list(preprocessing.features)].to_dict(orient="records"))
 
     linreg = LinearRegression()
     linreg.fit(X_train, y_train)
@@ -115,14 +120,12 @@ def main():
                          float(g["lon"].median())]
                      for s, g in df_train.groupby("sector")}
     joblib.dump({
-        "dv": dv,
+        **preprocessing.legacy_bundle_fields(),
         "model": model,
-        "features": features,
         "sector_dist": sector_dist,
         "median_dist": float(df_train["dist_to_center"].median()),
         "sector_latlon": sector_latlon,
         "median_latlon": [float(df_train["lat"].median()), float(df_train["lon"].median())],
-        "numeric_defaults": {c: float(df_train[c].median()) for c in numerical},
         "grid_ppm": grid_ppm,
         "sector_ppm": sector_ppm,
         "global_ppm": global_ppm,

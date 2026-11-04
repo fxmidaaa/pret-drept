@@ -7,6 +7,7 @@ import shap
 
 from features import binary, categorical, floor_flags, latlon_to_km, ppm_from_grid
 from src.rent_domain.apartment import validate_apartment_relationships
+from src.rent_prediction.xgboost_preprocessing import XGBoostPreprocessing
 
 BINARY_SET = set(binary)
 # real model inputs that just aren't meaningful to show as a "driver": raw
@@ -65,12 +66,16 @@ def driver_label(raw_name):
     return nice_name(raw_name)
 
 def build_features(apartment, bund):
+    return _build_features(apartment, bund, bund["features"], bund["numeric_defaults"])
+
+
+def _build_features(apartment, bund, feature_names, defaults):
     # turn a request into exactly the feature dict the model was trained on.
     # every key here MUST be one of bund['features'] - anything else the
     # vectorizer silently drops, and the real feature falls back to a default.
 
     # keep only the columns the model knows, turn into the vectorizer format
-    x_dict = {f: apartment.get(f) for f in bund['features']}
+    x_dict = {f: apartment.get(f) for f in feature_names}
 
     # derive the ground/top floor flags if the caller didn't send them -
     # the rule lives in features.floor_flags so it can't drift from training
@@ -92,8 +97,8 @@ def build_features(apartment, bund):
 
     for feature, value in x_dict.items():
         if value is None:
-            if feature in bund["numeric_defaults"]:
-                x_dict[feature] = bund["numeric_defaults"][feature]
+            if feature in defaults:
+                x_dict[feature] = defaults[feature]
             elif feature in categorical:
                 x_dict[feature] = "necunoscut"
             else:
@@ -104,11 +109,11 @@ def build_features(apartment, bund):
 def run(apartment):
     validate_apartment_relationships(apartment)
     bund = get_bundle()
-    dv = bund['dv']
+    preprocessing = XGBoostPreprocessing.from_legacy_bundle(bund)
     listed_price = apartment.get('price')
 
-    x_dict = build_features(apartment, bund)
-    X = dv.transform([x_dict])
+    x_dict = _build_features(apartment, bund, preprocessing.features, preprocessing.numeric_defaults)
+    X = preprocessing.transform([x_dict])
 
     fair_price = float(np.expm1(bund['model'].predict(X)[0]))
 
@@ -125,7 +130,7 @@ def run(apartment):
             result["verdict"] = "fair price"
 
     shap_values = bund["explainer"].shap_values(X)[0]
-    names = dv.get_feature_names_out()
+    names = preprocessing.vectorizer.get_feature_names_out()
     row = X[0]  # the encoded feature values, aligned with names/shap_values
 
     drivers = []
