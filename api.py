@@ -1,15 +1,29 @@
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field, field_validator
-
-from typing import Optional
 import os
+from math import isfinite
+from typing import Optional
+
+from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel, Field, field_validator
 
 import predict
 
 app = FastAPI(title='Fair Chisinau Rent', description='Overpriced apartment?')
 
 HOMEPAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app")
+
+
+def _json_safe_float(value: float) -> float | None:
+    return value if isfinite(value) else None
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_error(_request: Request, exc: RequestValidationError) -> JSONResponse:
+    detail = jsonable_encoder(exc.errors(), custom_encoder={float: _json_safe_float})
+    return JSONResponse(status_code=422, content={"detail": detail})
+
 
 @app.get("/options")
 def options():
