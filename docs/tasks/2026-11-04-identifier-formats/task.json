@@ -1,0 +1,114 @@
+{
+  "acceptance_criteria": [
+    "Every affected field rejects trailing newlines and other out-of-format values while preserving the documented valid spellings."
+  ],
+  "affected_modules": [
+    "src/rent_contracts/schemas/v1",
+    "tests/foundations",
+    "docs/architecture/contracts-v1.md"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Read-only probes reproduced trailing-newline acceptance in all 28 patterned subschemas and complete representative documents.",
+    "All 28 regressions using complete synthetic documents failed before the schema change and passed afterward.",
+    "All seven updated schemas passed standalone format comparisons against the intended complete-string grammars.",
+    "The full checkout passed 285 tests. The extracted source distribution and wheel each passed 142 tests.",
+    "Scoped lint and format, workflow validation, architecture checks, and whitespace checks passed. All 18 prior documentation edits match their starting digests."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "Local A12 patch verified and ready for review. Remote CI is pending push approval.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-04T11:09:57.725718+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-04T11:09:57.754366+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-04T11:09:57.754633+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-04T11:09:57.754887+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-04T11:13:40.051381+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-04T11:13:40.052250+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Reproduce acceptance and add coverage for all affected fields.",
+    "Enforce whole-string length and character constraints in the public schemas.",
+    "Verify checkout and packaged tests and preserve prior evidence."
+  ],
+  "important_decisions": [
+    "Keep the fix in the independently usable JSON Schemas and preserve exact identity values.",
+    "Use independent JSON Schema constraints for the first character, allowed alphabet, and string length. Keep the tests in the existing packaged contract suite."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Await user approval to push. After approval, commit only the reviewed A12 files, push to fix/repository-audit, and verify GitHub CI on the published revision. Preserve the 18 pre-existing edits.",
+  "objective": "Reject malformed identifier and digest strings at the public schema boundary",
+  "original_authorized_request": "User selected A12 option 1 and requires separate approval before push.",
+  "pending_approvals": [
+    "Approval to push the reviewed A12 patch to fix/repository-audit."
+  ],
+  "protected_invariants": [
+    "Preserve existing valid values, nullable alternatives, schema identities, exact comparisons, legacy interfaces, and prior local evidence."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "The 28 existing identifier and digest patterns across the seven public v1 schemas, targeted tests, packaging of the tests, and contract documentation."
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261104-A12",
+  "verification_evidence": [
+    {
+      "check": "identifier-regressions",
+      "reference": "docs/tasks/2026-11-04-identifier-formats/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout-suite",
+      "reference": "docs/tasks/2026-11-04-identifier-formats/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "distributions",
+      "reference": "docs/tasks/2026-11-04-identifier-formats/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-checks",
+      "reference": "docs/tasks/2026-11-04-identifier-formats/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-04-identifier-formats/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "identifier-regressions",
+    "checkout-suite",
+    "distributions",
+    "source-checks",
+    "preservation"
+  ]
+}

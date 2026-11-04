@@ -12,6 +12,12 @@ JSON is UTF-8. Unknown object fields, duplicate JSON keys, nonfinite numbers, un
 
 Schemas are loaded from bundled local resources. External schema lookup is denied; adapter schemas are explicitly supplied by the caller's registry. No configuration can select a Python import path, command, host mount, credentials or runtime security options.
 
+Identifiers such as `record_id` and `task_id` contain 1 to 128 characters. The first
+character is an ASCII letter or digit. The rest can also use `_`, `.` and `-`.
+SHA-256 digests are `sha256:` followed by exactly 64 lowercase hex digits. A non-null
+`reviewed_commit` contains exactly 40 or 64 lowercase hex digits. These checks apply
+to the complete string. Identity comparisons use the submitted value as-is.
+
 ## Request contracts
 
 | Schema | Initial fields and semantics |
@@ -20,7 +26,7 @@ Schemas are loaded from bundled local resources. External schema lookup is denie
 | `train-request` | `contract_version`, `model_family`, `configuration`, resolved `training_partition` and nullable `validation_partition`, `dataset_ref`, `split_ref`, `random_seed`, nullable approved `checkpoint_ref`, assigned `output_directory` |
 | `predict-batch-request` | `contract_version`, exact `bundle_ref` (resolved path plus digest), `input_path`, `input_schema_version`, `inference_configuration`, assigned `output_path` |
 
-Immutable request references are `sha256:<64 lowercase hex digits>`. Dataset/split digests identify release/manifest envelopes; a later DVC release will also retain its own DVC object identity (§8.2). They are not invented DVC object hashes or proof that data is retrievable. Snapshot references must already be sealed in this initial protocol; a future sealable-reference workflow requires its own validated admission path.
+Dataset/split digests identify the release and manifest envelopes. A later DVC release will also retain its own DVC object identity (§8.2). Retrieval must be verified separately. Snapshot references must already be sealed in this initial protocol. A future sealable-reference workflow requires its own validated admission path.
 
 Resource shape is positive integer CPU, MiB and duration, plus nonnegative GPU count. Policy maxima, approved image, authenticated principal, output paths, resource enforcement and retry limits belong to trusted admission; callers cannot grant them through these fields. Initial experiment operation is training; promotion/deployment are never workload operations. The explicit seed is a necessary identity input, not a promise of cross-hardware bitwise determinism.
 

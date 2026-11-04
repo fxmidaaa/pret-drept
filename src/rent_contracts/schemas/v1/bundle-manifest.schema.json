@@ -8,24 +8,35 @@
     },
     "bundle_digest": {
       "type": "string",
-      "pattern": "^sha256:[a-f0-9]{64}$"
+      "minLength": 71,
+      "maxLength": 71,
+      "pattern": "^sha256:[a-f0-9]{64}"
     },
     "model_family": {
       "type": "string",
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9]",
+      "not": {
+        "pattern": "[^A-Za-z0-9_.-]"
+      }
     },
     "provenance": {
       "type": "object",
       "properties": {
         "source_snapshot": {
           "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$"
+          "minLength": 71,
+          "maxLength": 71,
+          "pattern": "^sha256:[a-f0-9]{64}"
         },
         "reviewed_commit": {
           "anyOf": [
             {
               "type": "string",
-              "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+              "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$",
+              "not": {
+                "pattern": "[^a-f0-9]"
+              }
             },
             {
               "type": "null"
@@ -34,19 +45,29 @@
         },
         "dataset_ref": {
           "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$"
+          "minLength": 71,
+          "maxLength": 71,
+          "pattern": "^sha256:[a-f0-9]{64}"
         },
         "split_ref": {
           "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$"
+          "minLength": 71,
+          "maxLength": 71,
+          "pattern": "^sha256:[a-f0-9]{64}"
         },
         "training_run": {
           "type": "string",
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9]",
+          "not": {
+            "pattern": "[^A-Za-z0-9_.-]"
+          }
         },
         "configuration_digest": {
           "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$"
+          "minLength": 71,
+          "maxLength": 71,
+          "pattern": "^sha256:[a-f0-9]{64}"
         },
         "random_seed": {
           "type": "integer",
@@ -87,7 +108,9 @@
           },
           "digest": {
             "type": "string",
-            "pattern": "^sha256:[a-f0-9]{64}$"
+            "minLength": 71,
+            "maxLength": 71,
+            "pattern": "^sha256:[a-f0-9]{64}"
           }
         },
         "required": [
@@ -109,7 +132,9 @@
         },
         "state_digest": {
           "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$"
+          "minLength": 71,
+          "maxLength": 71,
+          "pattern": "^sha256:[a-f0-9]{64}"
         },
         "compatibility_version": {
           "const": "1.0.0"
@@ -147,7 +172,11 @@
       "properties": {
         "name": {
           "type": "string",
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9]",
+          "not": {
+            "pattern": "[^A-Za-z0-9_.-]"
+          }
         },
         "interface_version": {
           "const": "1.0.0"
@@ -212,7 +241,9 @@
           },
           "digest": {
             "type": "string",
-            "pattern": "^sha256:[a-f0-9]{64}$"
+            "minLength": 71,
+            "maxLength": 71,
+            "pattern": "^sha256:[a-f0-9]{64}"
           },
           "license_ref": {
             "type": "string",
