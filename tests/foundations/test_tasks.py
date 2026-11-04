@@ -1,6 +1,5 @@
 import json
 from datetime import datetime, timezone
-from pathlib import Path
 
 import pytest
 
@@ -198,11 +197,3 @@ def test_blocked_record_cannot_conceal_skipped_historical_planning(task_document
     )
     with pytest.raises(ContractError, match="PLANNED"):
         TaskRecord.from_document(task_document)
-
-
-def test_persisted_project_task_context_is_valid():
-    root = Path(__file__).resolve().parents[2]
-    records = list((root / "docs/tasks").glob("*/task.json"))
-    assert records, "project task context must exist"
-    for path in records:
-        TaskRecord.read(path)

@@ -14,8 +14,16 @@ python3.13 -m venv .venv
 .venv/bin/python -m ruff format --check src scripts scrape.py tests/foundations tests/test_scrape.py tests/conftest.py
 .venv/bin/rent-check-architecture --root .
 .venv/bin/python -m pytest -q -ra
-.venv/bin/python -m build --no-isolation
+.venv/bin/python scripts/check_distribution.py
 ```
+
+`MANIFEST.in` declares the foundations source distribution, including the schema resources and
+the self-contained contract, prediction and bundle, task lifecycle, and architecture tests. Keep
+tests that require the application, workflow files, or project task records in checkout CI.
+`scripts/check_distribution.py` builds the wheel from the source archive and runs the shipped
+suite twice from a temporary extraction. The source run imports from the extracted `src/` tree.
+The wheel run imports from the wheel and exercises all seven packaged schemas. Both runs bypass
+the checkout's editable install and use dependencies from the locked development environment.
 
 Workflow validation uses development-only **actionlint 1.7.12**. The explicit installer supports macOS/Linux on ARM64 and x86-64, downloads the maintainer's release archive, and checks its pinned SHA-256 before installing the executable. It replaces no Python dependencies. Installation needs network access; subsequent semantic checks and regression tests run offline. Optional shellcheck/pyflakes integrations are disabled to keep the semantic tool set identical locally and in CI. Review version/checksum changes together against the [maintainer release](https://github.com/rhysd/actionlint/releases/tag/v1.7.12).
 

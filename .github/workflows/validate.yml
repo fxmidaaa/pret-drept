@@ -44,8 +44,8 @@ jobs:
           MPLCONFIGDIR: ${{ runner.temp }}/rent-matplotlib
           NUMBA_CACHE_DIR: ${{ runner.temp }}/rent-numba
         run: python -m pytest -q -ra
-      - name: Build distribution
-        run: python -m build --no-isolation
+      - name: Build and test foundations distributions
+        run: python scripts/check_distribution.py
 
 # This is Level 1 PR validation source, not a protected runner/promotion workflow.
 # Protected checks must be installed from a reviewed revision and enforced by host rules.

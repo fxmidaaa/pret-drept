@@ -6,6 +6,11 @@ verified new foundations. See the [development guide](docs/development.md) for c
 tests and current limitations. The original app/workflows described below are preserved; their
 historical scores do not certify the new temporal/unseen-property evaluation protocol.
 
+The Python wheel and source archive ship the engineering foundations. The source archive
+includes synthetic contract, task lifecycle, and architecture tests. With the package dependencies
+and `pytest` installed, run `python -m pytest` from the unpacked archive. The application, full
+test suite, and linked project resources below are available in the repository checkout.
+
 My first machine learning project. I scraped about 4,500 real apartment rental listings from a
 Moldovan classifieds site, trained a model on them, and built a small app that estimates a fair
 monthly rent and tells you whether a given listing is overpriced or a good deal.
