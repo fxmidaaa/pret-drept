@@ -13,6 +13,7 @@ _DOMAINS = {
     "rent_agent": "agent",
     "rent_platform": "platform",
     "rent_contracts": "contracts",
+    "rent_domain": "contracts",
     "rent_data": "data",
     "rent_checks": "tooling",
 }

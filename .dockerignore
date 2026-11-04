@@ -8,3 +8,9 @@
 !api.py
 !model.joblib
 !app
+!src/
+src/*
+!src/rent_domain/
+src/rent_domain/*
+!src/rent_domain/__init__.py
+!src/rent_domain/apartment.py

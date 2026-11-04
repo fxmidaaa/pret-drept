@@ -6,6 +6,7 @@ import numpy as np
 import shap
 
 from features import binary, categorical, floor_flags, latlon_to_km, ppm_from_grid
+from src.rent_domain.apartment import validate_apartment_relationships
 
 BINARY_SET = set(binary)
 # real model inputs that just aren't meaningful to show as a "driver": raw
@@ -101,6 +102,7 @@ def build_features(apartment, bund):
     return x_dict
 
 def run(apartment):
+    validate_apartment_relationships(apartment)
     bund = get_bundle()
     dv = bund['dv']
     listed_price = apartment.get('price')

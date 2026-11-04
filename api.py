@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
 import predict
+from src.rent_domain.apartment import ApartmentRelationshipError
 
 app = FastAPI(title='Fair Chisinau Rent', description='Overpriced apartment?')
 
@@ -86,4 +87,9 @@ class Apartment(BaseModel):
 @app.post("/predict")
 def make_prediction(apartment: Apartment):
     # predict.run derives is_ground/is_top from the floors itself
-    return predict.run(apartment.model_dump())
+    try:
+        return predict.run(apartment.model_dump())
+    except ApartmentRelationshipError as exc:
+        raise RequestValidationError(
+            [{"type": "value_error", "loc": ("body", exc.field), "msg": str(exc)}]
+        ) from None

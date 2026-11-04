@@ -10,6 +10,8 @@ from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 from referencing.exceptions import NoSuchResource
 
+from rent_domain.apartment import ApartmentRelationshipError, validate_apartment_relationships
+
 SCHEMA_NAMES = (
     "apartment",
     "experiment-request",
@@ -107,7 +109,7 @@ def _resources() -> tuple[dict[str, dict], Registry]:
 
 
 def validate_document(name: str, document: dict[str, Any]) -> None:
-    """Validate public syntax. Adapter config, admission and payload integrity are separate."""
+    """Validate public syntax and cross-field apartment constraints."""
     if name not in SCHEMA_NAMES:
         raise ContractError("unsupported document contract")
     canonical_json(document)
@@ -119,6 +121,11 @@ def validate_document(name: str, document: dict[str, Any]) -> None:
     if error is not None:
         # Never echo user-supplied property names, values, credentials or raw exceptions.
         raise ContractError(f"{name} contract violation ({error.validator})")
+    if name == "apartment":
+        try:
+            validate_apartment_relationships(document)
+        except ApartmentRelationshipError as exc:
+            raise ContractError(str(exc)) from None
 
 
 def validate_configuration(configuration: dict, schema: dict) -> None:
