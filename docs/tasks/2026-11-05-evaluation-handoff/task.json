@@ -1,0 +1,108 @@
+{
+  "acceptance_criteria": [
+    "Historical claims describe filtered random validation and the M2 handoff preserves the required temporal and unseen-property benchmarks."
+  ],
+  "affected_modules": [
+    "README.md",
+    "notebooks/eda.ipynb",
+    "notebooks/model_selection.ipynb",
+    "docs/tasks/2026-11-05-evaluation-handoff"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "The frozen architecture requires temporal evaluation, reviewed property identity, and common evaluation records. The legacy trainer filters random validation rows by asking price.",
+    "README and notebook Markdown now describe scores as historical measurements on filtered random splits.",
+    "The M2 handoff records approved acquisition, observation retention, immutable dataset releases, reviewed property identities, fixed evaluation membership, leakage checks, and dual evaluation.",
+    "Verified the existing local documentation links and anchors and exact preservation of all 24 executable notebook cells and all non-Markdown content.",
+    "All 11 focused existing tests passed. All 22 pre-existing local documentation edits match their starting digests."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A14 documentation increment is ready for review. The official benchmark implementation remains deferred to M2.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-05T11:55:41.887991+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-05T11:55:41.915064+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-05T11:55:41.915324+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-05T11:55:41.915574+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-05T11:59:16.184857+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-05T11:59:16.185650+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Qualify historical README and notebook evaluation claims.",
+    "Record the M2 data, identity, and evaluation prerequisites.",
+    "Verify documentation, task records, and notebook preservation."
+  ],
+  "important_decisions": [
+    "Defer benchmark implementation to M2 and treat legacy scores as historical diagnostics.",
+    "Keep A14 benchmark implementation explicitly open in the M2 handoff."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Await separate push approval for the five reviewed A14 documentation files. After approval, publish to fix/repository-audit and verify CI. Preserve the 22 pre-existing edits. Resume the A14 benchmark implementation in M2 after its data and identity prerequisites.",
+  "objective": "Qualify historical evaluation claims and record the approved A14 benchmark handoff to M2",
+  "original_authorized_request": "User approved the documentation patch and deferring benchmark implementation to M2. Push requires separate approval.",
+  "pending_approvals": [
+    "Approval to push the reviewed A14 documentation patch to fix/repository-audit."
+  ],
+  "protected_invariants": [
+    "Preserve the frozen architecture, notebook executable cells and metadata, legacy ML and acquisition code, all existing model and data artifacts, and prior local evidence."
+  ],
+  "risk_level": "L0",
+  "scope_boundaries": [
+    "README evaluation descriptions, notebook Markdown, and the A14 documentation task and M2 handoff."
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261105-A14",
+  "verification_evidence": [
+    {
+      "check": "documentation",
+      "reference": "docs/tasks/2026-11-05-evaluation-handoff/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "notebook-preservation",
+      "reference": "docs/tasks/2026-11-05-evaluation-handoff/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "task-records",
+      "reference": "docs/tasks/2026-11-05-evaluation-handoff/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-05-evaluation-handoff/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "documentation",
+    "notebook-preservation",
+    "task-records",
+    "preservation"
+  ]
+}

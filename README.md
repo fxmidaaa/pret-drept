@@ -53,18 +53,20 @@ published. What's public is a small synthetic sample plus the column schema in
 [`data/sample/`](data/sample/), and a model that only ever holds coarse aggregates, never a single
 listing's coordinates or price.
 
-That gives 4,528 listings, or 3,557 after cleaning (the two trims below take it to about 3,400).
-Cleaning drops rows missing area, price, or rooms, drops reposted duplicates, and keeps rent between
-100 and 2000 EUR - normal flats, which is what this tool is for (more on the cap in "Where it falls
-short"). Then two more trims. I cut the worst 1% of rent-per-m² on each end, which is almost always
-someone fat-fingering the area or the price. And I drop any listing asking less than half or more
-than double its local market rate, the median EUR/m² of the flats in its own ~1 km grid cell: if everyone around you rents at 10 EUR/m² and you
-want 25, that's not a price, that's a wish, and the app's job is to catch listings like that, not to
-learn from them. The 1% cutoffs and the medians I use to fill in missing values are computed on the
-training split only, so validation rows never sneak into what the model learns from. The neighbour
-rule is just two fixed numbers (0.5x and 2x), so there's nothing to leak there. About 95% of
-listings are priced in EUR and the rest in MDL or USD; I convert everything to EUR at a fixed
-19.5 MDL/EUR (BNM, mid-2026). The snapshot was collected in July 2026.
+The historical snapshot was reported as 4,528 listings, with 3,557 after initial cleaning and
+about 3,400 after further trimming. Legacy cleaning drops rows missing area, asking price, or
+rooms, keeps asking rents between 100 and 2000 EUR, and deduplicates on coarse apartment
+attributes together with asking price. This key can retain repeated apartments when their
+asking price changes.
+
+The legacy trainer uses a random 80/20 split. It fits rent-per-m² quantile bounds and imputation
+medians on training data, then also trims validation rows by rent per m² and by their ratio to
+the training-derived local market rate. Validation membership therefore depends on observed
+asking prices. The reported scores describe the listings retained by these filters.
+
+The historical profile put about 95% of listings in EUR and the rest in MDL or USD. The legacy
+conversion uses a fixed 19.5 MDL/EUR rate. Project notes date the snapshot to July 2026, while
+the CSV's missing observation timestamps limit the chronology that can be reconstructed.
 
 ---
 
@@ -140,13 +142,12 @@ Three of them took actual thought:
 
 ## Picking the model
 
-`train.py` uses XGBoost, and not just because XGBoost is the fashionable pick. The whole argument is a
-model bake-off in [`notebooks/model_selection.ipynb`](notebooks/model_selection.ipynb): I run a dumb
-baseline, linear regression, ridge, random forest, gradient boosting, and XGBoost over the same data
-and the same split, score them the same way, confirm the order with 5-fold cross-validation, and tune
-the two best. Roughly where they land (RMSE in real EUR of rent):
+`train.py` uses XGBoost. The [model-selection notebook](notebooks/model_selection.ipynb)
+records the historical comparison with a simple baseline, linear regression, ridge, random
+forest, and gradient boosting. The comparison used random splits and five random folds after
+legacy cleaning and asking-price filters.
 
-| model | CV RMSE |
+| model | Historical CV RMSE (EUR) |
 |---|---|
 | dumb baseline (one price per m², times area) | ~290 |
 | linear regression | 249 |
@@ -154,29 +155,18 @@ the two best. Roughly where they land (RMSE in real EUR of rent):
 | random forest, tuned | 200 |
 | **XGBoost, tuned** | **192** |
 
-So the shipped model is off by about 134 EUR (16.1% MAPE) on a typical listing. Median rent in the
-data is around 750. Not amazing, but every model beats the dumb baseline by a mile, and even a plain
-straight line explains 60% of the variance, which told me the features were pulling their weight
-before I ever touched a tree.
+The legacy bundle's reported random validation scores were MAE 134 EUR, MAPE 16.1%, RMSE 188 EUR,
+and R² 0.78. The trainer stores these scores in `model.joblib` after a fixed 80/20 random split
+(`random_state=42`) and validation trimming. Their coverage is the retained historical
+population. MAE averages absolute errors in euros, and RMSE gives more weight to large errors.
 
-One honest note about where these numbers come from. The table above is 5-fold cross-validation
-from the notebook. The model I actually ship gets retrained by `train.py` on a single fixed 80/20
-split (`random_state=42`), and its own holdout scores go into `model.joblib` and get printed every
-time the API loads it: MAE 134 EUR, MAPE 16.1%, RMSE 188, R² 0.78. The holdout agrees with the CV
-(188 vs 192 ± 6), so this split isn't a lucky one. A detail I like from the notebook: untuned,
-XGBoost and random forest come out essentially tied. The search then opens a ~7 EUR gap in XGBoost's
-favour, so it earns its spot.
+A14's benchmark implementation is deferred to M2. The frozen architecture requires primary
+future-market evaluation and a secondary view for previously unseen apartments, using the
+same versioned evaluation records across candidates. The
+[A14 handoff](docs/tasks/2026-11-05-evaluation-handoff/plan.md#m2-handoff) records the required
+timestamped observations, immutable dataset releases, and reviewed property identities.
 
-Also, the headline number is MAE now, not RMSE. I spent a while chasing the gap between the two
-(188 vs 134), convinced something was broken in the data. It wasn't. The model misses by roughly
-the same percentage everywhere (~16%), but 16% of a 1,600 EUR flat is four times 16% of a 400 EUR
-one, and RMSE squares every miss, so a handful of expensive flats end up deciding the whole number.
-I even checked by shuffling the percentage errors between listings: a model that missed everyone by
-the same percentage would show an even *bigger* gap than mine does. So the gap is just what rent
-prices look like, not a bug. MAE tells you what happens on a typical listing, RMSE tells you how
-rough the expensive end gets, and I keep both around.
-
-The tuned XGBoost settings (found by random search in the notebook):
+The legacy XGBoost settings came from the notebook's historical random search.
 
 ```
 n_estimators=600, max_depth=6, learning_rate=0.05,
@@ -189,16 +179,14 @@ subsample=0.83, colsample_bytree=0.77, min_child_weight=7
 
 Worth being upfront about a few things:
 
-- It's built for normal flats, not luxury. I cap rent at 2000 EUR/month on purpose (it used to be
-  3000). The ~4% above that are premium places whose price sits in things my fields simply don't
-  have: which residence it is, the finishes, the view. The model can't see any of that, so it
-  priced them all like ordinary flats, missed by 600-1000 EUR, and those few misses were quietly
-  deciding my metrics. So they're out. The catch: give it a genuinely premium apartment and it will
-  lowball the rent and cry "overpriced" at a listing that might just be expensive for a reason.
+- Legacy cleaning limits asking rents to 100–2000 EUR, and further validation trims remove
+  atypically priced listings. The API accepts a broader range of asking prices, so the reported
+  scores cover a narrower population than requests the app can receive.
 - It only knows what the listing says. A beautiful flat with a lazy description, or a scam with a
   great one, will fool it exactly the way it would fool you.
-- It's a July 2026 snapshot. Prices move, so it needs re-scraping and re-training now and then to
-  stay honest.
+- The historical CSV has no observation timestamps, and its deduplication key includes asking
+  price. Measuring future-market and unseen-property performance needs the M2 data history
+  and reviewed identity policy.
 
 ---
 
@@ -316,8 +304,7 @@ coordinate or price.
 ## Still on the list
 
 - Github Actions (CI).
-- A wider hyperparameter search. The current one is only 10 random draws, so 192 is more of a
-  ceiling than the real best.
+- A wider hyperparameter search after M2 establishes the versioned evaluation cohort.
 - Some kind of confidence range instead of a single number.
-- Re-scraping on a schedule so it doesn't go stale.
+- Scheduled acquisition with timestamped observation history and versioned dataset releases.
 - Eventually: sale prices too.
