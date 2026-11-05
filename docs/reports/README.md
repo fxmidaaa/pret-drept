@@ -37,6 +37,14 @@ above are historical. Follow the M2 task's publication section for current recov
 the two unrelated report-consistency edits remain local. Merge and protected actions
 are separate from this PR request.
 
+Current publication: [PR #1](https://github.com/fxmidaaa/pret-drept/pull/1),
+`fix/repository-audit` → `main`, open and unmerged. Source commit `fa0f28c`
+passed [Linux CI](https://github.com/fxmidaaa/pret-drept/actions/runs/42116621974):
+455 checkout passes / 12 private-model skips, 275 tests per distribution and 38
+frontend passes. A16/A18's earlier local status below is superseded by inclusion
+in this PR. An evidence-only follow-up records publication; resolve the PR's latest
+head for recovery and preserve the two unrelated local reporting edits.
+
 On recovery, run `git branch --show-current`, `git rev-parse --short HEAD`,
 `git status --short` and `git diff --check`; inspect the diff and current plan before
 continuing. Preserve all local work. After any further source edit, rerun the relevant

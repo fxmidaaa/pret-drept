@@ -1,6 +1,6 @@
 # M2 first increment — development evaluation contracts
 
-2026-11-05; `fix/repository-audit` at
+Initial implementation checkpoint, 2026-11-05; `fix/repository-audit` at
 `36e67b75ad562cec6dd98dc5bff7f411f383db4d`, uncommitted. Risk: **L2 source proposal**
 under frozen specification §§6.2, 8–9, 12.7 and 13.4. Existing audit work is preserved.
 The [plan](../tasks/2026-11-05-m2-evaluation-contracts/plan.md) and
@@ -82,3 +82,13 @@ retained as history. The PR includes the accumulated audit branch and locally
 verified A16/A18/M2 work; two unrelated report-consistency edits remain local.
 The task's follow-up records the publication plan and actual PR/CI evidence.
 No merge, real-data application or protected operation is authorized by this step.
+
+Source published at `fa0f28c879d5180cb04fb783c22866f911ddadc1` in
+[PR #1](https://github.com/fxmidaaa/pret-drept/pull/1), targeting `main` and unmerged.
+Exact-source [Linux CI](https://github.com/fxmidaaa/pret-drept/actions/runs/42116621974)
+passed: **455 checkout tests passed, 12 private-model skips**, **275 tests per
+distribution**, **38 frontend tests**. Earlier unavailable-CI/uncommitted statements
+describe the initial checkpoint. Independent protected review/runtime evidence
+remains unavailable; A10/A14 and M2's exit gate remain open. The task's publication
+section records the 65-file source commit, 126-file full branch diff, preservation,
+connector/CLI outcome and current recovery. This follow-up changes evidence only.

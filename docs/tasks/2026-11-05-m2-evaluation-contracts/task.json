@@ -29,14 +29,20 @@
     "Final preservation/documentation probe passed: 141 source files byte-identical plus five exactly verified additive edits, ten new files (15 M2 files), all 21 task records and 43 local links/anchors; branch/HEAD unchanged and no staged changes",
     "Recorded corrected initial failures and exact recovery actions; real-data/feature-lineage/runtime/protected checks skipped or unavailable with external prerequisites; no experiment or new CI run",
     "Prepared the first increment for review; final evidence/task/preservation check repeats after this checkpoint; stop before later M2 work",
-    "User requested a pull request into main. Verified GitHub identity fxmidaaa, main at 0427a092426c11efe7f30110c3d26e94c9bfb969 and audit branch at 36e67b75ad562cec6dd98dc5bff7f411f383db4d; no existing PR returned. Preparing publication of reviewed audit/A16/A18/M2 source while preserving two unrelated report-consistency edits locally."
+    "User requested a pull request into main. Verified GitHub identity fxmidaaa, main at 0427a092426c11efe7f30110c3d26e94c9bfb969 and audit branch at 36e67b75ad562cec6dd98dc5bff7f411f383db4d; no existing PR returned. Preparing publication of reviewed audit/A16/A18/M2 source while preserving two unrelated report-consistency edits locally.",
+    "Published 65 reviewed source/test/documentation files at fa0f28c879d5180cb04fb783c22866f911ddadc1; the two unrelated report-consistency edits remain local and byte-identical",
+    "GitHub connector PR creation returned integration HTTP 403; verified existing CLI account fxmidaaa and created https://github.com/fxmidaaa/pret-drept/pull/1 targeting main, open/unmerged. Remote base/head and all 126 PR changed filenames match the intended branch diff",
+    "Exact-source Linux PR CI run 42116621974 / foundations job 127557856701 passed: checkout 455 passed and 12 private-model skips, source/wheel 275 passed each, frontend 38 passed; static/workflow/architecture/notebook checks passed",
+    "Publishing this evidence-only follow-up separately; current recovery resolves the actual PR head. No merge, data work or protected action performed"
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/42116621974"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "First M2 contract increment implemented and locally verified, READY_FOR_REVIEW: three versioned schemas, metadata/eligibility/cohort validators and 114 synthetic cases. Checkout 467 passed; source/wheel 275 each; frontend 38; static/architecture/workflow/notebook and preservation/docs checks passed. All prior work preserved; uncommitted on unchanged HEAD. No real-data split/release, feature-leakage certification, benchmark or M2 exit-gate pass is claimed.",
+  "final_outcome": "First M2 source increment published with the accumulated audit/A16/A18 work in PR #1 into main, open and unmerged. Source fa0f28c879d5180cb04fb783c22866f911ddadc1 passed Linux CI run 42116621974: 455 checkout passes/12 explicit private-model skips, 275 tests per distribution and 38 frontend passes. Prior local 467 passes and 114 new synthetic cases retained as evidence. This record-only follow-up preserves the two unrelated local reporting edits. Policy remains READY_FOR_REVIEW; no real split/release, leakage certification, benchmark, M2 exit-gate pass or protected action is claimed.",
   "history": [
     {
       "state": "PROPOSED",
@@ -83,9 +89,9 @@
     "Official temporal eligibility requires defensible observation history or approved remediation; the historical CSV has no timestamps and current scraper dates do not reconstruct observations",
     "Confirmed property/unseen claims need reviewed pairs/matching policy; otherwise retain unresolved/probable states",
     "M2 exit gate remains open: immutable restorable releases, authorized isolated reproducible baseline runs and defensible dual development evaluation do not exist from this increment",
-    "New-revision Linux CI and independent protected policy/access/isolation verification are unavailable in this uncommitted source session"
+    "Development Linux PR CI passed for the published source; independent protected policy/access/isolation verification remains unavailable and is not established by that CI."
   ],
-  "next_recovery_action": "Read the PR follow-up in plan.md and inspect actual branch/HEAD/status/diff. Publish the reviewed audit/A16/A18/M2 source to fix/repository-audit and open a PR into main, preserving the two unrelated report-consistency files locally. Verify exact remote head, PR base/head and Linux CI; record actual publication references. No force-push, merge, real-data application, experiment or protected action.",
+  "next_recovery_action": "Inspect https://github.com/fxmidaaa/pret-drept/pull/1 and resolve its latest head; base must remain main and PR remains unmerged. Read the publication section in plan.md, exact-source fa0f28c879d5180cb04fb783c22866f911ddadc1 and passing CI run 42116621974; an evidence-only follow-up follows. Check current branch/HEAD/status/diff and latest CI before further review work. Preserve the two unrelated report-consistency edits against /private/tmp/pret-drept-pr-main-iroydzwc/starting-files.json. Repeat check_publication.py, repository task validation and whitespace after evidence edits. Do not restore historical tips or merge, apply real data, experiment or activate protected policy under this PR request.",
   "objective": "Start M2 with reviewable development eligibility, observation and split contracts; stop after this increment",
   "original_authorized_request": "docs/tasks/2026-11-05-m2-evaluation-contracts/request.md",
   "pending_approvals": [
@@ -142,9 +148,9 @@
     },
     {
       "check": "remote-ci",
-      "reference": "docs/tasks/2026-11-05-m2-evaluation-contracts/plan.md#final-verification",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/42116621974",
       "required": false,
-      "status": "unavailable"
+      "status": "passed"
     },
     {
       "check": "independent-protected-review",

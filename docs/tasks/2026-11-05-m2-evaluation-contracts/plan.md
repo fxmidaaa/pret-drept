@@ -201,3 +201,35 @@ with the full branch scope and explicit A10/A14/M2 limits; verify remote refs, P
 base/head and Linux CI. Record the actual PR/source/CI references once available.
 Recovery: inspect actual status and PR head before any retry; do not force-push,
 include private/ignored artifacts, merge or overwrite the preserved local edits.
+
+### Publication evidence
+
+Created [PR #1](https://github.com/fxmidaaa/pret-drept/pull/1),
+`fix/repository-audit` → `main`, open for review and unmerged. Source commit:
+`fa0f28c879d5180cb04fb783c22866f911ddadc1` (65 reviewed files). Its full PR diff
+contains 126 files including the earlier audit commits; remote filenames exactly
+match `git diff origin/main...HEAD`. Both unrelated report-consistency files remain
+uncommitted and match their starting publication hashes.
+
+The GitHub connector read the repository but PR creation returned integration
+HTTP 403. The existing GitHub CLI identity was independently checked as `fxmidaaa`;
+`gh pr create --repo fxmidaaa/pret-drept --base main --head fix/repository-audit`
+with the prepared title/body file created the PR. No new credentials or permission
+changes were needed.
+
+Exact-source [Linux PR CI run 42116621974](https://github.com/fxmidaaa/pret-drept/actions/runs/42116621974)
+passed; foundations job `127557856701` reported **455 passed, 12 private-model
+checks skipped**, one existing deprecation warning. Source/wheel each passed **275**;
+frontend passed **38**; semantic workflow, notebooks, static and architecture checks
+passed. Logs were inspected for these counts. The omitted private model is an
+explicit prerequisite skip, not an inference/privacy/runtime certification. This
+development CI does not close A10, A14, independent protected review or M2's gate.
+
+This evidence-only follow-up is committed separately; it changes no source/test
+behavior. On recovery, resolve the PR's actual latest head rather than restoring
+the historical `36e67b7` or source-only `fa0f28c` checkpoint. Check PR base/head,
+status and the latest CI run before review/merge decisions. Recheck local evidence
+with `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python /private/tmp/pret-drept-pr-main-iroydzwc/check_publication.py`,
+the repository task test and `git diff --check`. That probe now checks the pushed
+branch head; the original probe retains the pre-publication checkpoint. Preserve
+the two local reporting edits. No merge is authorized by this task.
