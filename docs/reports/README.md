@@ -26,7 +26,7 @@ revision. Test counts in the summaries describe the checks recorded for those re
 | A14 | [Evaluation handoff](a14-evaluation-handoff.md) | Documentation published. Benchmark implementation deferred to M2. | `a78f927` |
 | A15 | [Normalization](a15-normalization.md) | Published | `ad34828` |
 | A16 | Frontend errors and rendering | Pending decision | — |
-| A17 | Privacy guarantees | Pending decision | — |
+| A17 | [Privacy claims and artifact review](a17-privacy-claims.md) | Option 1 approved for publication; exact-revision CI pending | — |
 | A18 | Public types and documentation | Pending decision | — |
 
 Publication refers to the approved increment described in each report. The reports retain

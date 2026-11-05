@@ -381,12 +381,11 @@ def impute_medians(df, medians=None):
     return df, medians
 
 # --- local market rate as a COARSE AGGREGATE ---------------------------------
-# The model needs a "what do nearby flats charge per m2?" signal, but it must
-# never ship one coordinate + price per training listing. So instead of a per-row
-# KNN we publish medians over coarse ~1 km grid cells, and only for cells that
-# hold enough listings that no single flat can be recovered from the aggregate.
+# The market-rate lookup uses group medians instead of explicit per-row
+# coordinate/rent tables. Grid/sector maps apply a minimum group size; the global
+# fallback does not. This limits stored detail but is not a disclosure-risk proof.
 GRID_PREC = 2          # decimals to round lat/lon to -> ~1 km cells
-GRID_MIN_GROUP = 15    # a cell / sector needs at least this many listings to publish
+GRID_MIN_GROUP = 15    # default minimum for grid/sector rent maps only
 
 def grid_key(lat, lon):
     return (round(float(lat), GRID_PREC), round(float(lon), GRID_PREC))
@@ -396,9 +395,8 @@ def _has_coords(lat, lon):
             and not (np.isnan(lat) or np.isnan(lon)))
 
 def build_ppm_grid(df, min_group=GRID_MIN_GROUP):
-    # returns (grid_ppm, sector_ppm, global_ppm): coarse cell -> median eur/m2,
-    # sector -> median eur/m2, and an overall fallback. only groups with at least
-    # min_group listings survive, so an aggregate can never expose a single flat.
+    # Returns grid/sector median EUR/m2 maps filtered by min_group, plus an
+    # unguarded global median fallback. No group memberships/counts are returned.
     ppm = (df["price"] / df["area"]).values
     global_ppm = float(np.median(ppm))
 

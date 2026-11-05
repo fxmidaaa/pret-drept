@@ -46,12 +46,18 @@ its currency, area, rooms, floor, sector, heating type, furnishing, even GPS coo
 guest about it too: I filter server-side to exactly what I need, lean on the API's own duplicate
 collapsing, pause between requests, and save as I go.
 
-One thing on privacy, since this scrapes real ads. `scrape.py` keeps only a reviewed list of fields,
-never contacts or the seller's name, and it stores the listing id as a one-way hash. The raw file it
-writes stays on my machine: gitignored, never committed, never baked into the Docker image, never
-published. What's public is a small synthetic sample plus the column schema in
-[`data/sample/`](data/sample/), and a model that only ever holds coarse aggregates, never a single
-listing's coordinates or price.
+The project uses field minimization: `scrape.py` persists a reviewed allowlist and excludes dedicated
+contact and seller-name controls. Allowed ad text, coordinates and photo references can still contain
+personal or linkable information; there is no content-redaction step. The listing key is a deterministic,
+truncated hash used for deduplication and resuming collection. Candidate source IDs can be rehashed to
+match it, so the key is a pseudonym, not proof of anonymity.
+
+Git ignore rules cover raw snapshots and model files, and the Docker build allowlist omits raw data.
+These rules reduce accidental inclusion; they do not enforce storage permissions or certify a
+model's privacy. The repository includes a [synthetic sample](data/sample/). The legacy model contains
+a fitted estimator, vectorizer and helper statistics, including coordinate defaults. Each exact model,
+image or data export needs its own [publication review](docs/operations/artifact-publication-review.md).
+The [A17 report](docs/reports/a17-privacy-claims.md) records the local artifact inventory and its limits.
 
 The historical snapshot was reported as 4,528 listings, with 3,557 after initial cleaning and
 about 3,400 after further trimming. Legacy cleaning drops rows missing area, asking price, or
@@ -123,9 +129,10 @@ Three of them took actual thought:
 - The local market rate. For each apartment I take the median EUR/m² of the flats in its own coarse
   (~1 km) grid cell, and fall back to the sector, then the whole city, when a cell is thin. That's
   basically what a person does when sizing up a price: you look around. It's one of the strongest
-  signals in the model. I compute it from the training rows only, and the shipped model keeps just
-  these cell and sector aggregates, each one an average over at least 15 listings. It never stores the
-  individual coordinates or prices, so no single listing can be pulled back out of it.
+  signals in the model. I compute it from the training rows only. Grid and sector rent maps retain
+  medians for groups with at least 15 rows by default. The global fallback and the separate coordinate
+  and numeric defaults have no equivalent minimum-group guard. These are medians, and aggregation
+  alone does not establish that an individual listing cannot be inferred.
 - Reading the ad text. Around a third of listings leave the condition field empty but describe it in
   words ("euroreparație", "евроремонт"). I pull those back out with keyword matching in both
   languages. Same trick for spotting when the rent already includes utilities, which otherwise
@@ -247,12 +254,13 @@ Run the tests (they cover the cleaning rules, features, API, and checkpoint pres
 python -m pytest
 ```
 
-If you'd rather not install Python at all, there's a Dockerfile. It ships the inference code plus a
-privacy-reviewed, pre-trained `model.joblib`. Training happens privately, not during the build, so you
-need a trained model present first:
+If you'd rather not install Python at all, there's a Dockerfile. It copies the inference code and the
+local `model.joblib`; it does not perform a privacy review. Training happens separately from the build.
+The commands below prepare and run a local image. Sharing an image or model requires review of the
+exact artifact and separate authorization; training or passing tests does not grant that approval.
 
 ```bash
-python train.py            # writes a reviewed model.joblib from your private data
+python train.py            # writes a legacy candidate model.joblib; review is separate
 docker build -t chisinau-rent .
 docker run -p 8000:8000 chisinau-rent
 ```
@@ -283,7 +291,7 @@ train.py                   trains XGBoost, saves model.joblib
 predict.py                 loads the model, makes one prediction + explanation
 api.py                     FastAPI - /predict, /options, /health, serves the page
 app/index.html             the one-page front end (form in, verdict out)
-Dockerfile                 containerised API (inference code + reviewed model)
+Dockerfile                 containerised API (inference code + supplied model)
 notebooks/eda.ipynb        exploratory analysis source
 notebooks/model_selection.ipynb   model comparison source
 data/sample/               synthetic sample + column schema (real data stays private)
@@ -296,8 +304,9 @@ training, prediction, and the API all import from it, so they can't quietly disa
 "ground floor" means or how a price gets converted. And `model.joblib` holds more than the model. It
 also stores sensible per-sector defaults, so the site can fill in the things a normal person would
 never type (typical coordinates, ceiling height, photo count) from just the sector you picked.
-Everything it stores is an aggregate: per-sector and coarse ~1 km grid medians, never a per-listing
-coordinate or price.
+The bundle stores these defaults and market-rate summaries alongside fitted model and vectorizer
+state. Precise latitude and longitude are model input features. The selected-key regression test
+checks known bundle fields and scalar map values; it is not an exhaustive disclosure-risk assessment.
 
 ---
 

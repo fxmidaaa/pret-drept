@@ -150,12 +150,11 @@ def simplify_feature_value(value):
 
 
 # --- explicit persistence allowlist -----------------------------------------
-# The scraper NEVER writes a field that is not on this list. Contacts, phone
-# numbers, the seller's name and every other control the API returns are dropped
-# at collection time. Listing ids are stored only as a short non-reversible hash
-# so a saved row can't be walked back to the live ad. Map and ad text stay
-# because the model derives coarse features from them, and the raw file is
-# private: gitignored, never shipped in the image, never committed to the repo.
+# Checkpoint columns are restricted to reviewed fields. Dedicated contact and
+# seller-name controls are excluded, but retained text/map/photo values may still
+# contain personal or linkable information; content is not redacted. Listing keys
+# are deterministic hash pseudonyms, not an anonymity guarantee. Git/build
+# exclusions do not replace private storage controls or publication review.
 FEATURE_FIELDS = [
     "Număr de camere",
     "Suprafață totală",
@@ -191,16 +190,14 @@ CHECKPOINT_FIELDS = frozenset(
 
 
 def listing_key(listing_id):
-    # short, non-reversible id so we can dedupe/resume without persisting the
-    # real 999.md listing id (which links straight back to the live ad).
+    # Stable pseudonym for dedupe/resume. Candidate source IDs can be rehashed to
+    # match it; this format does not establish unlinkability.
     return hashlib.sha1(str(listing_id).encode("utf-8")).hexdigest()[:16]
 
 
 def fetch_listing_details(listing_id):
-    # download a single listing and transform it into a flat dict, keeping ONLY
-    # the reviewed allowlist fields. the id becomes a non-reversible hash, and any
-    # control not on the allowlist (contacts, phone, seller name, ...) is dropped
-    # at collection time and never touches disk.
+    # Project source controls onto the reviewed fields and hash the source ID.
+    # Omitted controls are not copied into the row; retained text is not redacted.
     data = gql(DETAIL_QUERY, {"i": {"id": str(listing_id)}})
     if data is None or data.get("advert") is None:
         return None

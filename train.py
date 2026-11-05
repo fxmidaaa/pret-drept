@@ -48,7 +48,7 @@ def main():
     df_val, _ = impute_medians(df_val, medians)
     print("train/val after outlier trim:", len(df_train), "/", len(df_val))
 
-    # local market rate as a coarse grid aggregate — no per-listing data ships
+    # Local market-rate summaries; artifact disclosure review remains separate.
     grid_ppm, sector_ppm, global_ppm = build_ppm_grid(df_train)
     df_train['knn_ppm'] = assign_ppm(df_train, grid_ppm, sector_ppm, global_ppm)
     df_val['knn_ppm'] = assign_ppm(df_val, grid_ppm, sector_ppm, global_ppm)
