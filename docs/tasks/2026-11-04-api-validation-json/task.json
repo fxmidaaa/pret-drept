@@ -1,0 +1,121 @@
+{
+  "acceptance_criteria": [
+    "Return 422 with JSON null for rejected nonfinite floats, including nested values. Preserve ordinary validation details."
+  ],
+  "affected_modules": [
+    "api.py",
+    "tests/foundations/test_api_validation.py"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Synthetic API probe reproduced HTTP 500 for NaN, both infinities, exponent overflow and nested NaN.",
+    "Before the fix, five raw requests returned 500 and the finite control passed.",
+    "Added an HTTP request validation handler using FastAPI encoding and a float encoder that converts nonfinite values to null.",
+    "Six focused and 241 full-suite tests passed. Source checks passed and all ten prior evidence digests match.",
+    "User approved the proposed A08 commit message and publication.",
+    "Published a8b6a1cf89de3b55b178032e282aebddb7fb128c and confirmed the remote ref. CI run 41804561617 started.",
+    "GitHub Actions run 41804561617 passed for a8b6a1c. Foundations job 126488260664 reported 229 passed and 12 private-model skips. The distribution build passed.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41804561617"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A08 published as a8b6a1c on fix/repository-audit. GitHub Actions passed with 229 tests passed and 12 private-model skips.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-04T09:03:19.968645+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-04T09:03:19.995316+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-04T09:03:19.995562+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-04T09:03:19.995793+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-04T09:04:14.686377+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-04T09:04:14.687132+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-04T09:04:14.687488+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Reproduce with raw requests",
+    "Encode nonfinite floats safely in validation responses",
+    "Verify and present commit proposal"
+  ],
+  "important_decisions": [
+    "User approved option 2: sanitize validation responses and keep the parser behavior.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm a8b6a1c on fix/repository-audit and preserve local A03–A08 evidence. Obtain separate approval to publish evidence updates."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
+  "objective": "Return JSON-safe HTTP 422 responses for rejected nonfinite inputs",
+  "original_authorized_request": "User approved A08 option 2 and requested a short implementation summary and proposed commit message before publication.",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Preserve HTTP 422 validation shape, current request parsing, architecture v1 and prior local evidence."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Legacy API validation response, focused tests and task evidence",
+    "Publish the four reviewed A08 files and verify GitHub CI."
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261104-A08",
+  "verification_evidence": [
+    {
+      "check": "http-regressions",
+      "reference": "docs/tasks/2026-11-04-api-validation-json/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "full-suite",
+      "reference": "docs/tasks/2026-11-04-api-validation-json/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-checks",
+      "reference": "docs/tasks/2026-11-04-api-validation-json/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-04-api-validation-json/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41804561617",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "http-regressions",
+    "full-suite",
+    "source-checks",
+    "preservation",
+    "remote-ci"
+  ]
+}

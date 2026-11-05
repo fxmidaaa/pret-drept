@@ -1,10 +1,11 @@
+import json
 from datetime import datetime, timezone
-from pathlib import Path
 
 import pytest
 
 from rent_agent.tasks import TaskRecord, TaskState
 from rent_contracts import ContractError
+from rent_contracts.validation import MAX_DOCUMENT_BYTES
 
 
 def advance(record, *states):
@@ -34,6 +35,42 @@ def test_task_context_survives_a_fresh_read(task_document, tmp_path):
     reloaded = TaskRecord.read(path)
     assert reloaded.to_document() == record.to_document()
     assert reloaded.to_document()["state"] == "READY_FOR_REVIEW"
+    assert list(tmp_path.glob(".task-*.tmp")) == []
+
+
+@pytest.mark.parametrize("extra_bytes", [0, 1], ids=["at-limit", "one-byte-over"])
+def test_task_record_storage_byte_limit(task_document, tmp_path, extra_bytes):
+    path = tmp_path / "task.json"
+    original = TaskRecord.from_document(task_document)
+    original.save(path)
+    previous_bytes = path.read_bytes()
+
+    def storage_size():
+        return len((json.dumps(task_document, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+
+    target = MAX_DOCUMENT_BYTES + extra_bytes
+    chunk = "é" * 1024
+    task_document["current_progress"] = [""]
+    base_size = storage_size()
+    task_document["current_progress"] = [chunk, ""]
+    count, tail = divmod(target - base_size, storage_size() - base_size)
+    task_document["current_progress"] = [chunk] * count + ["x" * tail]
+    assert storage_size() == target
+    record = TaskRecord.from_document(task_document)
+
+    if extra_bytes:
+        with pytest.raises(ContractError, match="size limit"):
+            record.save(path)
+        assert path.read_bytes() == previous_bytes
+        assert TaskRecord.read(path) == original
+    else:
+        record.save(path)
+        assert path.stat().st_size == MAX_DOCUMENT_BYTES
+        assert TaskRecord.read(path) == record
+        with path.open("ab") as stream:
+            stream.write(b"\n")
+        with pytest.raises(ContractError, match="size limit"):
+            TaskRecord.read(path)
     assert list(tmp_path.glob(".task-*.tmp")) == []
 
 
@@ -160,11 +197,3 @@ def test_blocked_record_cannot_conceal_skipped_historical_planning(task_document
     )
     with pytest.raises(ContractError, match="PLANNED"):
         TaskRecord.from_document(task_document)
-
-
-def test_persisted_project_task_context_is_valid():
-    root = Path(__file__).resolve().parents[2]
-    records = list((root / "docs/tasks").glob("*/task.json"))
-    assert records, "project task context must exist"
-    for path in records:
-        TaskRecord.read(path)

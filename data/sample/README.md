@@ -6,27 +6,31 @@ pipeline expects without me having to ship anyone's actual rental ad to do it.
 
 ## Why the real data isn't here
 
-The training data is scraped from a public listings site, and even a rental ad carries personal stuff:
-map coordinates, the free-text description, photo references. So the raw snapshot stays on my machine.
-It's gitignored, never committed, never copied into the Docker image, never baked into the published
-model. The only things that ever leave my machine are coarse aggregates: median EUR/m² over ~1 km
-grid cells and over whole sectors, and each of those is an average of at least 15 listings, so no
-single flat can be read back out.
+Public listing data can contain personal or linkable information, including coordinates, ad text and
+photo references. Git ignore rules cover raw snapshots, and the Docker build allowlist omits them.
+These rules reduce accidental inclusion; they do not enforce storage permissions or establish anonymity.
 
-There's a test that enforces this, by the way. `test_bundle_ships_no_row_level_data` in
-[`tests/test_api.py`](../../tests/test_api.py) fails if any per-listing field ever sneaks into
-`model.joblib`, so this isn't just a promise in a README.
+The legacy bundle contains a fitted estimator, vectorizer, numeric defaults and market-rate summaries.
+The grid and sector rent maps use medians with a default minimum of 15 rows per group. The global
+fallback and coordinate/default statistics have no equivalent guard. A median can coincide with an
+observed value, and aggregation alone does not prove that no listing can be inferred.
+
+`test_bundle_ships_no_row_level_data` in [`tests/test_api.py`](../../tests/test_api.py) checks selected
+top-level field names and scalar rent-map values. It does not inspect every nested/native payload,
+verify cohort sizes or certify privacy. See the [A17 artifact review](../../docs/reports/a17-privacy-claims.md)
+and [publication review procedure](../../docs/operations/artifact-publication-review.md).
 
 ## The columns
 
-Each row is one listing, in the shape `scrape.py` writes it. And `scrape.py` is picky on purpose: it
-only ever writes the reviewed allowlist below. The source id is stored as a short one-way hash
-(`listing_key`), and contacts, phone numbers, and the seller's name are thrown away at collection
-time, so they never hit disk at all.
+Each row illustrates the shape `scrape.py` writes. Checkpoint storage accepts only reviewed fields.
+Dedicated contact and seller-name controls are excluded, but allowed text is not redacted and can
+retain personal information. `listing_key` is a deterministic pseudonym: the first 16 hexadecimal
+characters of SHA-1 over the source ID. Candidate IDs can be rehashed to match it. Changing this
+format would require an explicit checkpoint migration; no such migration is made here.
 
 | Column | Meaning |
 |---|---|
-| `listing_key` | one-way hash of the source id, used only for dedupe and resuming a scrape |
+| `listing_key` | deterministic hash pseudonym used for deduplication and resuming collection; not an anonymity guarantee |
 | `Sector` | city sector (Centru, Botanica, Râșcani, and so on) |
 | `Număr de camere` | rooms |
 | `Suprafață totală` | total area, m² |
@@ -39,7 +43,7 @@ time, so they never hit disk at all.
 | `Suprafață bucătărie`, `Inălțimea tavanelor` | kitchen area, ceiling height |
 | `Terasă`, `Aparat de aer condiționat`, `Încălzire prin pardoseală`, `Geamuri panoramice` | more amenity flags |
 | `Autorul anunțului` | who's posting (private person or agency) |
-| `Harta` | JSON `{"lat":…,"lon":…}`, used only to derive a distance and a coarse grid cell |
+| `Harta` | JSON `{"lat":…,"lon":…}`; coordinates are model inputs and also produce distance/grid features and coordinate defaults |
 | `Fotografii` | photo references, used only to count how many there are |
 | `Textul anunțului` | ad text, used only to pull out a few boolean flags (condition, utilities, lux, bathroom count) |
 | `Tipul ofertei`, `Regiune`, `Localitate` | filter fields (monthly rent, Chișinău) |
@@ -48,9 +52,10 @@ time, so they never hit disk at all.
 
 ## Doing this with your own data
 
-1. Scrape your own listings with `python scrape.py`. It writes to `data/raw/listings.csv`, which stays
-   private.
-2. Run `python train.py`. It cleans the raw file, builds the features, and writes a `model.joblib`
-   that holds aggregates only.
-3. Run `python -m pytest`. If any row-level field ever slipped into the model, the privacy test above
-   catches it.
+1. Collection needs separate authorization. Use the root README's
+   [checkpoint instructions](../../README.md#running-it) to choose a compatible destination distinct
+   from the historical snapshot. Keep raw observations under appropriate private storage controls.
+2. Training from an authorized local snapshot writes a legacy candidate `model.joblib` containing
+   fitted state and helper statistics. Training does not review or approve the artifact for sharing.
+3. Follow the [development guide](../../docs/development.md) to run the relevant checks. Review the
+   exact artifact, intended destination and disclosure risks before any separately authorized export.

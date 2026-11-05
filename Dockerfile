@@ -7,6 +7,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY features.py predict.py api.py ./
+COPY src/rent_domain/__init__.py src/rent_domain/apartment.py ./src/rent_domain/
+COPY src/rent_prediction/__init__.py src/rent_prediction/xgboost_preprocessing.py ./src/rent_prediction/
 COPY app/ ./app/
 COPY model.joblib ./model.joblib
 

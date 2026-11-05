@@ -1,0 +1,130 @@
+{
+  "acceptance_criteria": [
+    "Every affected field rejects trailing newlines and other out-of-format values while preserving the documented valid spellings."
+  ],
+  "affected_modules": [
+    "src/rent_contracts/schemas/v1",
+    "tests/foundations",
+    "docs/architecture/contracts-v1.md"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Read-only probes reproduced trailing-newline acceptance in all 28 patterned subschemas and complete representative documents.",
+    "All 28 regressions using complete synthetic documents failed before the schema change and passed afterward.",
+    "All seven updated schemas passed standalone format comparisons against the intended complete-string grammars.",
+    "The full checkout passed 285 tests. The extracted source distribution and wheel each passed 142 tests.",
+    "Scoped lint and format, workflow validation, architecture checks, and whitespace checks passed. All 18 prior documentation edits match their starting digests.",
+    "The user approved pushing the reviewed A12 patch.",
+    "Published d5583a537eaf6b9e637fcd2bfb8149657eec539a to fix/repository-audit and verified the remote ref.",
+    "GitHub Actions run 41821705819 passed. Job 126546185591 reported 273 checkout tests passed and 12 private-model skips. The extracted source and wheel each passed 142 tests.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41821705819"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "Published A12 to fix/repository-audit at d5583a5 and verified passing GitHub CI.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-04T11:09:57.725718+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-04T11:09:57.754366+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-04T11:09:57.754633+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-04T11:09:57.754887+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-04T11:13:40.051381+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-04T11:13:40.052250+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-04T11:33:56.939506+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Reproduce acceptance and add coverage for all affected fields.",
+    "Enforce whole-string length and character constraints in the public schemas.",
+    "Verify checkout and packaged tests and preserve prior evidence."
+  ],
+  "important_decisions": [
+    "Keep the fix in the independently usable JSON Schemas and preserve exact identity values.",
+    "Use independent JSON Schema constraints for the first character, allowed alphabet, and string length. Keep the tests in the existing packaged contract suite.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm d5583a5 on fix/repository-audit and GitHub Actions run 41821705819. Preserve the local CI evidence and the 18 earlier documentation edits."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
+  "objective": "Reject malformed identifier and digest strings at the public schema boundary",
+  "original_authorized_request": "User selected A12 option 1 and requires separate approval before push.",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Preserve existing valid values, nullable alternatives, schema identities, exact comparisons, legacy interfaces, and prior local evidence."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "The 28 existing identifier and digest patterns across the seven public v1 schemas, targeted tests, packaging of the tests, and contract documentation."
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261104-A12",
+  "verification_evidence": [
+    {
+      "check": "identifier-regressions",
+      "reference": "docs/tasks/2026-11-04-identifier-formats/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout-suite",
+      "reference": "docs/tasks/2026-11-04-identifier-formats/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "distributions",
+      "reference": "docs/tasks/2026-11-04-identifier-formats/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-checks",
+      "reference": "docs/tasks/2026-11-04-identifier-formats/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-04-identifier-formats/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41821705819",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "identifier-regressions",
+    "checkout-suite",
+    "distributions",
+    "source-checks",
+    "preservation",
+    "remote-ci"
+  ]
+}

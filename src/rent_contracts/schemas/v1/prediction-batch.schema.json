@@ -8,7 +8,9 @@
     },
     "bundle_digest": {
       "type": "string",
-      "pattern": "^sha256:[a-f0-9]{64}$"
+      "minLength": 71,
+      "maxLength": 71,
+      "pattern": "^sha256:[a-f0-9]{64}"
     },
     "target_unit": {
       "const": "EUR/month"
@@ -21,7 +23,11 @@
         "properties": {
           "record_id": {
             "type": "string",
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9]",
+            "not": {
+              "pattern": "[^A-Za-z0-9_.-]"
+            }
           },
           "predicted_rent_eur": {
             "type": "number"

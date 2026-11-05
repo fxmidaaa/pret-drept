@@ -129,9 +129,8 @@ def test_golden_prediction_directly():
 
 @pytest.mark.legacy_artifact
 def test_bundle_ships_no_row_level_data():
-    # privacy gate: the published model must contain only aggregates, never a
-    # per-listing coordinate, price, id, or raw text. if any of these keys ever
-    # comes back, the artifact is leaking training rows and must not ship.
+    # Regression check for known top-level fields and rent-map value shapes.
+    # This does not inspect every nested/native payload or certify privacy.
     bund = predict.get_bundle()
     forbidden = {
         "knn_points", "knn_ppm_values", "listings", "raw", "coords",

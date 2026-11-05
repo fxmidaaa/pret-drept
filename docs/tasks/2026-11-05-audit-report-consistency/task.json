@@ -1,0 +1,117 @@
+{
+  "acceptance_criteria": [
+    "A01-A15 have discoverable reports with verified publication references, and A14 remains explicitly deferred for M2 implementation."
+  ],
+  "affected_modules": [
+    "docs/reports",
+    "docs/development.md",
+    "docs/tasks"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Confirmed standalone reports stop at A04 while A05-A15 evidence is recorded in task plans and JSON. A02 still contains a pre-publication status checkpoint.",
+    "Independently verified all 15 original GitHub CI runs against their published source commits.",
+    "Added A05-A15 summary reports and a common A01-A18 status index. A14 remains explicitly deferred for M2 implementation.",
+    "Reconciled A02's published source and exact-commit CI, retaining its earlier checkpoint history.",
+    "All 15 task records agree with the verified publication references. The existing task-record test passed.",
+    "Checked 61 local links and anchors across the 44-file documentation review set. All 26 prior evidence-file digests match."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "Local audit documentation reconciliation is verified and ready for review.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-05T15:52:37.114132+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-05T15:52:37.148033+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-05T15:52:37.148311+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-05T15:52:37.148571+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-05T15:59:48.946283+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-05T15:59:48.947130+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Reconcile prior task evidence with source history and exact-commit CI.",
+    "Backfill A05-A15 summaries and create a report index.",
+    "Verify documentation, report coverage, evidence references, and prior-file preservation."
+  ],
+  "important_decisions": [
+    "Use one report per handled finding and retain detailed plans and machine-readable state under docs/tasks.",
+    "Summarize originally recorded verification and independently recheck the published source and CI identity.",
+    "Include preserved local post-CI evidence in the proposed publication so report links and task status agree."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Await push approval for the 44-file documentation patch, including 26 preserved prior evidence updates. After approval, publish to fix/repository-audit and verify CI.",
+  "objective": "Provide a consistent report and navigation structure for all handled audit findings",
+  "original_authorized_request": "User asked to fix the inconsistent documentation layout. Push requires separate approval.",
+  "pending_approvals": [
+    "Approval to push the reviewed audit documentation patch to fix/repository-audit."
+  ],
+  "protected_invariants": [
+    "Preserve prior evidence, historical checkpoints, source code, application behavior, architecture requirements, and deferred milestone work."
+  ],
+  "risk_level": "L0",
+  "scope_boundaries": [
+    "Audit report summaries and index, documented reporting convention, A02 publication status reconciliation, and task evidence.",
+    "Include the 26 pre-existing post-CI documentation updates unchanged in the reviewed publication."
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261105-REPORTS",
+  "verification_evidence": [
+    {
+      "check": "publication-references",
+      "reference": "docs/tasks/2026-11-05-audit-report-consistency/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "report-coverage",
+      "reference": "docs/tasks/2026-11-05-audit-report-consistency/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "documentation-links",
+      "reference": "docs/tasks/2026-11-05-audit-report-consistency/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "task-records",
+      "reference": "docs/tasks/2026-11-05-audit-report-consistency/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-05-audit-report-consistency/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "publication-references",
+    "report-coverage",
+    "documentation-links",
+    "task-records",
+    "preservation"
+  ]
+}

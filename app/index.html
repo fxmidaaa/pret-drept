@@ -85,7 +85,7 @@
   button:hover { background: #2f5fd6; }
   button:disabled { opacity: 0.6; cursor: default; }
 
-  #result { margin-top: 20px; display: none; }
+  #result { margin-top: 20px; }
   .result-card { text-align: center; padding: 26px 20px; }
   .fair-label { color: var(--muted); font-size: 0.85rem; }
   .fair-price { font-size: 2.4rem; font-weight: 700; margin: 4px 0 14px; }
@@ -106,6 +106,10 @@
   .driver .arrow { font-size: 1.05rem; }
   .driver .up { color: var(--red); }
   .driver .down { color: var(--green); }
+  .driver .effect { margin-left: auto; color: var(--muted); font-size: 0.82rem; }
+  .price-unit { font-size: 1rem; color: var(--muted); font-weight: 400; }
+  .error-list { text-align: left; margin-bottom: 0; }
+  input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--red); }
   footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 20px; }
 </style>
 </head>
@@ -120,22 +124,22 @@
     <form id="form">
       <div class="section-title">Basics</div>
       <div class="grid">
-        <div><label>Rooms</label><input type="number" id="rooms" min="1" max="6" value="2"></div>
-        <div><label>Area (m²)</label><input type="number" id="area" min="10" max="400" value="55"></div>
-        <div><label>Floor</label><input type="number" id="floor" min="1" max="30" value="3"></div>
-        <div><label>Floors in building</label><input type="number" id="total_floors" min="1" max="30" value="9"></div>
-        <div><label>Balconies</label><input type="number" id="balcony_count" min="0" max="4" value="0"></div>
-        <div><label>Bathrooms</label><input type="number" id="bathrooms" min="1" max="4" value="1"></div>
-        <div><label>Kitchen area (m²) — optional</label><input type="number" id="kitchen_area" min="3" max="60" placeholder="optional"></div>
-        <div style="grid-column: 1 / -1;"><label>Ceiling height (m) — optional</label><input type="number" id="ceiling_height" min="2" max="4.5" step="0.1" placeholder="optional"></div>
+        <div><label for="rooms">Rooms</label><input type="number" id="rooms" min="1" max="6" value="2"></div>
+        <div><label for="area">Area (m²)</label><input type="number" id="area" min="10" max="400" value="55"></div>
+        <div><label for="floor">Floor</label><input type="number" id="floor" min="1" max="30" value="3"></div>
+        <div><label for="total_floors">Floors in building</label><input type="number" id="total_floors" min="1" max="30" value="9"></div>
+        <div><label for="balcony_count">Balconies</label><input type="number" id="balcony_count" min="0" max="4" value="0"></div>
+        <div><label for="bathrooms">Bathrooms</label><input type="number" id="bathrooms" min="1" max="4" value="1"></div>
+        <div><label for="kitchen_area">Kitchen area (m²) — optional</label><input type="number" id="kitchen_area" min="3" max="60" placeholder="optional"></div>
+        <div style="grid-column: 1 / -1;"><label for="ceiling_height">Ceiling height (m) — optional</label><input type="number" id="ceiling_height" min="2" max="4.5" step="0.1" placeholder="optional"></div>
       </div>
 
       <div class="section-title">Location & building</div>
       <div class="grid">
-        <div><label>Sector</label><select id="sector"></select></div>
-        <div><label>Listing by</label><select id="author"></select></div>
-        <div><label>Building fund</label><select id="building_fund"></select></div>
-        <div><label>Condition</label><select id="condition"></select></div>
+        <div><label for="sector">Sector</label><select id="sector"></select></div>
+        <div><label for="author">Listing by</label><select id="author"></select></div>
+        <div><label for="building_fund">Building fund</label><select id="building_fund"></select></div>
+        <div><label for="condition">Condition</label><select id="condition"></select></div>
       </div>
 
       <div class="section-title">Amenities</div>
@@ -155,21 +159,202 @@
       <div class="section-title">Asking rent</div>
       <div class="grid">
         <div style="grid-column: 1 / -1;">
-          <label>Listed rent (EUR / month) — optional, to get a verdict</label>
+          <label for="price">Listed rent (EUR / month) — optional, to get a verdict</label>
           <input type="number" id="price" min="0" value="600" step="50">
         </div>
       </div>
 
-      <button type="submit" id="submitBtn">Estimate fair rent</button>
+      <button type="submit" id="submitBtn" disabled>Loading options…</button>
     </form>
   </div>
 
-  <div id="result"></div>
+  <div id="result" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 
   <footer>Learning project · estimates are not professional advice · data from 999.md</footer>
 </div>
 
 <script>
+"use strict";
+
+/**
+ * @typedef {{feature: string, effect: "raises price"|"lowers price"}} Driver
+ * @typedef {{fair_price: number, drivers: Driver[], verdict?: string, deviation_pct?: number}} Prediction
+ * @typedef {{sector: string[], author: string[], building_fund: string[], condition: string[]}} Options
+ * @typedef {{field: string, message: string}} FieldError
+ * @typedef {{kind: "validation", errors: FieldError[]}|{kind: "service"|"network"|"invalid"}} Failure
+ */
+
+const FIELD_LABELS = {
+  rooms: "Rooms", area: "Area", floor: "Floor", total_floors: "Floors in building",
+  balcony_count: "Balconies", bathrooms: "Bathrooms", kitchen_area: "Kitchen area",
+  ceiling_height: "Ceiling height", sector: "Sector", author: "Listing by",
+  building_fund: "Building fund", condition: "Condition", price: "Listed rent",
+  autonomous_heating: "Autonomous heating", furnished: "Furnished", elevator: "Elevator",
+  parking: "Parking", air_conditioning: "Air conditioning", floor_heating: "Floor heating",
+  terrace: "Terrace", panoramic_windows: "Panoramic windows",
+  utilities_included: "Utilities included in rent", lux: "Premium building / finishes"
+};
+const OPTION_FIELDS = ["sector", "author", "building_fund", "condition"];
+const VERDICTS = {
+  "overpriced": {className: "overpriced", label: "Overpriced"},
+  "good deal": {className: "good", label: "Good deal"},
+  "fair price": {className: "fair", label: "Fair price"}
+};
+const isObject = value => value !== null && typeof value === "object" && !Array.isArray(value);
+const isText = value => typeof value === "string" && value.trim().length > 0;
+
+/** @param {unknown} value @returns {Prediction|null} */
+function parsePrediction(value) {
+  if (!isObject(value) || !Number.isFinite(value.fair_price) || value.fair_price <= 0) return null;
+  const drivers = value.drivers === undefined ? [] : value.drivers;
+  if (!Array.isArray(drivers) || !drivers.every(driver =>
+    isObject(driver) && isText(driver.feature) &&
+    ["raises price", "lowers price"].includes(driver.effect))) return null;
+  const prediction = {
+    fair_price: value.fair_price,
+    drivers: drivers.map(({feature, effect}) => ({feature, effect}))
+  };
+  if (value.verdict !== undefined) {
+    if (typeof value.verdict !== "string" || !Object.hasOwn(VERDICTS, value.verdict) ||
+        !Number.isFinite(value.deviation_pct)) return null;
+    prediction.verdict = value.verdict;
+    prediction.deviation_pct = value.deviation_pct;
+  }
+  return prediction;
+}
+
+/** @param {unknown} value @returns {Options|null} */
+function parseOptions(value) {
+  if (!isObject(value) || !OPTION_FIELDS.every(field =>
+    Array.isArray(value[field]) && value[field].length > 0 && value[field].every(isText))) return null;
+  return Object.fromEntries(OPTION_FIELDS.map(field => [field, [...value[field]]]));
+}
+
+/** Extract recognized field messages only; never render raw input/context objects. */
+function parseFieldErrors(value) {
+  const errors = new Map();
+  if (isObject(value) && Array.isArray(value.detail)) {
+    for (const error of value.detail) {
+      if (!isObject(error) || !Array.isArray(error.loc) || error.loc.length !== 2 ||
+          error.loc[0] !== "body" || typeof error.loc[1] !== "string" ||
+          !Object.hasOwn(FIELD_LABELS, error.loc[1]) || !isText(error.msg)) continue;
+      if (!errors.has(error.loc[1])) errors.set(error.loc[1], error.msg);
+    }
+  }
+  return [...errors].map(([field, message]) => ({field, message}));
+}
+
+/**
+ * @template T
+ * @param {string} url
+ * @param {(value: unknown) => T|null} parse
+ * @param {RequestInit} [init]
+ * @returns {Promise<{kind: "success", data: T}|Failure>}
+ */
+async function requestJson(url, parse, init) {
+  let response;
+  try {
+    response = await fetch(url, init);
+  } catch {
+    return {kind: "network"};
+  }
+  if (!response.ok && response.status !== 422) return {kind: "service"};
+  let value;
+  try {
+    value = await response.json();
+  } catch {
+    return {kind: "invalid"};
+  }
+  if (response.status === 422) return {kind: "validation", errors: parseFieldErrors(value)};
+  const data = parse(value);
+  return data === null ? {kind: "invalid"} : {kind: "success", data};
+}
+
+// Dynamic content always enters the DOM as text, including error and driver labels.
+function element(tag, className = "", text = "") {
+  const node = document.createElement(tag);
+  node.className = className;
+  node.textContent = text;
+  return node;
+}
+
+function showResult(card) {
+  const result = document.getElementById("result");
+  result.replaceChildren(card);
+  result.hidden = false;
+  result.scrollIntoView({behavior: "smooth", block: "nearest"});
+}
+
+function clearResult() {
+  const result = document.getElementById("result");
+  result.hidden = true;
+  result.replaceChildren();
+  for (const field of Object.keys(FIELD_LABELS)) {
+    const control = document.getElementById(field);
+    control.removeAttribute("aria-invalid");
+    control.removeAttribute("aria-describedby");
+  }
+}
+
+/** @param {Failure} failure */
+function renderFailure(failure, loadingOptions = false) {
+  const messages = {
+    validation: "Please check the apartment details and try again.",
+    service: "The service could not complete the request. Please try again.",
+    network: "Could not reach the service. Check your connection and try again.",
+    invalid: "The service returned an unexpected response. Please try again."
+  };
+  const card = element("div", "card result-card");
+  if (loadingOptions) {
+    card.appendChild(element("p", "", "Apartment options could not be loaded. Refresh the page to try again."));
+  }
+  card.appendChild(element("p", "", messages[failure.kind]));
+  if (!loadingOptions && failure.kind === "validation" && failure.errors.length) {
+    const list = element("ul", "error-list");
+    for (const {field, message} of failure.errors) {
+      const item = element("li", "", `${FIELD_LABELS[field]}: ${message}`);
+      item.id = `error-${field}`;
+      list.appendChild(item);
+      const control = document.getElementById(field);
+      control.setAttribute("aria-invalid", "true");
+      control.setAttribute("aria-describedby", item.id);
+    }
+    card.appendChild(list);
+  }
+  showResult(card);
+}
+
+/** @param {Prediction} data */
+function renderPrediction(data) {
+  const card = element("div", "card result-card");
+  card.appendChild(element("div", "fair-label", "Estimated fair rent"));
+  const price = element("div", "fair-price", `€${data.fair_price.toLocaleString()}`);
+  price.appendChild(element("span", "price-unit", " / month"));
+  card.appendChild(price);
+  if (data.verdict !== undefined) {
+    const verdict = VERDICTS[data.verdict];
+    card.appendChild(element("div", `badge ${verdict.className}`, verdict.label));
+    const deviation = data.deviation_pct;
+    const text = Math.abs(deviation) < 0.5 ? "Right on the market rate." :
+      `The listing is about ${Math.abs(deviation).toFixed(0)}% ${deviation > 0 ? "above" : "below"} the estimated market rent.`;
+    card.appendChild(element("div", "dev-text", text));
+  }
+  if (data.drivers.length) {
+    const drivers = element("div", "drivers");
+    drivers.appendChild(element("h3", "", "What drove this estimate"));
+    for (const driver of data.drivers) {
+      const up = driver.effect === "raises price";
+      const row = element("div", "driver");
+      row.appendChild(element("span", `arrow ${up ? "up" : "down"}`, up ? "▲" : "▼"));
+      row.appendChild(element("span", "", driver.feature));
+      row.appendChild(element("span", "effect", up ? "raises rent" : "lowers rent"));
+      drivers.appendChild(row);
+    }
+    card.appendChild(drivers);
+  }
+  showResult(card);
+}
+
 // nicer labels for the romanian option values, while still submitting the raw value
 const NICE = {
   building_fund: { "construcţii noi": "New build", "secundar": "Secondary (older stock)" },
@@ -196,21 +381,28 @@ function fillSelect(id, values) {
   values.forEach(v => {
     const opt = document.createElement("option");
     opt.value = v;
-    opt.textContent = (NICE[id] && NICE[id][v]) || titleCase(v);
+    opt.textContent = NICE[id] && Object.hasOwn(NICE[id], v) ? NICE[id][v] : titleCase(v);
     sel.appendChild(opt);
   });
 }
 
-// load the dropdown options from the model
-fetch("/options").then(r => r.json()).then(opts => {
-  fillSelect("sector", opts.sector);
-  fillSelect("author", opts.author);
-  fillSelect("building_fund", opts.building_fund);
-  fillSelect("condition", opts.condition);
-  // default sector to centru if present
-  const s = document.getElementById("sector");
-  if (opts.sector.includes("centru")) s.value = "centru";
-});
+const button = document.getElementById("submitBtn");
+let optionsReady = false;
+let submitting = false;
+
+async function loadOptions() {
+  const result = await requestJson("/options", parseOptions);
+  if (result.kind !== "success") {
+    renderFailure(result, true);
+    button.textContent = "Options unavailable";
+    return;
+  }
+  for (const field of OPTION_FIELDS) fillSelect(field, result.data[field]);
+  if (result.data.sector.includes("centru")) document.getElementById("sector").value = "centru";
+  optionsReady = true;
+  button.disabled = false;
+  button.textContent = "Estimate fair rent";
+}
 
 const num = id => Number(document.getElementById(id).value);
 // optional numeric: blank -> null (so the API imputes it instead of getting 0)
@@ -222,8 +414,11 @@ const chk = id => document.getElementById(id).checked ? 1 : 0;
 
 document.getElementById("form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const btn = document.getElementById("submitBtn");
-  btn.disabled = true; btn.textContent = "Estimating…";
+  if (!optionsReady || submitting) return;
+  submitting = true;
+  button.disabled = true;
+  button.textContent = "Estimating…";
+  clearResult();
 
   const floor = num("floor"), total = num("total_floors");
   const body = {
@@ -250,62 +445,21 @@ document.getElementById("form").addEventListener("submit", async (e) => {
   };
 
   try {
-    const res = await fetch("/predict", {
+    const result = await requestJson("/predict", parsePrediction, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
-    const data = await res.json();
-    render(data);
-  } catch (err) {
-    document.getElementById("result").style.display = "block";
-    document.getElementById("result").innerHTML =
-      '<div class="card result-card">Something went wrong. Is the server running?</div>';
+    if (result.kind === "success") renderPrediction(result.data);
+    else renderFailure(result);
   } finally {
-    btn.disabled = false; btn.textContent = "Estimate fair rent";
+    submitting = false;
+    button.disabled = false;
+    button.textContent = "Estimate fair rent";
   }
 });
 
-function render(data) {
-  const fair = data.fair_price.toLocaleString();
-  let verdictHtml = "";
-  if (data.verdict) {
-    const cls = data.verdict === "overpriced" ? "overpriced"
-              : data.verdict === "good deal" ? "good" : "fair";
-    const label = data.verdict === "overpriced" ? "Overpriced"
-                : data.verdict === "good deal" ? "Good deal" : "Fair price";
-    const dev = data.deviation_pct;
-    const devText = dev > 0
-      ? `The listing is about ${dev.toFixed(0)}% above the estimated market rent.`
-      : `The listing is about ${Math.abs(dev).toFixed(0)}% below the estimated market rent.`;
-    verdictHtml = `<div class="badge ${cls}">${label}</div>
-                   <div class="dev-text">${Math.abs(dev) < 0.5 ? "Right on the market rate." : devText}</div>`;
-  }
-
-  let driversHtml = "";
-  if (data.drivers && data.drivers.length) {
-    driversHtml = '<div class="drivers"><h3>What drove this estimate</h3>' +
-      data.drivers.map(d => {
-        const up = d.effect === "raises price";
-        return `<div class="driver">
-                  <span class="arrow ${up ? "up" : "down"}">${up ? "▲" : "▼"}</span>
-                  <span>${d.feature}</span>
-                  <span style="margin-left:auto;color:var(--muted);font-size:0.82rem;">
-                    ${up ? "raises rent" : "lowers rent"}</span>
-                </div>`;
-      }).join("") + "</div>";
-  }
-
-  const r = document.getElementById("result");
-  r.style.display = "block";
-  r.innerHTML = `<div class="card result-card">
-      <div class="fair-label">Estimated fair rent</div>
-      <div class="fair-price">€${fair}<span style="font-size:1rem;color:var(--muted);font-weight:400;"> / month</span></div>
-      ${verdictHtml}
-      ${driversHtml}
-    </div>`;
-  r.scrollIntoView({ behavior: "smooth", block: "nearest" });
-}
+void loadOptions();
 </script>
 </body>
 </html>

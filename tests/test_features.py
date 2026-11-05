@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd 
+import pytest
 
 import sys
 import os
@@ -196,7 +197,169 @@ def test_clean_data():
     # checking if mdl -> eur (14040 mdl -> 720 eur)
     assert any(math.isclose(p, 720.0) for p in df['price'])
 
+
+@pytest.mark.parametrize("unit", [None, "", "UNIT_UNKNOWN", "EUR", 1, ["UNIT_EUR"]])
+def test_price_requires_a_supported_currency(unit):
+    assert clean_price({"price_value": 500, "price_unit": unit}) is None
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        True,
+        [],
+        {},
+        "invalid",
+        "NaN",
+        "Infinity",
+        float("inf"),
+        -500,
+        0,
+        pytest.param(10**400, id="oversized-integer"),
+    ],
+)
+def test_price_requires_a_positive_finite_number(value):
+    assert clean_price({"price_value": value, "price_unit": "UNIT_EUR"}) is None
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("-55", -55.0),
+        ("−55", -55.0),
+        ("- 55 m²", -55.0),
+        ("-.5", -0.5),
+        ("+3,5", 3.5),
+        ("-1e2", -100.0),
+        (-55, -55.0),
+    ],
+)
+def test_numeric_extraction_preserves_sign(value, expected):
+    assert first_number(value) == expected
+
+
+@pytest.mark.parametrize("value", [True, [55], {"value": 55}, float("inf"), "1e309"])
+def test_numeric_extraction_rejects_unsupported_or_nonfinite_values(value):
+    assert first_number(value) is None
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        '{"lat":"47.02","lon":"28.83"}',
+        '{"lat":true,"lon":28.83}',
+        '{"lat":47.02,"lon":Infinity}',
+        "[]",
+        "null",
+    ],
+)
+def test_coordinate_representation_rejection_does_not_raise(value):
+    assert parse_latlon(value) == (None, None)
+
+
+def test_negative_optional_measurements_are_not_made_positive():
+    assert clean_kitchen("-10") is None
+    assert clean_ceiling("-2.8") is None
+    assert clean_balcony("-2") == 0
+
+
+def test_clean_data_reports_aggregate_normalization_and_exclusion_reasons():
+    rows = [
+        make_listing(),
+        make_listing(price_unit="SYNTHETIC_PRIVATE_UNIT"),
+        make_listing(price_value="SYNTHETIC_PRIVATE_AMOUNT"),
+        make_listing(**{features.AREA_COL: "-55"}),
+        make_listing(price_value=600, **{features.MAP_COL: '{"lat":"47.02","lon":"28.83"}'}),
+        make_listing(price_value=700, **{features.ROOMS_COL: "-2"}),
+        make_listing(),
+        make_listing(**{features.SECTOR_COL: None}),
+        make_listing(**{features.AREA_COL: None}),
+        make_listing(price_value=50),
+        make_listing(price_value=1000, price_unit="UNIT_USD"),
+    ]
+    original = pd.DataFrame(rows)
+    before = original.copy(deep=True)
+    diagnostics = {"previous": "stale"}
+    cleaned = clean_data(original, diagnostics=diagnostics)
+    pd.testing.assert_frame_equal(original, before)
+    assert sorted(cleaned["price"]) == [500, 600, 920]
+    assert cleaned.loc[4, ["lat", "lon", "dist_to_center"]].isna().all()
+    assert diagnostics == {
+        "input_rows": 11,
+        "field_issues": {
+            "unsupported_currency": 1,
+            "invalid_price": 1,
+            "missing_or_invalid_coordinates": 1,
+        },
+        "excluded_rows": {
+            "missing_sector_or_author": 1,
+            "missing_required_fields": 3,
+            "duplicate": 1,
+            "price_out_of_range": 1,
+            "area_out_of_range": 1,
+            "rooms_out_of_range": 1,
+        },
+        "output_rows": 3,
+    }
+    pd.testing.assert_frame_equal(cleaned, clean_data(original))
+
+
+def test_clean_data_accepts_an_empty_frame_with_the_source_columns():
+    empty = pd.DataFrame(columns=make_listing())
+    diagnostics = {}
+    assert clean_data(empty, diagnostics=diagnostics).empty
+    assert diagnostics["input_rows"] == diagnostics["output_rows"] == 0
+    assert sum(diagnostics["field_issues"].values()) == 0
+    assert sum(diagnostics["excluded_rows"].values()) == 0
+
+
+def test_missing_currency_column_excludes_rows_and_reports_the_reason():
+    source = pd.DataFrame([make_listing()]).drop(columns="price_unit")
+    diagnostics = {}
+    assert clean_data(source, diagnostics=diagnostics).empty
+    assert diagnostics["field_issues"]["unsupported_currency"] == 1
+    assert diagnostics["excluded_rows"]["missing_required_fields"] == 1
+
+
+def test_failed_normalization_preserves_the_previous_report():
+    source = pd.DataFrame([make_listing()]).drop(columns=features.AREA_COL)
+    diagnostics = {"previous_report": 1}
+    with pytest.raises(KeyError):
+        clean_data(source, diagnostics=diagnostics)
+    assert diagnostics == {"previous_report": 1}
+
+
+def test_training_entry_point_prints_safe_normalization_counts(tmp_path, monkeypatch, capsys):
+    import json
+
+    import train
+
+    rows = pd.DataFrame([make_listing(), make_listing(price_unit="SYNTHETIC_PRIVATE_UNIT")])
+    monkeypatch.setattr(train.pd, "read_csv", lambda path: rows)
+    monkeypatch.setattr(train, "BASE", str(tmp_path))
+
+    class ReachedSplit(Exception):
+        pass
+
+    def stop_before_fitting(cleaned, **kwargs):
+        assert list(cleaned["price"]) == [500]
+        raise ReachedSplit
+
+    monkeypatch.setattr(train, "train_test_split", stop_before_fitting)
+    with pytest.raises(ReachedSplit):
+        train.main()
+    output = capsys.readouterr().out
+    prefix = "normalization diagnostics: "
+    line = next(line for line in output.splitlines() if line.startswith(prefix))
+    report = json.loads(line.removeprefix(prefix))
+    assert report["field_issues"]["unsupported_currency"] == 1
+    assert report["input_rows"] == 2 and report["output_rows"] == 1
+    assert "SYNTHETIC_PRIVATE_UNIT" not in output
+    assert not (tmp_path / "model.joblib").exists()
+
+
 # --- outlier trimming and imputation (fit on train, reuse on val) ---
+
 
 def test_trim_ppm_outliers_reuses_train_bounds():
     # 100 ordinary flats + one absurdly expensive one: fitting must drop the

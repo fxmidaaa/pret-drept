@@ -1,0 +1,181 @@
+{
+  "acceptance_criteria": [
+    "Distinct stable observation/listing/property references and dataset/split identities",
+    "Explicit temporal semantics, complete assignments/exclusions and fixed target-independent populations",
+    "Unresolved/probable identity never automatically unseen; future-market overlap remains explicit",
+    "Meaningful synthetic invalid and leakage/population cases pass plus relevant development/distribution checks",
+    "Policy review precedes real-data use; limitations, next increment and recovery are durable"
+  ],
+  "affected_modules": [
+    "rent_contracts schemas/validation/evaluation",
+    "tests/foundations/test_evaluation_contracts.py",
+    "MANIFEST.in",
+    "contract/development/report documentation",
+    "M2 task context"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Read full specification and required handoffs; inspected actual contracts, legacy boundaries and tests",
+    "Confirmed fix/repository-audit at 36e67b75ad562cec6dd98dc5bff7f411f383db4d with prior uncommitted work",
+    "Saved starting diff/status and 146 source digests under /private/tmp/pret-drept-m2-contracts-rkyw61fp; no private data/model discovery reads",
+    "Persisted L2 source proposal, acceptance criteria, later increment outline and threat/prerequisite assessment before implementation",
+    "Implemented three additive schemas, semantic metadata/eligibility/cohort checks, exact comparison population checks and source-distribution test inclusion",
+    "Added synthetic collision/overlap/time/identity/target-selector/population fixtures; focused run passed 218 tests with prior contracts before final additional cases",
+    "Initial synthetic run: 105 passed and one impossible-date case failed because optional JSON Schema date-time checking was absent; explicit calendar parsing now enforces all new semantic helpers. Initial formatting differences corrected",
+    "Documented the proposed temporal order, uncertainty/exclusion rules, complete candidate population and limits of metadata-only leakage checks; all real-data gates remain external",
+    "Last source/test edits add immutability, unsupported-version and impossible manifest-date cases; aggregate verification follows",
+    "Final checks after the last source/test edit: 114 new synthetic cases, 467 checkout tests, 275 source and 275 wheel tests, and 38 frontend tests passed; zero failures/skips in those suites",
+    "Ruff lint/format (36 files), architecture, actionlint, both notebook publication checks and whitespace passed; existing Starlette/httpx warning retained",
+    "Final preservation/documentation probe passed: 141 source files byte-identical plus five exactly verified additive edits, ten new files (15 M2 files), all 21 task records and 43 local links/anchors; branch/HEAD unchanged and no staged changes",
+    "Recorded corrected initial failures and exact recovery actions; real-data/feature-lineage/runtime/protected checks skipped or unavailable with external prerequisites; no experiment or new CI run",
+    "Prepared the first increment for review; final evidence/task/preservation check repeats after this checkpoint; stop before later M2 work",
+    "User requested a pull request into main. Verified GitHub identity fxmidaaa, main at 0427a092426c11efe7f30110c3d26e94c9bfb969 and audit branch at 36e67b75ad562cec6dd98dc5bff7f411f383db4d; no existing PR returned. Preparing publication of reviewed audit/A16/A18/M2 source while preserving two unrelated report-consistency edits locally.",
+    "Published 65 reviewed source/test/documentation files at fa0f28c879d5180cb04fb783c22866f911ddadc1; the two unrelated report-consistency edits remain local and byte-identical",
+    "GitHub connector PR creation returned integration HTTP 403; verified existing CLI account fxmidaaa and created https://github.com/fxmidaaa/pret-drept/pull/1 targeting main, open/unmerged. Remote base/head and all 126 PR changed filenames match the intended branch diff",
+    "Exact-source Linux PR CI run 42116621974 / foundations job 127557856701 passed: checkout 455 passed and 12 private-model skips, source/wheel 275 passed each, frontend 38 passed; static/workflow/architecture/notebook checks passed",
+    "Publishing this evidence-only follow-up separately; current recovery resolves the actual PR head. No merge, data work or protected action performed"
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/42116621974"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "First M2 source increment published with the accumulated audit/A16/A18 work in PR #1 into main, open and unmerged. Source fa0f28c879d5180cb04fb783c22866f911ddadc1 passed Linux CI run 42116621974: 455 checkout passes/12 explicit private-model skips, 275 tests per distribution and 38 frontend passes. Prior local 467 passes and 114 new synthetic cases retained as evidence. This record-only follow-up preserves the two unrelated local reporting edits. Policy remains READY_FOR_REVIEW; no real split/release, leakage certification, benchmark, M2 exit-gate pass or protected action is claimed.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-05T21:29:54.924927+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-05T21:29:54.951938+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-05T21:29:54.952271+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-05T21:29:54.952576+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-05T21:41:14.608429+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-05T21:46:29.912587+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "See docs/tasks/2026-11-05-m2-evaluation-contracts/plan.md"
+  ],
+  "important_decisions": [
+    "Conservative development-only proposal; source authorization does not activate trusted policy",
+    "Use closed metadata schemas and existing canonical SHA-256/local validation patterns; keep legacy training intact",
+    "Use explicit calendar parsing for new semantic contracts rather than relying on optional JSON Schema date-time format support",
+    "Training prediction cutoffs are strictly before the cutoff; validation is start-inclusive/end-exclusive; whole captured input availability includes collection",
+    "Complete inventory and exact exclusion/cohort sets are fixed; candidate omissions/substitutions/resealed split references fail correspondence",
+    "Represented properties remain in future-market; confirmed absence from a fully resolved declared training partition is required for unseen-property membership; overlapping views are not independent",
+    "No final-holdout surface in the development envelope; the full protected manifest and access enforcement remain later work",
+    "Bound training IDs/times support later target-aggregate/fitted-transform lineage checks, but no feature-level leakage-free claim is made",
+    "Next increment is observation provenance/release-candidate validation, synthetic-first and non-publishing; real input/field handling requires review and applicable authorization",
+    "The later user PR request supersedes the earlier no-commit/no-push restriction for necessary source publication; it grants no merge, real-data or protected-action authority."
+  ],
+  "known_blockers": [
+    "Outside this completed source increment: real-data application requires policy/field-handling review, applicable private-input authorization and domain/currency/provenance/quarantine decisions",
+    "Official temporal eligibility requires defensible observation history or approved remediation; the historical CSV has no timestamps and current scraper dates do not reconstruct observations",
+    "Confirmed property/unseen claims need reviewed pairs/matching policy; otherwise retain unresolved/probable states",
+    "M2 exit gate remains open: immutable restorable releases, authorized isolated reproducible baseline runs and defensible dual development evaluation do not exist from this increment",
+    "Development Linux PR CI passed for the published source; independent protected policy/access/isolation verification remains unavailable and is not established by that CI."
+  ],
+  "next_recovery_action": "Inspect https://github.com/fxmidaaa/pret-drept/pull/1 and resolve its latest head; base must remain main and PR remains unmerged. Read the publication section in plan.md, exact-source fa0f28c879d5180cb04fb783c22866f911ddadc1 and passing CI run 42116621974; an evidence-only follow-up follows. Check current branch/HEAD/status/diff and latest CI before further review work. Preserve the two unrelated report-consistency edits against /private/tmp/pret-drept-pr-main-iroydzwc/starting-files.json. Repeat check_publication.py, repository task validation and whitespace after evidence edits. Do not restore historical tips or merge, apply real data, experiment or activate protected policy under this PR request.",
+  "objective": "Start M2 with reviewable development eligibility, observation and split contracts; stop after this increment",
+  "original_authorized_request": "docs/tasks/2026-11-05-m2-evaluation-contracts/request.md",
+  "pending_approvals": [
+    "Independent review of eligibility/temporal/property policy before any real-data application; no approval requested for authorized source work"
+  ],
+  "protected_invariants": [
+    "Frozen architecture v1; development-only metadata, no final-holdout details or labels",
+    "No acquisition, data publication, experiments, trusted-policy activation, promotion or deployment",
+    "No invented historical time/identity evidence or benchmark results; task records grant no permissions"
+  ],
+  "risk_level": "L2",
+  "scope_boundaries": [
+    "Additive public contracts, semantic validators, synthetic fixtures and evidence only; no real-data application or milestone completion",
+    "Preserve all pre-existing changes and legacy interfaces. Initial session prohibited commit/push; the subsequent user request for a PR into main authorizes the source commits/push necessary for that PR only."
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261105-M2-CONTRACTS",
+  "verification_evidence": [
+    {
+      "check": "synthetic-contracts",
+      "reference": "docs/tasks/2026-11-05-m2-evaluation-contracts/plan.md#final-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout",
+      "reference": "docs/tasks/2026-11-05-m2-evaluation-contracts/plan.md#final-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "static-architecture",
+      "reference": "docs/tasks/2026-11-05-m2-evaluation-contracts/plan.md#final-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "distribution",
+      "reference": "docs/tasks/2026-11-05-m2-evaluation-contracts/plan.md#final-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "documentation-preservation",
+      "reference": "docs/tasks/2026-11-05-m2-evaluation-contracts/plan.md#final-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "frontend",
+      "reference": "docs/tasks/2026-11-05-m2-evaluation-contracts/plan.md#final-verification",
+      "required": false,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/42116621974",
+      "required": false,
+      "status": "passed"
+    },
+    {
+      "check": "independent-protected-review",
+      "reference": "docs/tasks/2026-11-05-m2-evaluation-contracts/plan.md#final-verification",
+      "required": false,
+      "status": "unavailable"
+    },
+    {
+      "check": "real-data-baseline-evaluation",
+      "reference": "docs/tasks/2026-11-05-m2-evaluation-contracts/plan.md#final-verification",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "feature-lineage-and-runtime",
+      "reference": "docs/tasks/2026-11-05-m2-evaluation-contracts/plan.md#final-verification",
+      "required": false,
+      "status": "skipped"
+    }
+  ],
+  "verification_requirements": [
+    "synthetic-contracts",
+    "checkout",
+    "static-architecture",
+    "distribution",
+    "documentation-preservation"
+  ]
+}

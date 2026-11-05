@@ -1,6 +1,10 @@
-import numpy as np
 import json
+import math
 import re
+from collections import Counter
+from numbers import Real
+
+import numpy as np
 
 MDL_PER_EUR = 19.5
 EUR_PER_USD = 0.92  # rough USD -> EUR, very few listings use USD
@@ -49,16 +53,15 @@ def floor_flags(floor, total_floors):
     return is_ground, is_top
 
 def parse_latlon(harta):
-    # 'Harta' is a json string like {"lat": 47.03, "lon": 28.80}. Turn it into the
-    # approximate distance in km from the city centre. Bad / missing coords -> None.
+    # Decode numeric coordinates from the source JSON using the existing city bounds.
     try:
         h = json.loads(harta) if isinstance(harta, str) else {}
-        lat, lon = h.get("lat"), h.get("lon")
-
-    except Exception:
+    except (ValueError, RecursionError):
         return None, None
-    
-    if lat is None or lon is None:
+    if not isinstance(h, dict):
+        return None, None
+    lat, lon = h.get("lat"), h.get("lon")
+    if type(lat) not in (int, float) or type(lon) not in (int, float):
         return None, None
     
     if not (46.9 < lat < 47.10 and 28.74 < lon < 28.95):
@@ -78,13 +81,27 @@ def distance_to_center(harta):
     return latlon_to_km(lat, lon)
 
 def first_number(text):
-    # pull the first number out of a value. "62" -> 62.0, "Apartament cu 3 camere" -> 3.0
-    if text is None or (isinstance(text, float) and np.isnan(text)):
-        return None
-    m = re.search(r"\d+[.,]?\d*", str(text))
+    """Extract a finite signed number, with decimal commas and optional exponent."""
+    if not isinstance(text, str):
+        return _finite_number(text)
+    m = re.search(
+        r"([+-]?)\s*((?:\d+(?:[.,]\d*)?|[.,]\d+)(?:[eE][+-]?\d+)?)",
+        text.replace("−", "-"),
+    )
     if m is None:
         return None
-    return float(m.group().replace(",", "."))
+    return _finite_number(m.group(1) + m.group(2).replace(",", "."))
+
+
+def _finite_number(value):
+    """Convert supported numeric values and strings to a finite float."""
+    if isinstance(value, bool) or not isinstance(value, (Real, str)):
+        return None
+    try:
+        number = float(value)
+    except (ValueError, OverflowError):
+        return None
+    return number if math.isfinite(number) else None
 
 def clean_rooms(text):
     # "Apartament cu 1 camera", "Apartament cu 4 camere", or "O camera"
@@ -119,7 +136,7 @@ def clean_parking(value):
 def clean_balcony(value):
     # "Balcon/ lojie" is "1"/"2"/"3"/"4 si mai multe"/"Nu"/NaN -> a count
     n = first_number(value)
-    if n is None:
+    if n is None or n < 0:
         return 0 # "Nu" or not specified
     return min(n, 4.0)
 
@@ -207,29 +224,34 @@ def bathrooms_from_text(text):
     return min(float(m.group(1)), 4.0)
 
 def clean_price(row):
-    # building the monthly rent in EUR from the value + its current unit
-    value = row.get("price_value")
+    return _normalize_price(row.get("price_value"), row.get("price_unit"))[0]
 
-    if value is None or (isinstance(value, float) and np.isnan(value)):
-        return None
-    
-    value = float(value)
-    unit = str(row.get("price_unit", ""))
 
+def _normalize_price(value, unit):
+    if not isinstance(unit, str) or unit not in ("UNIT_EUR", "UNIT_MDL", "UNIT_USD"):
+        return None, "unsupported_currency"
+    value = _finite_number(value)
+    if value is None or value <= 0:
+        return None, "invalid_price"
     if unit == "UNIT_MDL":
-        return value / MDL_PER_EUR
-    
+        return value / MDL_PER_EUR, None
     if unit == "UNIT_USD":
-        return value * EUR_PER_USD
-    return value
+        return value * EUR_PER_USD, None
+    return value, None
 
-def clean_data(df):
-    # cleans raw scraped 999 dataframe and returns a ready one for the model
+def clean_data(df, *, diagnostics=None):
+    """Normalize source rows and replace optional diagnostic counts on success."""
     df = df.copy()
+    input_rows = len(df)
+    exclusions = {}
 
     # --- NUMERICAL FEATURES --- 
 
-    df["price"] = df.apply(clean_price, axis=1)
+    values = df.get("price_value", [None] * len(df))
+    units = df.get("price_unit", [None] * len(df))
+    prices = [_normalize_price(value, unit) for value, unit in zip(values, units, strict=True)]
+    df["price"] = [value for value, _ in prices]
+    field_issues = dict(Counter(reason for _, reason in prices if reason is not None))
 
     df['rooms'] = df[ROOMS_COL].apply(clean_rooms)
     df['area'] = df[AREA_COL].apply(first_number)
@@ -242,6 +264,7 @@ def clean_data(df):
     df["dist_to_center"] = np.array(
         [latlon_to_km(p[0], p[1]) if p[0] is not None else np.nan for p in latlon], dtype=float
     )
+    field_issues["missing_or_invalid_coordinates"] = int(df["lat"].isna().sum())
 
     df["kitchen_area"] = df[KITCHEN_COL].apply(clean_kitchen)
     df["ceiling_height"] = df[CEILING_COL].apply(clean_ceiling)
@@ -274,18 +297,24 @@ def clean_data(df):
     from_text = df.loc[blank, TEXT_COL].apply(condition_from_text)
     df.loc[blank, "condition"] = from_text.fillna("necunoscut")
 
+    before = len(df)
     df = df[(df["sector"] != "necunoscut") & (df["author"] != "necunoscut")]
+    exclusions["missing_sector_or_author"] = before - len(df)
 
     # drop rows that lack the most important features
+    before = len(df)
     df = df.dropna(subset=["price", "area", "rooms"])
+    exclusions["missing_required_fields"] = before - len(df)
 
     # drop duplicated listings. a lot of apartments are reposted with another ad.
     # if one copy lands in train and another in validation, the model gets graded on flats
     # it has already seen and the metrics look better than they really are.
     # same key attributes + same price = same flat, i assume. 
+    before = len(df)
     df = df.drop_duplicates(
         subset=["sector", "rooms", "area", "floor", "total_floors", "price"]
     )
+    exclusions["duplicate"] = before - len(df)
 
     # remove obvious outliers (typos, daily-rate leftovers, bad areas)
     # the price cap is 2000 EUR/month on purpose: this model is for the mass
@@ -293,15 +322,24 @@ def clean_data(df):
     # structured field captures (the residential complex, the finishes, the view),
     # so the model can only underprice them - and squared metrics then report
     # little else. pricing them is out of scope, and the README says so.
-    df = df[(df["price"] >= 100) & (df["price"] <= 2000)] # in euros
-    df = df[(df["area"] >= 10) & (df["area"] <= 400)]
-    df = df[(df["rooms"] >= 1) & (df["rooms"] <= 6)]
+    for field, lower, upper in (("price", 100, 2000), ("area", 10, 400), ("rooms", 1, 6)):
+        before = len(df)
+        df = df[df[field].between(lower, upper)]
+        exclusions[f"{field}_out_of_range"] = before - len(df)
 
     # two cheap derived flags, computed by the shared rule above
     flags = [floor_flags(f, t) for f, t in zip(df["floor"], df["total_floors"])]
     df["is_ground"] = [g for g, _ in flags]
     df["is_top"] = [t for _, t in flags]
 
+    if diagnostics is not None:
+        diagnostics.clear()
+        diagnostics.update(
+            input_rows=input_rows,
+            field_issues=field_issues,
+            excluded_rows=exclusions,
+            output_rows=len(df),
+        )
     return df
 
 # the columns whose missing values get filled with a median. the medians are FIT
@@ -343,12 +381,11 @@ def impute_medians(df, medians=None):
     return df, medians
 
 # --- local market rate as a COARSE AGGREGATE ---------------------------------
-# The model needs a "what do nearby flats charge per m2?" signal, but it must
-# never ship one coordinate + price per training listing. So instead of a per-row
-# KNN we publish medians over coarse ~1 km grid cells, and only for cells that
-# hold enough listings that no single flat can be recovered from the aggregate.
+# The market-rate lookup uses group medians instead of explicit per-row
+# coordinate/rent tables. Grid/sector maps apply a minimum group size; the global
+# fallback does not. This limits stored detail but is not a disclosure-risk proof.
 GRID_PREC = 2          # decimals to round lat/lon to -> ~1 km cells
-GRID_MIN_GROUP = 15    # a cell / sector needs at least this many listings to publish
+GRID_MIN_GROUP = 15    # default minimum for grid/sector rent maps only
 
 def grid_key(lat, lon):
     return (round(float(lat), GRID_PREC), round(float(lon), GRID_PREC))
@@ -358,9 +395,8 @@ def _has_coords(lat, lon):
             and not (np.isnan(lat) or np.isnan(lon)))
 
 def build_ppm_grid(df, min_group=GRID_MIN_GROUP):
-    # returns (grid_ppm, sector_ppm, global_ppm): coarse cell -> median eur/m2,
-    # sector -> median eur/m2, and an overall fallback. only groups with at least
-    # min_group listings survive, so an aggregate can never expose a single flat.
+    # Returns grid/sector median EUR/m2 maps filtered by min_group, plus an
+    # unguarded global median fallback. No group memberships/counts are returned.
     ppm = (df["price"] / df["area"]).values
     global_ppm = float(np.median(ppm))
 

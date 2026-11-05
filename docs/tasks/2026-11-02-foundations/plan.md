@@ -67,3 +67,11 @@ No effective protected policy, holdout access, registry identity or deployed sta
 M1 source applied to the original checkout at the unchanged audited HEAD; no commit/push, deployment or protected policy activation. **137 combined tests passed, zero failed/skipped** with the real model. Architecture, lint, format, package/schema and input-integrity checks passed; the remaining warning and historical failures are recorded in the M1 report. Raw data/model hashes and legacy ML/application source are unchanged. GraphQL source timestamp fields are verified on public data; historical private-ID checks were rejected before execution and remain unperformed.
 
 M1 is ready for source review; the overall architecture is incomplete. Next recovery action: reconcile Git and final evidence, then scope M2 timestamp-aware ingestion and data lineage without fabricating history or exporting private IDs without explicit authorization. Independent protected CI/runtime review, real container isolation, reviewed property identities and official temporal evidence remain prerequisites for later gates.
+
+## Current recovery pointer — 2026-11-05
+
+Earlier checkpoints above are historical evidence, including their source/CI identities.
+Current branch state and next actions are in the [audit index](../../reports/README.md#current-checkpoint-and-recovery)
+and [completion plan](../2026-11-05-audit-completion/plan.md): `fix/repository-audit` at
+`36e67b7` plus uncommitted audit work. Inspect actual status/diff and preserve all local
+changes; do not restore an older branch tip or infer publication authorization.

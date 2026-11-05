@@ -1,0 +1,147 @@
+{
+  "acceptance_criteria": [
+    "Privacy statements match the actual field, identifier, aggregate and fitted-state controls and disclose the limits of existing tests.",
+    "An exact-artifact type/count inventory and review limitations are recorded without exposing private values.",
+    "A publication review procedure and M2/M4 handoff preserve frozen retention and model-specific requirements.",
+    "AST/preservation, synthetic, relevant-check and documentation verification pass."
+  ],
+  "affected_modules": [
+    "README.md",
+    "data/sample/README.md",
+    "scrape.py",
+    "features.py",
+    "train.py",
+    "tests/test_api.py",
+    "docs/reports/README.md",
+    "docs/reports/a17-privacy-claims.md",
+    "docs/operations/artifact-publication-review.md",
+    "docs/tasks/2026-11-05-privacy-claims"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Recorded option 1 approval and the bounded L0 plan.",
+    "Captured preimages/digests for all ten pre-existing changed files and existing A17 source files.",
+    "Confirmed the existing legacy model matches the earlier audited SHA-256 and size before deserialization.",
+    "Reviewed the known bundle with network connections blocked; recorded recognized schema names, types and counts only. The model digest matched before and after inspection.",
+    "Reconciled current README/sample statements and four Python files' explanatory comments; added publication guidance, the M2/M4 handoff and the A17 report.",
+    "Four synthetic boundary probes passed without network or private dataset access. Relevant existing tests passed: 139 passed, no skips, one existing deprecation warning.",
+    "Scoped lint/format, architecture and notebook checks passed. AST and scope checks confirmed comment-only Python changes and preservation of prior work.",
+    "Final documentation evidence records eleven A17 files, nine byte-identical prior files, an A17-only shared-index change and 40 checked local links/anchors.",
+    "Final task-record and documentation/preservation checks passed after evidence edits. The eleven-file increment is ready for review; no commit, push or runtime-policy change was made.",
+    "The user approved source publication with push please on 2026-11-05. Publish only A17; A16 and prior report-consistency updates remain local. Verified the remote branch is still d9ac405 before preparing the commit.",
+    "Verified the existing GitHub account as fxmidaaa and committed only the eleven-file A17 tree at ee4b5552885e6ec0ebef3a73cdc295a7f6b16e45. Shared index staging excluded the A16 row.",
+    "Pushed A17 normally to fix/repository-audit and independently verified the remote SHA. All nine prior A16/evidence files remained byte-identical.",
+    "Exact-source GitHub CI run 42074089595 succeeded. Job 127409503574 passed all steps: 322 checkout tests passed with 12 private-model skips; source archive and wheel each passed 142 tests.",
+    "Recorded source publication and CI evidence in the A17 report, index and task plan. A16 remains local and no model/data artifacts were published.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/42074089595"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A17 option 1 was published at ee4b5552885e6ec0ebef3a73cdc295a7f6b16e45 on fix/repository-audit. Exact-source CI passed: 322 checkout tests with 12 private-model skips and 142 tests each for the source archive and wheel. This documentation follow-up records the completed source publication. Python behavior, model bytes and all earlier A16/evidence work are preserved; stronger controls remain M2/M4 work.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-05T17:06:09+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-05T17:06:09+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-05T17:06:09+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-05T17:16:41.263307+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-05T17:18:06.366581+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-05T17:27:12.239635+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Verify and inventory the known legacy bundle using safe type/count summaries.",
+    "Correct current prose/comments and document exact-artifact review and the M2/M4 handoff.",
+    "Verify unchanged semantics, prior-work/model preservation, existing relevant checks, links and task records."
+  ],
+  "important_decisions": [
+    "Correct unsupported assurances without silently changing privacy, normalization, serving or retention behavior.",
+    "Treat publication guidance as reviewable source; it grants no authorization or active enforcement.",
+    "Keep artifact review summaries to approved field names, object types, shapes/counts and explicit limits.",
+    "The observed helper maps have scalar or coordinate-pair values and no group memberships/support counts; their sizes do not certify original cohort sizes or distinct-property counts.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm published source ee4b555 and successful CI run 42074089595 using the report/plan recovery command. Review the publication-evidence follow-up and branch CI as needed. A16 remains local awaiting its separate publication decision; A18 is the next audit decision. No data/model distribution or deployment was authorized."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
+  "objective": "Reconcile privacy claims with implemented controls and review the existing legacy artifact without changing behavior",
+  "original_authorized_request": "The user approved A17 option 1: correct documentation and misleading comments, review the existing legacy bundle locally without private-value disclosure, and document stronger publication controls as an M2/M4 handoff. Commit/push approval remains separate.",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Preserve executable Python semantics, tests, legacy interfaces, hash/aggregation behavior and exact model bytes.",
+    "Preserve A16 and earlier local evidence; modify only the A17 row in the shared audit index.",
+    "No private values in reports, protected-label access, collection, training, new credentials, effective-policy change, data/model distribution or deployment. Source-only publication is user-authorized."
+  ],
+  "risk_level": "L0",
+  "scope_boundaries": [
+    "README/sample documentation, explanatory Python comments, artifact-publication review guidance and A17 report/task evidence.",
+    "Read-only type/count inventory of the known user-provided legacy bundle; synthetic probes without network or private dataset access."
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261105-A17",
+  "verification_evidence": [
+    {
+      "check": "scope-and-semantics",
+      "reference": "docs/tasks/2026-11-05-privacy-claims/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "artifact-review",
+      "reference": "docs/tasks/2026-11-05-privacy-claims/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "synthetic-evidence",
+      "reference": "docs/tasks/2026-11-05-privacy-claims/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "relevant-checks",
+      "reference": "docs/tasks/2026-11-05-privacy-claims/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "documentation-links",
+      "reference": "docs/tasks/2026-11-05-privacy-claims/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "published-source-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/42074089595",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "scope-and-semantics",
+    "artifact-review",
+    "synthetic-evidence",
+    "relevant-checks",
+    "documentation-links",
+    "published-source-ci"
+  ]
+}

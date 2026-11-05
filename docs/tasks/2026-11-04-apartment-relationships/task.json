@@ -1,0 +1,143 @@
+{
+  "acceptance_criteria": [
+    "Reject the three inconsistent relationships across API, direct prediction and canonical validation. Preserve valid equality and optional values. Verify wheel and legacy source imports."
+  ],
+  "affected_modules": [
+    "src/rent_domain",
+    "src/rent_contracts/validation.py",
+    "src/rent_checks/architecture.py",
+    "api.py",
+    "predict.py",
+    "Dockerfile",
+    ".dockerignore",
+    "tests/foundations",
+    "docs/architecture/contracts-v1.md"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Synthetic probe showed four inconsistent cases accepted by both HTTP and canonical validation.",
+    "Before the fix twelve invalid-input regressions failed and three valid controls passed.",
+    "Shared the standard-library rules between the legacy source and the installed contract package. The API translates domain errors to field-specific 422 details.",
+    "All 256 tests and scoped source checks passed. Wheel, network-disabled Docker COPY smoke build and exported legacy API probe passed. All twelve prior evidence digests match.",
+    "User approved the proposed A09 commit message and publication.",
+    "Published c4b91eac786e9d1cf21058ee956b310e41bd4c43 and confirmed the remote ref. CI run 41809961842 was queued.",
+    "GitHub Actions run 41809961842 passed for c4b91ea. Foundations job 126506591055 reported 244 passed and 12 private-model skips. The distribution build passed.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41809961842"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A09 published as c4b91ea on fix/repository-audit. GitHub Actions passed with 244 tests passed and 12 private-model skips.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-04T09:14:28.137022+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-04T09:14:28.162751+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-04T09:14:28.163007+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-04T09:14:28.163263+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-04T09:18:08.482976+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-04T09:18:08.483836+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-04T09:18:08.484267+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Add regression cases",
+    "Implement shared standard-library domain validation",
+    "Verify and present the patch"
+  ],
+  "important_decisions": [
+    "Require both coordinates or neither. Keep legacy sector fallback when both are absent.",
+    "Share one standard-library-only package with legacy source and installed contracts.",
+    "Use post-schema semantic checks in the canonical validator and translate only the domain error in the HTTP route.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm c4b91ea on fix/repository-audit and preserve local A03–A09 evidence. Obtain separate approval to publish evidence updates."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
+  "objective": "Apply shared apartment relationship checks across legacy and canonical inputs",
+  "original_authorized_request": "User approved A09 option 1 and requested no dependency changes if possible.",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Preserve architecture v1, supported legacy interfaces, dependency lists and prior local evidence."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Domain rules, API and direct prediction, apartment contract, Docker source packaging, focused tests and task evidence",
+    "Publish the twelve reviewed A09 files and verify GitHub CI."
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261104-A09",
+  "verification_evidence": [
+    {
+      "check": "relationship-regressions",
+      "reference": "docs/tasks/2026-11-04-apartment-relationships/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "full-suite",
+      "reference": "docs/tasks/2026-11-04-apartment-relationships/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-checks",
+      "reference": "docs/tasks/2026-11-04-apartment-relationships/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "packaging",
+      "reference": "docs/tasks/2026-11-04-apartment-relationships/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-04-apartment-relationships/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "full-container-runtime",
+      "reference": "docs/tasks/2026-11-04-apartment-relationships/plan.md#verification",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41809961842",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "relationship-regressions",
+    "full-suite",
+    "source-checks",
+    "packaging",
+    "preservation",
+    "remote-ci"
+  ]
+}

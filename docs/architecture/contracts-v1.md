@@ -6,11 +6,39 @@ Authority: supplied specification §§7, 10–12 and §6.4. The prose fixes sema
 
 Version the domain (`apartment`), adapter interface (`RegressionAdapter`), bundle format and prediction protocol independently. Their initial versions happen to be `1.0.0`; validators reject unsupported versions instead of assuming compatibility. A future adapter can register an identifier/configuration schema without changing the experiment protocol. Registration and execution approval are separate.
 
-JSON is UTF-8. Unknown object fields, duplicate JSON keys, nonfinite numbers, unsupported Python object types, documents over 1 MiB and nesting beyond 64 levels are rejected. These parser limits are implementation choices, not resource authorization. Parquet remains the intended table transport (§12.2); no pretend CSV/Parquet training implementation is introduced in M1.
+JSON is UTF-8 without a byte-order mark (BOM). Byte input is decoded explicitly as
+UTF-8 before JSON parsing; UTF-16/32 auto-detection is disabled. `load_document` accepts
+only text or `bytes`, with the same BOM/Unicode rules for each. Unknown object fields,
+duplicate JSON keys, nonfinite numbers, unsupported Python object types, documents over
+1 MiB (counted in UTF-8 bytes) and nesting beyond 64 levels are rejected. These parser
+limits are implementation choices, not resource authorization. Parquet remains the
+intended table transport (§12.2); no pretend CSV/Parquet training implementation is introduced in M1.
 
-`load_document(raw)` performs strict decoding. `validate_document(name, document)` validates the named public **structural** schema only. `ExperimentRequest.from_document(..., model_schemas=registered_schemas)` additionally validates adapter configuration. Production callers must use the latter and independently perform channel authentication, effective task authorization, immutable-reference resolution, policy bounds and sealing. Passing schema validation never admits an experiment.
+`load_document(raw)` performs strict decoding. `validate_document(name, document)`
+validates the named public **structural** schema only.
+`ExperimentRequest.from_document(..., model_schemas=registered_schemas)` additionally
+validates adapter registration and configuration. Direct construction with
+`ExperimentRequest(payload, model_schemas=registered_schemas)` performs the same checks
+and canonicalizes the JSON before immutable storage. The registry is required and is
+not retained in the request. Construction without it fails, including replacement
+without the required registry. Callers must independently perform channel authentication,
+effective task authorization, immutable-reference resolution, policy bounds and sealing.
+Passing schema validation never admits an experiment.
+
+The additive M2 [development evaluation proposal](evaluation-contracts-v1.md) defines
+`observation-reference`, `evaluation-policy` and `development-split`, with semantic
+helpers for explicit eligibility/exclusions, temporal/property checks and fixed
+candidate populations. These development-only contracts require policy review
+before real-data use and do not expose restricted final-holdout details or certify
+feature leakage, a dataset release or the M2 exit gate.
 
 Schemas are loaded from bundled local resources. External schema lookup is denied; adapter schemas are explicitly supplied by the caller's registry. No configuration can select a Python import path, command, host mount, credentials or runtime security options.
+
+Identifiers such as `record_id` and `task_id` contain 1 to 128 characters. The first
+character is an ASCII letter or digit. The rest can also use `_`, `.` and `-`.
+SHA-256 digests are `sha256:` followed by exactly 64 lowercase hex digits. A non-null
+`reviewed_commit` contains exactly 40 or 64 lowercase hex digits. These checks apply
+to the complete string. Identity comparisons use the submitted value as-is.
 
 ## Request contracts
 
@@ -20,7 +48,7 @@ Schemas are loaded from bundled local resources. External schema lookup is denie
 | `train-request` | `contract_version`, `model_family`, `configuration`, resolved `training_partition` and nullable `validation_partition`, `dataset_ref`, `split_ref`, `random_seed`, nullable approved `checkpoint_ref`, assigned `output_directory` |
 | `predict-batch-request` | `contract_version`, exact `bundle_ref` (resolved path plus digest), `input_path`, `input_schema_version`, `inference_configuration`, assigned `output_path` |
 
-Immutable request references are `sha256:<64 lowercase hex digits>`. Dataset/split digests identify release/manifest envelopes; a later DVC release will also retain its own DVC object identity (§8.2). They are not invented DVC object hashes or proof that data is retrievable. Snapshot references must already be sealed in this initial protocol; a future sealable-reference workflow requires its own validated admission path.
+Dataset/split digests identify the release and manifest envelopes. A later DVC release will also retain its own DVC object identity (§8.2). Retrieval must be verified separately. Snapshot references must already be sealed in this initial protocol. A future sealable-reference workflow requires its own validated admission path.
 
 Resource shape is positive integer CPU, MiB and duration, plus nonnegative GPU count. Policy maxima, approved image, authenticated principal, output paths, resource enforcement and retry limits belong to trusted admission; callers cannot grant them through these fields. Initial experiment operation is training; promotion/deployment are never workload operations. The explicit seed is a necessary identity input, not a promise of cross-hardware bitwise determinism.
 
@@ -29,6 +57,8 @@ Model configuration is deliberately not forced into a common set of hyperparamet
 ## Prediction contract and atomicity
 
 `apartment` describes canonical apartment inputs, with `record_id` rather than positional identity, square-metre area and the existing application's basic ranges. Source normalization and categorical policy remain explicit future domain/adapter work. The schema includes the legacy user-entered features; it excludes target labels, asking-price comparisons, text, coordinates outside the declared city ranges, caller-computed target aggregates and privileged metadata. Current legacy `/predict` still accepts an asking price for its user-facing verdict; this does not become a batch feature.
+
+Apartment validation also checks relationships between fields. The floor must be at or below the building's total floors, and the kitchen area must fit within the apartment area when supplied. Supply both coordinates or leave both absent or null. The legacy HTTP and direct prediction paths use the same rules. Legacy prediction uses its sector estimate when both coordinates are missing.
 
 `prediction-batch` contains `contract_version`, `bundle_digest`, `target_unit=EUR/month` and nonempty `predictions`, each containing `record_id` and finite `predicted_rent_eur`. `validate_prediction_correspondence` validates the **entire** input and output population and exact requested bundle identity. Order may differ because correspondence is by identity. Missing, substituted or duplicate records fail; no clipping or fallback model is implied. An empty batch fails.
 

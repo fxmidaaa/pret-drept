@@ -1,0 +1,153 @@
+{
+  "acceptance_criteria": [
+    "See plan.md criteria 1-5: strict record preservation, verified atomic saving, offline regression behavior, preserved interfaces and executed final checks"
+  ],
+  "affected_modules": [
+    "scrape.py",
+    "tests/test_scrape.py",
+    "README.md",
+    "docs/development.md",
+    ".github/workflows/validate.yml",
+    "docs/tasks/2026-11-02-scraper-checkpoint",
+    "docs/reports/a02-scraper-checkpoint.md"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Read current source, audit/alignment, completed A01 record and relevant architecture; preserved pre-existing work and private-input digests",
+    "Reproduced original failure with a synthetic legacy CSV: test failed because load_checkpoint silently returned zero records instead of rejecting incompatible schema",
+    "Implemented strict textual CSV loading, validated atomic replacement, explicit optional checkpoint path and CLI errors in the existing script",
+    "Added offline failure/round-trip/CLI regressions and extended static checks to the touched scraper and new test file",
+    "Review identified a default CSV field-size compatibility gap; adjusted the temporary parser limit to the open file size and restored it afterward, with a long-cell regression test",
+    "Initial 30 focused tests passed; added serialized-column-loss protection before final verification",
+    "31 final checkpoint regressions passed, including partial serialized rows/columns, long cell support and in-process offline CLI help",
+    "Full local suite: 173 passed, zero failed/skipped in 19.09 seconds; one existing Starlette/httpx warning",
+    "Scoped Ruff check/format passed on 23 files; actionlint and architecture commands passed",
+    "Private data/model and pre-existing A01 evidence hashes unchanged; AST/source checks preserve existing acquisition logic, ML/API/training and dependency/architecture contracts",
+    "Completed engineering review and documentation; no source publication, real acquisition or migration performed",
+    "User approved the presented A02 branch/message with push; publication authorized and pending execution",
+    "Publication reconciled on 2026-11-05. Git history contains approved source 9341519338a35f37541b9c25b1d89ff4b9f787ba. GitHub confirmed its exact CI run 41526231926 succeeded with 161 tests passed and 12 private-model checks skipped.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41526231926"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A02 approved source was published as 9341519 and its exact-commit GitHub CI passed. Publication status reconciled on 2026-11-05. Historical-data migration remains separate.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-02T20:56:26.464283+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-02T20:56:26.489455+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-02T20:56:26.489746+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-02T20:56:26.490026+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-02T21:05:11.144287+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-02T21:10:16.580750+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-05T15:56:49.213544+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Persist approval and preservation identities",
+    "Add regression tests and establish the existing failure",
+    "Implement checkpoint validation and atomic replacement",
+    "Update usage and verification file selection",
+    "Execute final checks and record review/recovery evidence"
+  ],
+  "important_decisions": [
+    "User approved A02 option 1 in the live conversation",
+    "Keep correction in the existing script with standard-library CSV/temporary-file support",
+    "Optional checkpoint path is additive; no automatic migration or collection",
+    "Transitions record current context creation, not reconstructed work start",
+    "Strict CSV text loading preserves identity and cell text; optional column minimization remains A04",
+    "Validate existing destination and serialized population/columns before same-directory atomic replacement; refuse record deletion",
+    "Temporarily accommodate long fields within the open file size and restore CSV parser state; concurrent access is not certified",
+    "CLI help is tested in-process with file reads and requests blocked; all collection fixtures remain synthetic",
+    "Proposed publication message: fix(scraper): preserve checkpoints with validated atomic saves; branch fix/repository-audit; approval pending",
+    "Approved publication: fix/repository-audit; fix(scraper): preserve checkpoints with validated atomic saves; prior A01 local evidence updates are outside this commit",
+    "The reconciliation transition is recorded at the current time. Earlier local checkpoints and their original timestamps remain as history.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm 9341519 in the fix/repository-audit history and GitHub Actions run 41526231926. Use the report publication-reconciliation section for current status."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
+  "objective": "Repair legacy checkpoint validation and atomic saving without rewriting historical data",
+  "original_authorized_request": "docs/tasks/2026-11-02-scraper-checkpoint/request.md",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Frozen architecture v1; independent acquisition/ML and preserved legacy API/training interfaces",
+    "Raw historical input remains unchanged; working checkpoints are not immutable releases",
+    "Prior local A01 evidence updates remain intact; no private row values in diagnostics or reports"
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "A02 option 1: existing scraper storage, offline tests, verification instructions and records",
+    "User approved publication of the reviewed A02 patch to fix/repository-audit; no data migration, live collection, training, protected operations, A03 retry changes or A04 field policy changes"
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261102-A02",
+  "verification_evidence": [
+    {
+      "check": "checkpoint-regressions",
+      "reference": "docs/reports/a02-scraper-checkpoint.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "local-suite",
+      "reference": "docs/reports/a02-scraper-checkpoint.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "lint-format",
+      "reference": "docs/reports/a02-scraper-checkpoint.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "workflow-architecture",
+      "reference": "docs/reports/a02-scraper-checkpoint.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation-context-diff",
+      "reference": "docs/reports/a02-scraper-checkpoint.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41526231926",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "checkpoint-regressions",
+    "local-suite",
+    "lint-format",
+    "workflow-architecture",
+    "preservation-context-diff",
+    "remote-ci"
+  ]
+}

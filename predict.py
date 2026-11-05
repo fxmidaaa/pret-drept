@@ -1,9 +1,13 @@
-import numpy as np
-import joblib
 import os
+from threading import Lock
+
+import joblib
+import numpy as np
 import shap
 
-from features import floor_flags, latlon_to_km, ppm_from_grid, categorical, binary
+from features import binary, categorical, floor_flags, latlon_to_km, ppm_from_grid
+from src.rent_domain.apartment import validate_apartment_relationships
+from src.rent_prediction.xgboost_preprocessing import XGBoostPreprocessing
 
 BINARY_SET = set(binary)
 # real model inputs that just aren't meaningful to show as a "driver": raw
@@ -14,25 +18,30 @@ DRIVER_LABELS = {"knn_ppm": "nearby rents", "lux": "premium finishes"}
 
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model.joblib')
 
-# to optimize prediction time and not to use for every single prediction model loading, i use 
-# a container dictionary that holds everything i need to make a prediction. 
-# it is loaded once from model.joblib and reused for every prediction
+# Each process publishes the bundle only after its explainer is ready.
 _bundle = None
+_bundle_lock = Lock()
+
 
 def get_bundle():
     global _bundle
-    if _bundle is None:
-        _bundle = joblib.load(MODEL_PATH)
+    with _bundle_lock:
+        if _bundle is not None:
+            return _bundle
 
-        # shap explainer for my xgboost model, explains one prediction at a time
-        _bundle['explainer'] = shap.TreeExplainer(_bundle['model'])
+        bundle = joblib.load(MODEL_PATH)
+        bundle["explainer"] = shap.TreeExplainer(bundle["model"])
 
-        meta = _bundle.get('meta', {})
+        meta = bundle.get("meta", {})
         if meta:
-            print(f'loaded model trained {meta.get("trained_at")} '
-                  f'on {meta.get("n_listings")} listings '
-                  f'(val MAE {meta.get('mae_eur')} EUR, MAPE {meta.get('mape_pct')}%)')
-    return _bundle
+            print(
+                f"loaded model trained {meta.get('trained_at')} "
+                f"on {meta.get('n_listings')} listings "
+                f"(val MAE {meta.get('mae_eur')} EUR, MAPE {meta.get('mape_pct')}%)"
+            )
+        _bundle = bundle
+        return bundle
+
 
 def known_values(column):
     # the category values the model was actually trained on
@@ -57,12 +66,16 @@ def driver_label(raw_name):
     return nice_name(raw_name)
 
 def build_features(apartment, bund):
+    return _build_features(apartment, bund, bund["features"], bund["numeric_defaults"])
+
+
+def _build_features(apartment, bund, feature_names, defaults):
     # turn a request into exactly the feature dict the model was trained on.
     # every key here MUST be one of bund['features'] - anything else the
     # vectorizer silently drops, and the real feature falls back to a default.
 
     # keep only the columns the model knows, turn into the vectorizer format
-    x_dict = {f: apartment.get(f) for f in bund['features']}
+    x_dict = {f: apartment.get(f) for f in feature_names}
 
     # derive the ground/top floor flags if the caller didn't send them -
     # the rule lives in features.floor_flags so it can't drift from training
@@ -84,8 +97,8 @@ def build_features(apartment, bund):
 
     for feature, value in x_dict.items():
         if value is None:
-            if feature in bund["numeric_defaults"]:
-                x_dict[feature] = bund["numeric_defaults"][feature]
+            if feature in defaults:
+                x_dict[feature] = defaults[feature]
             elif feature in categorical:
                 x_dict[feature] = "necunoscut"
             else:
@@ -94,12 +107,13 @@ def build_features(apartment, bund):
     return x_dict
 
 def run(apartment):
+    validate_apartment_relationships(apartment)
     bund = get_bundle()
-    dv = bund['dv']
+    preprocessing = XGBoostPreprocessing.from_legacy_bundle(bund)
     listed_price = apartment.get('price')
 
-    x_dict = build_features(apartment, bund)
-    X = dv.transform([x_dict])
+    x_dict = _build_features(apartment, bund, preprocessing.features, preprocessing.numeric_defaults)
+    X = preprocessing.transform([x_dict])
 
     fair_price = float(np.expm1(bund['model'].predict(X)[0]))
 
@@ -116,7 +130,7 @@ def run(apartment):
             result["verdict"] = "fair price"
 
     shap_values = bund["explainer"].shap_values(X)[0]
-    names = dv.get_feature_names_out()
+    names = preprocessing.vectorizer.get_feature_names_out()
     row = X[0]  # the encoded feature values, aligned with names/shap_values
 
     drivers = []

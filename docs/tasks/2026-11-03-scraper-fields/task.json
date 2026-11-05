@@ -1,0 +1,147 @@
+{
+  "acceptance_criteria": [
+    "See plan.md criteria 1-5: single approved storage list, header/row enforcement before fetching/writing, original-file preservation, compatible round trips, final checks and evidence"
+  ],
+  "affected_modules": [
+    "scrape.py",
+    "tests/test_scrape.py",
+    "README.md",
+    "docs/development.md",
+    "docs/tasks/2026-11-03-scraper-fields",
+    "docs/reports/a04-scraper-fields.md"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Confirmed fix/repository-audit at 7e12d69 with only two pre-existing local A03 evidence updates",
+    "Read audit, alignment, repository guidance, current task/code and relevant architecture",
+    "Persisted live approval, plan/acceptance criteria and four private/prior-evidence preservation identities",
+    "Six synthetic counterexamples failed against unchanged code as expected: four unexpected-header cases and two direct-save cases",
+    "Added immutable CHECKPOINT_FIELDS derived from reviewed controls plus generated metadata; one validator enforces headers and row keys",
+    "75 focused scraper tests passed, including 12 new A04 regression cases; README/development instructions updated",
+    "Final focused scraper suite: 75 passed, zero failed/skipped in 0.62 seconds; all 12 new A04 cases passed",
+    "Final full local suite: 217 passed, zero failed/skipped in 18.84 seconds; one existing deprecation warning",
+    "Scoped Ruff check/format (23 files), pinned actionlint and architecture command passed",
+    "Four private/prior-evidence identities unchanged; nine existing scraper functions and protected source/configuration unchanged",
+    "Recorded engineering rationale, limitations and exact recovery; no commit/push or real-data operation",
+    "User approved the presented branch and commit message; publication of the reviewed A04 patch is authorized and pending execution",
+    "Committed exactly the eight reviewed A04 files as af574c9ffa31c47b53e3b3de459e984a685e46df with the approved message",
+    "Pushed fix/repository-audit without force; local HEAD, tracking ref and queried remote branch all match",
+    "Exact-commit push run 41631390504 started; foundations job 125901557634 is in progress",
+    "Exact-commit GitHub run 41631390504 and foundations job 125901557634 succeeded; all workflow/static/architecture/test/build steps passed",
+    "CI: 205 passed, 12 explicit absent-private-model skips, zero failures, one pytest warning in 4.20 seconds; existing action-runtime warnings also recorded",
+    "Saved post-publication A04 evidence locally; two pre-existing A03 evidence updates remain byte-identical and unpublished; no further commit/push",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41631390504"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A04 option 2 source commit af574c9 pushed to fix/repository-audit with the approved message; local suite 217 passed and exact-commit GitHub CI passed with 205 passed/12 explicit absent-private-model skips. Post-CI A04 evidence saved locally; prior A03 evidence unchanged and unpublished. No migration or live acquisition.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-03T11:44:57.797757+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-03T11:44:57.825485+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-03T11:44:57.825805+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-03T11:44:57.826118+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-03T11:46:59.875367+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-03T11:49:13.731068+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-03T11:49:13.731702+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Persist approval/plan/context and preservation identities",
+    "Reproduce unknown-header and direct-save failures using synthetic fixtures",
+    "Add shared storage allowlist validation at read/write boundaries",
+    "Verify approved fields, serialization defenses and acquisition filtering; update instructions",
+    "Run final checks, review engineering scope and persist evidence/recovery"
+  ],
+  "important_decisions": [
+    "User approved A04 option 2; reject unexpected storage fields without silently dropping them",
+    "Preserve existing filtering of unapproved incoming controls; metadata/price fields join approved names only at the storage boundary",
+    "L1 source validation in the unprivileged scraper, not trusted policy activation",
+    "State timestamps record current task transitions, not reconstructed work start",
+    "Validate headers explicitly so empty checkpoints cannot bypass field checks",
+    "Validate every input row before serialization; the existing reader also validates destinations and temporary output",
+    "Reject incompatible files without silent projection; leave source acquisition/filtering and A02/A03 behavior intact",
+    "Approved publication: fix/repository-audit; fix(scraper): reject unapproved checkpoint columns. The two A03 local evidence updates are excluded; post-publication A04 evidence stays local until separately approved.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Published fix/repository-audit is at af574c9ffa31c47b53e3b3de459e984a685e46df; exact-commit CI passed. Preserve the four local post-CI evidence files (A03/A04 reports and task records). Obtain user approval of a new branch/message proposal before publishing them; other fixes and collection/migration require separate decisions."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
+  "objective": "Enforce the approved checkpoint storage fields and reject unexpected columns without data changes",
+  "original_authorized_request": "docs/tasks/2026-11-03-scraper-fields/request.md",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Frozen architecture v1; acquisition independent of ML/harness",
+    "Private input and two existing A03 evidence updates remain unchanged; no sensitive values/names in rejection diagnostics",
+    "Preserve A02 validated atomic saves and A03 incomplete-run/retry behavior; checkpoints are not immutable releases"
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "A04 option 2: existing scraper field validation, offline tests, documentation and task evidence",
+    "User approved publication of the reviewed A04 patch and exact-commit CI inspection; no migration, live acquisition, training, other audit fixes, effective trusted-policy changes or publication of unrelated A03 evidence updates"
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261103-A04",
+  "verification_evidence": [
+    {
+      "check": "field-regressions",
+      "reference": "docs/reports/a04-scraper-fields.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "local-suite",
+      "reference": "docs/reports/a04-scraper-fields.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-checks",
+      "reference": "docs/reports/a04-scraper-fields.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation-context-diff",
+      "reference": "docs/reports/a04-scraper-fields.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41631390504",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "field-regressions",
+    "local-suite",
+    "source-checks",
+    "preservation-context-diff",
+    "remote-ci"
+  ]
+}

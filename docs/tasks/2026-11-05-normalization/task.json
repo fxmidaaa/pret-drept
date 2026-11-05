@@ -1,0 +1,134 @@
+{
+  "acceptance_criteria": [
+    "Unknown currencies and malformed required numbers are excluded, invalid optional coordinates become missing, and signed numbers retain their signs with safe aggregate diagnostics."
+  ],
+  "affected_modules": [
+    "features.py",
+    "train.py",
+    "tests/test_features.py",
+    "tests/foundations/test_xgboost_preprocessing.py",
+    "docs/development.md"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Read-only probes reproduced unknown currency defaulting to EUR, string coordinates raising TypeError, negative text becoming positive, and malformed prices raising ValueError.",
+    "Synthetic counterexamples produced 30 regression failures before the helper changes.",
+    "Prices now require known currency tokens and positive finite amounts. Unsupported coordinate representations become a missing pair. Numeric extraction preserves signs.",
+    "clean_data reports aggregate field issues and sequential row exclusion counts. The training entry point prints safe JSON diagnostics.",
+    "All 334 checkout tests passed. The extracted source archive and wheel each passed 142 tests.",
+    "The reviewed synthetic sample matches the prior cleaned DataFrame and existing currency conversions. Seven downstream feature and evaluation functions match the baseline.",
+    "Source checks passed. All 24 prior documentation edits match their starting digests.",
+    "The user approved publishing the seven reviewed A15 files.",
+    "Verified the fxmidaaa GitHub login and pushed ad34828915a61930b82049fc41343bf05622769b to fix/repository-audit. GitHub confirmed the remote revision.",
+    "GitHub Actions run 42035675032 passed. Job 127273057403 reported 322 checkout tests passed and 12 private-model skips, and passed 142 tests each for the extracted source and wheel.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/42035675032"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "Published A15 to fix/repository-audit at ad34828 and verified passing GitHub CI.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-05T12:42:03.661347+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-05T12:42:03.689465+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-05T12:42:03.689742+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-05T12:42:03.690009+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-05T12:48:55.137614+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-05T12:48:55.138434+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-05T13:27:27.134893+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Reproduce normalization failures with synthetic fixtures.",
+    "Tighten helpers and add per-call diagnostic counts through clean_data.",
+    "Verify the training entry point, compatibility, and prior evidence."
+  ],
+  "important_decisions": [
+    "Keep normalization in the existing shared module. Reject unsupported coordinate representations and retain missing-coordinate imputation.",
+    "Use aggregate counts for field issues and sequential row exclusions while retaining the DataFrame result.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm ad34828 on fix/repository-audit and GitHub Actions run 42035675032. Preserve the local CI evidence and the 24 prior documentation edits."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
+  "objective": "Reject unsupported normalization inputs safely and report aggregate field and exclusion reasons",
+  "original_authorized_request": "User selected A15 option 1. Push requires separate approval.",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Preserve existing supported conversions, caller interfaces, training and evaluation policy, existing artifacts and dependencies, and prior local evidence. Use synthetic data for normalization verification."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Legacy normalization helpers, optional aggregate clean_data diagnostics, legacy training report, regression tests, and documentation."
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261105-A15",
+  "verification_evidence": [
+    {
+      "check": "normalization-regressions",
+      "reference": "docs/tasks/2026-11-05-normalization/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout-suite",
+      "reference": "docs/tasks/2026-11-05-normalization/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "distributions",
+      "reference": "docs/tasks/2026-11-05-normalization/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-checks",
+      "reference": "docs/tasks/2026-11-05-normalization/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-05-normalization/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/42035675032",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "normalization-regressions",
+    "checkout-suite",
+    "distributions",
+    "source-checks",
+    "preservation",
+    "remote-ci"
+  ]
+}

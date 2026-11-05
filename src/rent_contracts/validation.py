@@ -10,6 +10,8 @@ from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 from referencing.exceptions import NoSuchResource
 
+from rent_domain.apartment import ApartmentRelationshipError, validate_apartment_relationships
+
 SCHEMA_NAMES = (
     "apartment",
     "experiment-request",
@@ -18,6 +20,9 @@ SCHEMA_NAMES = (
     "prediction-batch",
     "bundle-manifest",
     "task-record",
+    "observation-reference",
+    "evaluation-policy",
+    "development-split",
 )
 MAX_DOCUMENT_BYTES = 1_048_576
 
@@ -74,9 +79,15 @@ def _constant(_: str) -> None:
 
 
 def load_document(raw: str | bytes) -> dict[str, Any]:
+    if not isinstance(raw, (str, bytes)):
+        raise ContractError("expected JSON text or UTF-8 bytes")
     try:
         if len(raw.encode("utf-8") if isinstance(raw, str) else raw) > MAX_DOCUMENT_BYTES:
             raise ContractError("document size limit exceeded")
+        if isinstance(raw, bytes):
+            # json.loads(bytes) auto-detects UTF-16/32 and strips a UTF-8 BOM.
+            # Decode explicitly so every wire document follows the UTF-8 contract.
+            raw = raw.decode("utf-8")
         value = json.loads(raw, object_pairs_hook=_pairs, parse_constant=_constant)
         canonical_json(value)
     except (ValueError, UnicodeError, RecursionError) as exc:
@@ -107,7 +118,7 @@ def _resources() -> tuple[dict[str, dict], Registry]:
 
 
 def validate_document(name: str, document: dict[str, Any]) -> None:
-    """Validate public syntax. Adapter config, admission and payload integrity are separate."""
+    """Validate public syntax and cross-field apartment constraints."""
     if name not in SCHEMA_NAMES:
         raise ContractError("unsupported document contract")
     canonical_json(document)
@@ -119,6 +130,11 @@ def validate_document(name: str, document: dict[str, Any]) -> None:
     if error is not None:
         # Never echo user-supplied property names, values, credentials or raw exceptions.
         raise ContractError(f"{name} contract violation ({error.validator})")
+    if name == "apartment":
+        try:
+            validate_apartment_relationships(document)
+        except ApartmentRelationshipError as exc:
+            raise ContractError(str(exc)) from None
 
 
 def validate_configuration(configuration: dict, schema: dict) -> None:

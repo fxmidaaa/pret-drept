@@ -1,0 +1,126 @@
+{
+  "acceptance_criteria": [
+    "Historical claims describe filtered random validation and the M2 handoff preserves the required temporal and unseen-property benchmarks."
+  ],
+  "affected_modules": [
+    "README.md",
+    "notebooks/eda.ipynb",
+    "notebooks/model_selection.ipynb",
+    "docs/tasks/2026-11-05-evaluation-handoff"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "The frozen architecture requires temporal evaluation, reviewed property identity, and common evaluation records. The legacy trainer filters random validation rows by asking price.",
+    "README and notebook Markdown now describe scores as historical measurements on filtered random splits.",
+    "The M2 handoff records approved acquisition, observation retention, immutable dataset releases, reviewed property identities, fixed evaluation membership, leakage checks, and dual evaluation.",
+    "Verified the existing local documentation links and anchors and exact preservation of all 24 executable notebook cells and all non-Markdown content.",
+    "All 11 focused existing tests passed. All 22 pre-existing local documentation edits match their starting digests.",
+    "The user approved publication and requested switching the GitHub login first.",
+    "Switched to fxmidaaa, verified the active account through the GitHub user endpoint, and used it to push a78f927fc22976c80ea6e2a1c765f78d99d903b1 to fix/repository-audit.",
+    "GitHub Actions run 42026575076 passed. Job 127242164657 verified both notebooks, reported 283 checkout tests passed and 12 private-model skips, and passed 142 tests each for the extracted source and wheel.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index.",
+    "A14 remains incomplete: validation price/m² and local-rate ratio filtering still depend on targets; no versioned fixed cohort or temporal/unseen-property benchmark is implemented. Propose/version the eligibility/split contracts next, then satisfy the timestamp/release/identity/isolation prerequisites before real runs."
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/42026575076"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "The A14 documentation increment was published at a78f927 with its recorded CI. A14 remains incomplete: train.py still filters validation membership using observed targets and the temporal/unseen-property benchmarks are absent. See docs/reports/a14-evaluation-handoff.md#incomplete-benchmark-prerequisites and the M2 handoff; documentation does not repair evaluation.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-05T11:55:41.887991+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-05T11:55:41.915064+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-05T11:55:41.915324+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-05T11:55:41.915574+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-05T11:59:16.184857+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-05T11:59:16.185650+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-05T12:24:09.393772+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Qualify historical README and notebook evaluation claims.",
+    "Record the M2 data, identity, and evaluation prerequisites.",
+    "Verify documentation, task records, and notebook preservation."
+  ],
+  "important_decisions": [
+    "Defer benchmark implementation to M2 and treat legacy scores as historical diagnostics.",
+    "Keep A14 benchmark implementation explicitly open in the M2 handoff.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm a78f927 on fix/repository-audit and GitHub Actions run 42026575076. Preserve the local CI evidence and the 22 prior documentation edits. Resume A14 benchmark implementation in M2.",
+    "Historical bounded-increment outcome: Published the A14 documentation increment to fix/repository-audit at a78f927 and verified passing GitHub CI. The A14 benchmark implementation remains deferred to M2."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
+  "objective": "Qualify historical evaluation claims and record the approved A14 benchmark handoff to M2",
+  "original_authorized_request": "User approved the documentation patch and deferring benchmark implementation to M2. Push requires separate approval.",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Preserve the frozen architecture, notebook executable cells and metadata, legacy ML and acquisition code, all existing model and data artifacts, and prior local evidence."
+  ],
+  "risk_level": "L0",
+  "scope_boundaries": [
+    "README evaluation descriptions, notebook Markdown, and the A14 documentation task and M2 handoff."
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261105-A14",
+  "verification_evidence": [
+    {
+      "check": "documentation",
+      "reference": "docs/tasks/2026-11-05-evaluation-handoff/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "notebook-preservation",
+      "reference": "docs/tasks/2026-11-05-evaluation-handoff/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "task-records",
+      "reference": "docs/tasks/2026-11-05-evaluation-handoff/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-05-evaluation-handoff/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/42026575076",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "documentation",
+    "notebook-preservation",
+    "task-records",
+    "preservation",
+    "remote-ci"
+  ]
+}

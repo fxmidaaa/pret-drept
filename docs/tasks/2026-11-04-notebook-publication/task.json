@@ -1,0 +1,141 @@
+{
+  "acceptance_criteria": [
+    "Both notebooks are output-free and unchanged outside saved state. The checker rejects saved notebook content with safe diagnostics."
+  ],
+  "affected_modules": [
+    "notebooks",
+    "scripts/check_notebooks.py",
+    "tests/foundations",
+    ".github/workflows/validate.yml",
+    "README.md",
+    "docs/development.md"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "The EDA notebook contains a saved five-row preview. The notebook was inspected without reproducing row values.",
+    "The checker rejected both baseline notebooks without including output content in diagnostics.",
+    "Cleared 26 saved outputs and reset execution counts across the two notebooks. Parsed JSON comparison preserved the rest of each notebook.",
+    "The publication check passed on both notebooks and all 10 synthetic checker tests passed.",
+    "Full checkout passed 295 tests. The extracted source archive and wheel each passed 142 tests.",
+    "Ruff, actionlint, architecture and whitespace checks passed. All 20 prior documentation edits match their starting digests.",
+    "The user approved pushing the reviewed A13 patch.",
+    "Published 086ef83d3d4043d89515ec2f83720d2474dc708a to fix/repository-audit and verified the remote ref.",
+    "GitHub Actions run 41847049502 passed. Job 126633187008 verified both notebooks, reported 283 checkout tests passed and 12 private-model skips, and passed 142 tests each for the extracted source and wheel.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41847049502"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "Published A13 to fix/repository-audit at 086ef83 and verified passing GitHub CI.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-04T14:19:09.660225+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-04T14:19:09.686292+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-04T14:19:09.686558+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-04T14:19:09.686810+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-04T14:22:03.336439+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-04T14:22:03.337613+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-04T14:24:52.619407+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Add and test a read-only notebook checker.",
+    "Clear notebook outputs and execution counts without running the notebooks.",
+    "Wire the check into CI and verify the reviewed patch."
+  ],
+  "important_decisions": [
+    "Use source-only notebooks and a structural check for saved state.",
+    "Inspect the Git-tracked notebook paths in the working tree and reject structured saved state without classifying the contents.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm 086ef83 on fix/repository-audit and GitHub Actions run 41847049502. Preserve the local CI evidence and the 20 earlier documentation edits."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
+  "objective": "Remove saved private listing previews from public notebook files and prevent saved output from returning",
+  "original_authorized_request": "User selected A13 option 1 and requires separate approval before push.",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Preserve notebook source and metadata, existing CI privileges, historical Git revisions, and prior local evidence. Do not execute notebook cells or access the private CSV."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Tracked notebook saved state, its unprivileged CI check, synthetic tests, and publication documentation."
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261104-A13",
+  "verification_evidence": [
+    {
+      "check": "notebook-gate",
+      "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-preservation",
+      "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout-suite",
+      "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "distributions",
+      "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-checks",
+      "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41847049502",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "notebook-gate",
+    "source-preservation",
+    "checkout-suite",
+    "distributions",
+    "source-checks",
+    "preservation",
+    "remote-ci"
+  ]
+}

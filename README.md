@@ -6,6 +6,11 @@ verified new foundations. See the [development guide](docs/development.md) for c
 tests and current limitations. The original app/workflows described below are preserved; their
 historical scores do not certify the new temporal/unseen-property evaluation protocol.
 
+The Python wheel and source archive ship the engineering foundations. The source archive
+includes synthetic contract, task lifecycle, and architecture tests. With the package dependencies
+and `pytest` installed, run `python -m pytest` from the unpacked archive. The application, full
+test suite, and linked project resources below are available in the repository checkout.
+
 My first machine learning project. I scraped about 4,500 real apartment rental listings from a
 Moldovan classifieds site, trained a model on them, and built a small app that estimates a fair
 monthly rent and tells you whether a given listing is overpriced or a good deal.
@@ -41,32 +46,42 @@ its currency, area, rooms, floor, sector, heating type, furnishing, even GPS coo
 guest about it too: I filter server-side to exactly what I need, lean on the API's own duplicate
 collapsing, pause between requests, and save as I go.
 
-One thing on privacy, since this scrapes real ads. `scrape.py` keeps only a reviewed list of fields,
-never contacts or the seller's name, and it stores the listing id as a one-way hash. The raw file it
-writes stays on my machine: gitignored, never committed, never baked into the Docker image, never
-published. What's public is a small synthetic sample plus the column schema in
-[`data/sample/`](data/sample/), and a model that only ever holds coarse aggregates, never a single
-listing's coordinates or price.
+The project uses field minimization: `scrape.py` persists a reviewed allowlist and excludes dedicated
+contact and seller-name controls. Allowed ad text, coordinates and photo references can still contain
+personal or linkable information; there is no content-redaction step. The listing key is a deterministic,
+truncated hash used for deduplication and resuming collection. Candidate source IDs can be rehashed to
+match it, so the key is a pseudonym, not proof of anonymity.
 
-That gives 4,528 listings, or 3,557 after cleaning (the two trims below take it to about 3,400).
-Cleaning drops rows missing area, price, or rooms, drops reposted duplicates, and keeps rent between
-100 and 2000 EUR - normal flats, which is what this tool is for (more on the cap in "Where it falls
-short"). Then two more trims. I cut the worst 1% of rent-per-m² on each end, which is almost always
-someone fat-fingering the area or the price. And I drop any listing asking less than half or more
-than double its local market rate, the median EUR/m² of the flats in its own ~1 km grid cell: if everyone around you rents at 10 EUR/m² and you
-want 25, that's not a price, that's a wish, and the app's job is to catch listings like that, not to
-learn from them. The 1% cutoffs and the medians I use to fill in missing values are computed on the
-training split only, so validation rows never sneak into what the model learns from. The neighbour
-rule is just two fixed numbers (0.5x and 2x), so there's nothing to leak there. About 95% of
-listings are priced in EUR and the rest in MDL or USD; I convert everything to EUR at a fixed
-19.5 MDL/EUR (BNM, mid-2026). The snapshot was collected in July 2026.
+Git ignore rules cover raw snapshots and model files, and the Docker build allowlist omits raw data.
+These rules reduce accidental inclusion; they do not enforce storage permissions or certify a
+model's privacy. The repository includes a [synthetic sample](data/sample/). The legacy model contains
+a fitted estimator, vectorizer and helper statistics, including coordinate defaults. Each exact model,
+image or data export needs its own [publication review](docs/operations/artifact-publication-review.md).
+The [A17 report](docs/reports/a17-privacy-claims.md) records the local artifact inventory and its limits.
+
+The historical snapshot was reported as 4,528 listings, with 3,557 after initial cleaning and
+about 3,400 after further trimming. Legacy cleaning drops rows missing area, asking price, or
+rooms, keeps asking rents between 100 and 2000 EUR, and deduplicates on coarse apartment
+attributes together with asking price. This key can retain repeated apartments when their
+asking price changes.
+
+The legacy trainer uses a random 80/20 split. It fits rent-per-m² quantile bounds and imputation
+medians on training data, then also trims validation rows by rent per m² and by their ratio to
+the training-derived local market rate. Validation membership therefore depends on observed
+asking prices. The reported scores describe the listings retained by these filters.
+
+The historical profile put about 95% of listings in EUR and the rest in MDL or USD. The legacy
+conversion uses a fixed 19.5 MDL/EUR rate. Project notes date the snapshot to July 2026, while
+the CSV's missing observation timestamps limit the chronology that can be reconstructed.
 
 ---
 
 ## What the market actually looks like
 
-Before training anything I spent a while just looking at the data
-([`notebooks/eda.ipynb`](notebooks/eda.ipynb) has the full tour). A few things stood out.
+Before training anything I spent a while just looking at the data. The
+[`EDA notebook`](notebooks/eda.ipynb) contains the analysis code. Both public notebooks are
+stored with cleared outputs and use the private dataset when run locally. The charts and
+model comparison on this page summarize the results.
 
 Rent is heavily skewed: lots of ordinary flats and a long tail of expensive ones. Taking the log
 makes it roughly symmetric, which is the whole reason the model trains on `log(price)`.
@@ -114,9 +129,10 @@ Three of them took actual thought:
 - The local market rate. For each apartment I take the median EUR/m² of the flats in its own coarse
   (~1 km) grid cell, and fall back to the sector, then the whole city, when a cell is thin. That's
   basically what a person does when sizing up a price: you look around. It's one of the strongest
-  signals in the model. I compute it from the training rows only, and the shipped model keeps just
-  these cell and sector aggregates, each one an average over at least 15 listings. It never stores the
-  individual coordinates or prices, so no single listing can be pulled back out of it.
+  signals in the model. I compute it from the training rows only. Grid and sector rent maps retain
+  medians for groups with at least 15 rows by default. The global fallback and the separate coordinate
+  and numeric defaults have no equivalent minimum-group guard. These are medians, and aggregation
+  alone does not establish that an individual listing cannot be inferred.
 - Reading the ad text. Around a third of listings leave the condition field empty but describe it in
   words ("euroreparație", "евроремонт"). I pull those back out with keyword matching in both
   languages. Same trick for spotting when the rent already includes utilities, which otherwise
@@ -133,13 +149,12 @@ Three of them took actual thought:
 
 ## Picking the model
 
-`train.py` uses XGBoost, and not just because XGBoost is the fashionable pick. The whole argument is a
-model bake-off in [`notebooks/model_selection.ipynb`](notebooks/model_selection.ipynb): I run a dumb
-baseline, linear regression, ridge, random forest, gradient boosting, and XGBoost over the same data
-and the same split, score them the same way, confirm the order with 5-fold cross-validation, and tune
-the two best. Roughly where they land (RMSE in real EUR of rent):
+`train.py` uses XGBoost. The [model-selection notebook](notebooks/model_selection.ipynb)
+records the historical comparison with a simple baseline, linear regression, ridge, random
+forest, and gradient boosting. The comparison used random splits and five random folds after
+legacy cleaning and asking-price filters.
 
-| model | CV RMSE |
+| model | Historical CV RMSE (EUR) |
 |---|---|
 | dumb baseline (one price per m², times area) | ~290 |
 | linear regression | 249 |
@@ -147,29 +162,18 @@ the two best. Roughly where they land (RMSE in real EUR of rent):
 | random forest, tuned | 200 |
 | **XGBoost, tuned** | **192** |
 
-So the shipped model is off by about 134 EUR (16.1% MAPE) on a typical listing. Median rent in the
-data is around 750. Not amazing, but every model beats the dumb baseline by a mile, and even a plain
-straight line explains 60% of the variance, which told me the features were pulling their weight
-before I ever touched a tree.
+The legacy bundle's reported random validation scores were MAE 134 EUR, MAPE 16.1%, RMSE 188 EUR,
+and R² 0.78. The trainer stores these scores in `model.joblib` after a fixed 80/20 random split
+(`random_state=42`) and validation trimming. Their coverage is the retained historical
+population. MAE averages absolute errors in euros, and RMSE gives more weight to large errors.
 
-One honest note about where these numbers come from. The table above is 5-fold cross-validation
-from the notebook. The model I actually ship gets retrained by `train.py` on a single fixed 80/20
-split (`random_state=42`), and its own holdout scores go into `model.joblib` and get printed every
-time the API loads it: MAE 134 EUR, MAPE 16.1%, RMSE 188, R² 0.78. The holdout agrees with the CV
-(188 vs 192 ± 6), so this split isn't a lucky one. A detail I like from the notebook: untuned,
-XGBoost and random forest come out essentially tied. The search then opens a ~7 EUR gap in XGBoost's
-favour, so it earns its spot.
+A14's benchmark implementation is deferred to M2. The frozen architecture requires primary
+future-market evaluation and a secondary view for previously unseen apartments, using the
+same versioned evaluation records across candidates. The
+[A14 handoff](docs/tasks/2026-11-05-evaluation-handoff/plan.md#m2-handoff) records the required
+timestamped observations, immutable dataset releases, and reviewed property identities.
 
-Also, the headline number is MAE now, not RMSE. I spent a while chasing the gap between the two
-(188 vs 134), convinced something was broken in the data. It wasn't. The model misses by roughly
-the same percentage everywhere (~16%), but 16% of a 1,600 EUR flat is four times 16% of a 400 EUR
-one, and RMSE squares every miss, so a handful of expensive flats end up deciding the whole number.
-I even checked by shuffling the percentage errors between listings: a model that missed everyone by
-the same percentage would show an even *bigger* gap than mine does. So the gap is just what rent
-prices look like, not a bug. MAE tells you what happens on a typical listing, RMSE tells you how
-rough the expensive end gets, and I keep both around.
-
-The tuned XGBoost settings (found by random search in the notebook):
+The legacy XGBoost settings came from the notebook's historical random search.
 
 ```
 n_estimators=600, max_depth=6, learning_rate=0.05,
@@ -182,56 +186,96 @@ subsample=0.83, colsample_bytree=0.77, min_child_weight=7
 
 Worth being upfront about a few things:
 
-- It's built for normal flats, not luxury. I cap rent at 2000 EUR/month on purpose (it used to be
-  3000). The ~4% above that are premium places whose price sits in things my fields simply don't
-  have: which residence it is, the finishes, the view. The model can't see any of that, so it
-  priced them all like ordinary flats, missed by 600-1000 EUR, and those few misses were quietly
-  deciding my metrics. So they're out. The catch: give it a genuinely premium apartment and it will
-  lowball the rent and cry "overpriced" at a listing that might just be expensive for a reason.
+- Legacy cleaning limits asking rents to 100–2000 EUR, and further validation trims remove
+  atypically priced listings. The API accepts a broader range of asking prices, so the reported
+  scores cover a narrower population than requests the app can receive.
 - It only knows what the listing says. A beautiful flat with a lazy description, or a scam with a
   great one, will fool it exactly the way it would fool you.
-- It's a July 2026 snapshot. Prices move, so it needs re-scraping and re-training now and then to
-  stay honest.
+- The historical CSV has no observation timestamps, and its deduplication key includes asking
+  price. Measuring future-market and unseen-property performance needs the M2 data history
+  and reviewed identity policy.
 
 ---
 
 ## Running it
 
-Python 3.13. First:
+For the legacy application runtime, use Python 3.13 in a virtual environment:
 
 ```bash
-pip install -r requirements.txt
+python3.13 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
 Start the app (you need a trained `model.joblib` for this):
 
 ```bash
-uvicorn api:app --reload
+.venv/bin/python -m uvicorn api:app --reload
 # then open http://127.0.0.1:8000
 ```
 
-Rebuild everything from scratch:
+Train from the existing private snapshot:
 
 ```bash
-python scrape.py    # grabs fresh listings into data/raw/listings.csv
 python train.py     # cleans, trains, writes model.joblib
 ```
+
+For separately authorized collection, choose a working checkpoint distinct from the historical dataset:
+
+```bash
+python scrape.py --checkpoint data/checkpoints/listings.csv
+```
+
+The legacy `python scrape.py` command retains its default path, but now rejects incompatible files
+before making requests. The historical snapshot uses `id` rather than the scraper's `listing_key`;
+it requires a separately reviewed migration to a new destination, retaining the original. No
+automatic conversion occurs. Compatible working checkpoints are saved atomically, and invalid,
+duplicate, or missing listing keys cause an error instead of silently losing rows. The separate
+checkpoint is not automatically used by `train.py` and is not an immutable dataset release.
+
+Checkpoints accept only the reviewed feature/filter columns plus `listing_key`, `price_value`,
+`price_unit`, `first_seen` and `last_seen`. Unexpected columns cause an error before collection or
+saving; the existing file is preserved, including when it contains only a header. Names must match
+exactly. Such files require a separately reviewed, versioned migration to a new destination, retaining
+the original. Unapproved controls in fetched advertisements continue to be ignored. This column rule
+does not detect personal information inside permitted text fields.
+
+Failed or unavailable listing retrievals stay outside completed checkpoint state, so a later run
+can retry them if they appear in search again. Rejection is saved only after retrieving and checking
+the listing. Search failures stop collection; any unresolved retrieval makes the command exit with
+status 1 after saving completed page progress. Error messages omit response bodies. Existing rejection
+markers remain unchanged because their original cause cannot be recovered. There is no persistent
+retry queue or guarantee that a listing will appear in a later search.
 
 Or try a single prediction from the terminal: `python predict.py` runs the example apartment at the
 bottom of that file.
 
-Run the tests (they cover the cleaning rules, the features, and the API):
+The runtime requirements do not include pytest, build tools or the foundations'
+`jsonschema` dependency. Installing the foundations with `python -m pip install .`
+provides the public contracts/checker packages, not the legacy API, frontend or model.
+
+For development and the full checkout tests (cleaning, features, API, contracts and
+checkpoint preservation), install the hash-locked development environment and the
+foundations package. This can reuse the Python 3.13 environment above:
 
 ```bash
-python -m pytest
+.venv/bin/python -m pip install --require-hashes -r requirements-dev.lock
+.venv/bin/python -m pip install --no-deps --no-build-isolation -e .
+.venv/bin/python scripts/install_actionlint.py --directory .venv/bin
+.venv/bin/python -m pytest -q -ra
+node --test tests/frontend/*.test.cjs
 ```
 
-If you'd rather not install Python at all, there's a Dockerfile. It ships the inference code plus a
-privacy-reviewed, pre-trained `model.joblib`. Training happens privately, not during the build, so you
-need a trained model present first:
+Frontend tests use Node.js 24.21.0 with no npm install or page build step. The
+[development guide](docs/development.md) lists native prerequisites and all checks.
+The development lock is not a certified inference runtime.
+
+If you'd rather not install Python at all, there's a Dockerfile. It copies the inference code and the
+local `model.joblib`; it does not perform a privacy review. Training happens separately from the build.
+The commands below prepare and run a local image. Sharing an image or model requires review of the
+exact artifact and separate authorization; training or passing tests does not grant that approval.
 
 ```bash
-python train.py            # writes a reviewed model.joblib from your private data
+python train.py            # writes a legacy candidate model.joblib; review is separate
 docker build -t chisinau-rent .
 docker run -p 8000:8000 chisinau-rent
 ```
@@ -256,18 +300,18 @@ curl -X POST "https://pret-drept-tm6owb5eka-ew.a.run.app/predict" \
 ## What's where
 
 ```
-scrape.py                  999.md GraphQL scraper -> data/raw/listings.csv
+scrape.py                  999.md GraphQL scraper with validated atomic working checkpoints
 features.py                all the cleaning and feature engineering
 train.py                   trains XGBoost, saves model.joblib
 predict.py                 loads the model, makes one prediction + explanation
 api.py                     FastAPI - /predict, /options, /health, serves the page
 app/index.html             the one-page front end (form in, verdict out)
-Dockerfile                 containerised API (inference code + reviewed model)
-notebooks/eda.ipynb        exploratory analysis (aggregate views only)
-notebooks/model_selection.ipynb   the "why XGBoost" model comparison
+Dockerfile                 containerised API (inference code + supplied model)
+notebooks/eda.ipynb        exploratory analysis source
+notebooks/model_selection.ipynb   model comparison source
 data/sample/               synthetic sample + column schema (real data stays private)
 images/                    charts from the EDA
-tests/                     unit tests for the cleaning rules, features and the API
+tests/                     tests for cleaning, features, the API and checkpoint preservation
 ```
 
 One thing I'm a little proud of: `features.py` is the only place the cleaning rules live, and
@@ -275,16 +319,16 @@ training, prediction, and the API all import from it, so they can't quietly disa
 "ground floor" means or how a price gets converted. And `model.joblib` holds more than the model. It
 also stores sensible per-sector defaults, so the site can fill in the things a normal person would
 never type (typical coordinates, ceiling height, photo count) from just the sector you picked.
-Everything it stores is an aggregate: per-sector and coarse ~1 km grid medians, never a per-listing
-coordinate or price.
+The bundle stores these defaults and market-rate summaries alongside fitted model and vectorizer
+state. Precise latitude and longitude are model input features. The selected-key regression test
+checks known bundle fields and scalar map values; it is not an exhaustive disclosure-risk assessment.
 
 ---
 
 ## Still on the list
 
 - Github Actions (CI).
-- A wider hyperparameter search. The current one is only 10 random draws, so 192 is more of a
-  ceiling than the real best.
+- A wider hyperparameter search after M2 establishes the versioned evaluation cohort.
 - Some kind of confidence range instead of a single number.
-- Re-scraping on a schedule so it doesn't go stale.
+- Scheduled acquisition with timestamped observation history and versioned dataset releases.
 - Eventually: sale prices too.

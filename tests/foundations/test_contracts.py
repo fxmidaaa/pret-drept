@@ -1,4 +1,6 @@
 import copy
+import json
+from dataclasses import replace
 
 import pytest
 
@@ -17,6 +19,57 @@ def test_request_is_independent_of_mutable_caller_state(request_document, model_
     exported["configuration"]["n_estimators"] = 800
     assert request.request_digest == identity
     assert request.to_document()["configuration"]["n_estimators"] == 3
+
+
+def test_direct_request_construction_requires_registered_schemas(request_document):
+    with pytest.raises(TypeError, match="model_schemas"):
+        ExperimentRequest(canonical_json(request_document))
+
+
+def test_direct_request_construction_validates_and_canonicalizes(request_document, model_schemas):
+    request = ExperimentRequest(json.dumps(request_document, indent=2), model_schemas=model_schemas)
+    parsed = ExperimentRequest.from_document(request_document, model_schemas=model_schemas)
+    assert request == parsed
+    assert request.canonical_payload == canonical_json(request_document)
+    assert request.request_digest == parsed.request_digest
+    with pytest.raises((TypeError, ValueError), match="model_schemas"):
+        replace(request)
+    model_schemas.clear()
+    request_document["configuration"]["n_estimators"] = 900
+    assert request.to_document()["configuration"]["n_estimators"] == 3
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("operation", "promote"),
+        ("model_family", "unregistered"),
+        ("configuration", {"n_estimators": 0}),
+        ("configuration", {"n_estimators": 3, "secret-option": "private-value"}),
+    ],
+)
+def test_direct_and_replacement_requests_cannot_bypass_validation(
+    request_document, model_schemas, field, value
+):
+    request = ExperimentRequest.from_document(request_document, model_schemas=model_schemas)
+    request_document[field] = value
+    payload = canonical_json(request_document)
+    with pytest.raises(ContractError) as failure:
+        ExperimentRequest(payload, model_schemas=model_schemas)
+    assert "private-value" not in str(failure.value)
+    with pytest.raises(ContractError):
+        replace(request, canonical_payload=payload, model_schemas=model_schemas)
+
+
+def test_direct_request_construction_rejects_unregistered_registry_and_ambiguous_json(
+    request_document, model_schemas
+):
+    with pytest.raises(ContractError, match="unregistered"):
+        ExperimentRequest(canonical_json(request_document), model_schemas={})
+    with pytest.raises(ContractError, match="duplicate"):
+        ExperimentRequest(
+            '{"operation":"train","operation":"promote"}', model_schemas=model_schemas
+        )
 
 
 @pytest.mark.parametrize(
@@ -78,6 +131,8 @@ def test_configuration_validation_never_fetches_remote_schema(request_document):
     schemas = {"xgboost": {"$ref": "https://invalid.example/secret-schema"}}
     with pytest.raises(ContractError, match="unresolved"):
         ExperimentRequest.from_document(request_document, model_schemas=schemas)
+    with pytest.raises(ContractError, match="unresolved"):
+        ExperimentRequest(canonical_json(request_document), model_schemas=schemas)
 
 
 @pytest.mark.parametrize(
@@ -96,6 +151,37 @@ def test_configuration_validation_never_fetches_remote_schema(request_document):
 def test_non_json_and_ambiguous_documents_are_rejected(raw):
     with pytest.raises(ContractError):
         load_document(raw)
+
+
+@pytest.mark.parametrize(
+    "encoding",
+    ["utf-16", "utf-16-le", "utf-16-be", "utf-32", "utf-32-le", "utf-32-be", "utf-8-sig"],
+)
+def test_only_utf8_byte_documents_are_accepted(encoding):
+    with pytest.raises(ContractError, match="invalid JSON document") as failure:
+        load_document('{"text":"private-value"}'.encode(encoding))
+    assert "private-value" not in str(failure.value)
+
+
+def test_utf8_text_and_bytes_preserve_unicode_and_reject_bom():
+    raw = '{"text":"Chișinău, Кишинёв 🏠"}'
+    assert load_document(raw.encode("utf-8")) == load_document(raw)
+    with pytest.raises(ContractError, match="invalid JSON document"):
+        load_document("\ufeff" + raw)
+
+
+@pytest.mark.parametrize("raw", [bytearray('{"a":1}', "utf-16"), memoryview(b"{}"), None])
+def test_unsupported_wire_types_cannot_bypass_utf8_decoding(raw):
+    with pytest.raises(ContractError, match="JSON text or UTF-8 bytes"):
+        load_document(raw)
+
+
+def test_document_limit_counts_utf8_bytes():
+    raw = '{"text":"' + "ș" * (MAX_DOCUMENT_BYTES // 2) + '"}'
+    assert len(raw) < MAX_DOCUMENT_BYTES
+    for value in (raw, raw.encode("utf-8")):
+        with pytest.raises(ContractError, match="size limit"):
+            load_document(value)
 
 
 @pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf"), (1, 2), {1: "bad"}])
@@ -124,7 +210,8 @@ def test_unknown_schema_and_sensitive_values_are_not_echoed(apartment):
     assert "do-not-print" not in str(failure.value)
 
 
-def test_resolved_cli_contracts_are_distinct(request_document):
+@pytest.fixture
+def cli_request_documents(request_document):
     train = {
         "contract_version": "1.0.0",
         "model_family": "xgboost",
@@ -137,11 +224,6 @@ def test_resolved_cli_contracts_are_distinct(request_document):
         "checkpoint_ref": None,
         "output_directory": "/outputs/candidate",
     }
-    validate_document("train-request", train)
-    invalid = copy.deepcopy(train)
-    del invalid["random_seed"]
-    with pytest.raises(ContractError):
-        validate_document("train-request", invalid)
     predict = {
         "contract_version": "1.0.0",
         "bundle_ref": {"path": "/inputs/bundle", "digest": request_document["dataset_ref"]},
@@ -150,6 +232,17 @@ def test_resolved_cli_contracts_are_distinct(request_document):
         "inference_configuration": {},
         "output_path": "/outputs/predictions.parquet",
     }
+    return {"train-request": train, "predict-batch-request": predict}
+
+
+def test_resolved_cli_contracts_are_distinct(cli_request_documents):
+    train = cli_request_documents["train-request"]
+    predict = cli_request_documents["predict-batch-request"]
+    validate_document("train-request", train)
+    invalid = copy.deepcopy(train)
+    del invalid["random_seed"]
+    with pytest.raises(ContractError):
+        validate_document("train-request", invalid)
     validate_document("predict-batch-request", predict)
     predict["inference_configuration"]["tolerant"] = True
     with pytest.raises(ContractError):
@@ -160,3 +253,97 @@ def test_all_error_categories_have_unique_nonzero_documented_exit_codes():
     assert set(EXIT_CODES) == set(ErrorCategory)
     assert len(set(EXIT_CODES.values())) == len(ErrorCategory)
     assert 0 not in EXIT_CODES.values()
+
+
+@pytest.fixture
+def identifier_documents(
+    apartment, request_document, manifest, task_document, cli_request_documents
+):
+    digest = request_document["dataset_ref"]
+    manifest["checkpoints"] = [
+        {"checkpoint_id": "checkpoint-1", "digest": digest, "license_ref": "test-license"}
+    ]
+    task_document["verification_evidence"] = [
+        {"check": "unit", "status": "passed", "required": True, "reference": "test-report"}
+    ]
+    return {
+        **cli_request_documents,
+        "apartment": apartment,
+        "bundle-manifest": manifest,
+        "experiment-request": request_document,
+        "prediction-batch": {
+            "contract_version": "1.0.0",
+            "bundle_digest": digest,
+            "target_unit": "EUR/month",
+            "predictions": [{"record_id": apartment["record_id"], "predicted_rent_eur": 750}],
+        },
+        "task-record": task_document,
+    }
+
+
+IDENTIFIER_CASES = (
+    ("A", "z" + "0" * 123 + "._-X"),
+    ("", ".id", "id/name", "é", "a" * 129),
+)
+DIGEST_CASES = (
+    ("sha256:" + "0a" * 32,),
+    ("sha256:" + "a" * 63, "sha256:" + "a" * 65, "sha256:" + "A" * 64, "sha512:" + "a" * 64),
+)
+GIT_COMMIT_CASES = (
+    ("a" * 40, "0f" * 32),
+    ("a" * 39, "a" * 41, "a" * 63, "a" * 65, "A" * 40),
+)
+
+
+@pytest.mark.parametrize(
+    "schema_name, path, cases",
+    [
+        ("apartment", ("record_id",), IDENTIFIER_CASES),
+        ("bundle-manifest", ("bundle_digest",), DIGEST_CASES),
+        ("bundle-manifest", ("model_family",), IDENTIFIER_CASES),
+        ("bundle-manifest", ("provenance", "source_snapshot"), DIGEST_CASES),
+        ("bundle-manifest", ("provenance", "reviewed_commit"), GIT_COMMIT_CASES),
+        ("bundle-manifest", ("provenance", "dataset_ref"), DIGEST_CASES),
+        ("bundle-manifest", ("provenance", "split_ref"), DIGEST_CASES),
+        ("bundle-manifest", ("provenance", "training_run"), IDENTIFIER_CASES),
+        ("bundle-manifest", ("provenance", "configuration_digest"), DIGEST_CASES),
+        ("bundle-manifest", ("artifacts", 0, "digest"), DIGEST_CASES),
+        ("bundle-manifest", ("preprocessing", "state_digest"), DIGEST_CASES),
+        ("bundle-manifest", ("adapter", "name"), IDENTIFIER_CASES),
+        ("bundle-manifest", ("checkpoints", 0, "digest"), DIGEST_CASES),
+        ("experiment-request", ("task_ref",), IDENTIFIER_CASES),
+        ("experiment-request", ("code_snapshot_ref",), DIGEST_CASES),
+        ("experiment-request", ("dataset_ref",), DIGEST_CASES),
+        ("experiment-request", ("split_ref",), DIGEST_CASES),
+        ("experiment-request", ("model_family",), IDENTIFIER_CASES),
+        ("experiment-request", ("idempotency_key",), IDENTIFIER_CASES),
+        ("predict-batch-request", ("bundle_ref", "digest"), DIGEST_CASES),
+        ("prediction-batch", ("bundle_digest",), DIGEST_CASES),
+        ("prediction-batch", ("predictions", 0, "record_id"), IDENTIFIER_CASES),
+        ("task-record", ("task_id",), IDENTIFIER_CASES),
+        ("task-record", ("verification_evidence", 0, "check"), IDENTIFIER_CASES),
+        ("train-request", ("model_family",), IDENTIFIER_CASES),
+        ("train-request", ("dataset_ref",), DIGEST_CASES),
+        ("train-request", ("split_ref",), DIGEST_CASES),
+        ("train-request", ("checkpoint_ref",), DIGEST_CASES),
+    ],
+)
+def test_identifier_formats(schema_name, path, cases, identifier_documents):
+    document = identifier_documents[schema_name]
+    container = document
+    for segment in path[:-1]:
+        container = container[segment]
+    field = path[-1]
+    valid_values, invalid_values = cases
+    for value in valid_values:
+        container[field] = value
+        validate_document(schema_name, document)
+        for suffix in ("\n", "\r\n", "\r", "\t", "\x00", "\u2028", "\u2029", " "):
+            container[field] = value + suffix
+            with pytest.raises(ContractError, match="contract violation"):
+                validate_document(schema_name, document)
+
+    for value in invalid_values:
+        container[field] = value
+        with pytest.raises(ContractError, match="contract violation"):
+            validate_document(schema_name, document)

@@ -8,26 +8,40 @@
     },
     "task_ref": {
       "type": "string",
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9]",
+      "not": {
+        "pattern": "[^A-Za-z0-9_.-]"
+      }
     },
     "operation": {
       "const": "train"
     },
     "code_snapshot_ref": {
       "type": "string",
-      "pattern": "^sha256:[a-f0-9]{64}$"
+      "minLength": 71,
+      "maxLength": 71,
+      "pattern": "^sha256:[a-f0-9]{64}"
     },
     "dataset_ref": {
       "type": "string",
-      "pattern": "^sha256:[a-f0-9]{64}$"
+      "minLength": 71,
+      "maxLength": 71,
+      "pattern": "^sha256:[a-f0-9]{64}"
     },
     "split_ref": {
       "type": "string",
-      "pattern": "^sha256:[a-f0-9]{64}$"
+      "minLength": 71,
+      "maxLength": 71,
+      "pattern": "^sha256:[a-f0-9]{64}"
     },
     "model_family": {
       "type": "string",
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9]",
+      "not": {
+        "pattern": "[^A-Za-z0-9_.-]"
+      }
     },
     "configuration": {
       "type": "object"
@@ -62,7 +76,11 @@
     },
     "idempotency_key": {
       "type": "string",
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9]",
+      "not": {
+        "pattern": "[^A-Za-z0-9_.-]"
+      }
     },
     "random_seed": {
       "type": "integer",

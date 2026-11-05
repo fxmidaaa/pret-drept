@@ -1,0 +1,145 @@
+{
+  "acceptance_criteria": [
+    "See plan.md criteria 1-5: retry failed retrievals, preserve valid/rejected state, distinguish search failure, safe incomplete exit and final verification"
+  ],
+  "affected_modules": [
+    "scrape.py",
+    "tests/test_scrape.py",
+    "README.md",
+    "docs/development.md",
+    "docs/tasks/2026-11-03-scraper-retry",
+    "docs/reports/a03-scraper-retry.md"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Read audit, guidance, alignment, current source and previous task records; confirmed clean fix/repository-audit at 48ddb57",
+    "Persisted live user approval, plan, acceptance criteria and private/prior-record preservation digests",
+    "Both original counterexamples reproduced against unchanged scraper: 2 expected failures",
+    "Implemented safe bounded request handling, explicit search failure and unresolved detail handling without rejection; preserved A02 storage",
+    "59 focused scraper tests passed, including 28 new acquisition cases; documentation updated",
+    "Strengthened the retry regression through the real request/helper path and both CLI failure exits; 60 tests passed",
+    "Final review added inconsistent search-count and malformed identity/control cases; 63 focused tests passed (32 new)",
+    "Final full suite: 205 passed, zero failed/skipped in 4.03 seconds; one existing deprecation warning",
+    "Scoped Ruff check/format (23 files), pinned actionlint, architecture and preservation checks passed",
+    "Recorded engineering review, limits and exact recovery; publication/live collection remain outside scope",
+    "User approved the presented branch and commit message with push; publication of the reviewed A03 patch is authorized and pending execution",
+    "Committed exactly the eight reviewed A03 files as 7e12d691575b3a1e06277c1900c6f9637314bd4a with the approved message",
+    "Pushed fix/repository-audit without force; local HEAD, tracking ref and queried remote branch all match",
+    "Exact-commit push run 41616714577 started; foundations job 125851855286 is in progress",
+    "Exact-commit GitHub run 41616714577 and foundations job 125851855286 succeeded; all workflow/static/architecture/test/build steps passed",
+    "CI: 193 passed, 12 explicit absent-private-model skips, zero failures, one pytest warning in 2.73 seconds; action-runtime warnings also recorded",
+    "Saved post-publication evidence locally in this record and a03-scraper-retry.md; no additional commit/push",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41616714577"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A03 option 2 source commit 7e12d69 pushed to fix/repository-audit with the approved message; local suite 205 passed, exact-commit GitHub CI passed with 193 passed/12 explicit absent-private-model skips. Post-CI evidence saved locally; no further publication, live acquisition or migration.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-03T09:57:49.216703+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-03T09:57:49.242491+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-03T09:57:49.242795+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-03T09:57:49.243064+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-03T10:01:15.060370+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-03T10:04:28.654044+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-03T10:04:28.654603+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Persist approved scope and preservation identities",
+    "Reproduce failure with synthetic regressions",
+    "Implement bounded acquisition/completeness correction",
+    "Update instructions and execute final checks",
+    "Review scope and persist evidence/recovery"
+  ],
+  "important_decisions": [
+    "User approved option 2 in this conversation; no durable queue or new acquisition-state protocol",
+    "Retain old rejection markers; retry unsuccessful details only when encountered again",
+    "State timestamps record task-record creation, not reconstructed work start",
+    "Preserve successful helper return shapes; use AcquisitionError for invalid/incomplete acquisition and CLI exit 1",
+    "No raw GraphQL/exception text in diagnostics; missing eligibility remains unresolved rather than rejected",
+    "HTTP errors now use the existing three-attempt request budget; sleep only between attempts",
+    "Approved publication: fix/repository-audit; fix(scraper): keep failed fetches retryable and flag incomplete runs. Post-publication evidence remains local until separately approved.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Published fix/repository-audit is at 7e12d691575b3a1e06277c1900c6f9637314bd4a; exact-commit CI passed. Preserve the two local post-CI evidence updates (this task record and docs/reports/a03-scraper-retry.md). Obtain user approval of a new commit message before publishing them; other audit fixes and collection/migration require separate decisions."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
+  "objective": "Correct A03 option 2: keep failed acquisition outside completed state and report incomplete collection",
+  "original_authorized_request": "docs/tasks/2026-11-03-scraper-retry/request.md",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Frozen architecture v1; acquisition independent of ML/harness",
+    "Private input and A01/A02 records unchanged; no row-level response/exception contents in diagnostics",
+    "A02 validated atomic storage preserved; mutable checkpoints are not dataset releases"
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Legacy scraper failure/completeness handling, offline tests, documentation and evidence only",
+    "User approved committing/pushing the reviewed A03 patch and inspecting exact-commit CI; no live collection, migration, reinterpretation of old rejections, training, other audit fixes or protected operations"
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261103-A03",
+  "verification_evidence": [
+    {
+      "check": "acquisition-regressions",
+      "reference": "docs/reports/a03-scraper-retry.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "local-suite",
+      "reference": "docs/reports/a03-scraper-retry.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-checks",
+      "reference": "docs/reports/a03-scraper-retry.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation-context-diff",
+      "reference": "docs/reports/a03-scraper-retry.md#executed-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41616714577",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "acquisition-regressions",
+    "local-suite",
+    "source-checks",
+    "preservation-context-diff",
+    "remote-ci"
+  ]
+}

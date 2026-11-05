@@ -1,0 +1,122 @@
+{
+  "acceptance_criteria": [
+    "Round-trip at the byte limit and preserve the old record one byte over."
+  ],
+  "affected_modules": [
+    "src/rent_agent/tasks.py",
+    "tests/foundations/test_tasks.py",
+    "docs/development.md"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Synthetic reproduction saved 1,350,871 bytes from a 600,684-byte compact record. Reading the replacement failed.",
+    "Before the fix, the at-limit test passed and the one-byte-over test failed as expected.",
+    "Saved payload is encoded once and checked before any file or directory creation. The bounded reader shares the same contract constant.",
+    "23 focused and 233 full-suite tests passed. Ruff, actionlint, architecture CLI and whitespace checks passed. All six pre-existing evidence digests match.",
+    "User approved publishing A06 with the proposed commit message by asking to push.",
+    "Published the five A06 files as 894a01675425bcf1e8cf05bab28dd42a47b419af and confirmed the remote ref. CI run 41728652619 started.",
+    "GitHub Actions run 41728652619 passed for 894a016. Foundations job 126239933622 reported 221 passed and 12 private-model skips. The distribution build passed.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41728652619"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A06 published as 894a016 on fix/repository-audit. GitHub Actions passed with 221 tests passed and 12 private-model skips.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-03T22:07:08.546100+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-03T22:07:08.572779+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-03T22:07:08.573023+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-03T22:07:08.573267+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-03T22:08:18.002460+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-03T22:08:18.003423+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-03T22:08:18.003801+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Add byte boundary tests",
+    "Enforce the shared limit before writing",
+    "Run checks and record results"
+  ],
+  "important_decisions": [
+    "Keep the indented storage format and use the existing byte limit.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm 894a016 on fix/repository-audit and preserve local A03–A06 evidence. Obtain separate approval to publish evidence updates."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
+  "objective": "Ensure saved task records fit the shared read limit",
+  "original_authorized_request": "User approved A06 option 1 in conversation. See plan.md.",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Preserve the frozen architecture, atomic replacement and prior local evidence."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Task record persistence, focused tests, developer guidance and task evidence",
+    "Publish the five reviewed A06 files and verify GitHub CI."
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261104-A06",
+  "verification_evidence": [
+    {
+      "check": "boundary-tests",
+      "reference": "docs/tasks/2026-11-04-task-record-size/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "full-suite",
+      "reference": "docs/tasks/2026-11-04-task-record-size/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-checks",
+      "reference": "docs/tasks/2026-11-04-task-record-size/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-04-task-record-size/plan.md#verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41728652619",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "boundary-tests",
+    "full-suite",
+    "source-checks",
+    "preservation",
+    "remote-ci"
+  ]
+}

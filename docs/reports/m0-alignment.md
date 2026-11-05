@@ -8,7 +8,12 @@ The attached document supplies the architectural requirements explicitly incorpo
 
 ## 1. Current architecture
 
-The repository is a small working application, not a blank project. Its 24 tracked files include six root Python modules, two notebooks, two test modules, a static frontend, an inference Dockerfile, images, and three synthetic sample rows.
+The repository is a small working application, not a blank project. At the audited
+`e08344dfab8ee03ef155e885c83153b5558ee178` baseline it has **25 tracked files** and
+**five root Python modules**: `api.py`, `features.py`, `predict.py`, `scrape.py` and
+`train.py`. It also includes two notebooks, two test modules, a static frontend, an
+inference Dockerfile, images, and three synthetic sample rows. This historical inventory
+is reproducible with `git ls-tree -r --name-only e08344d`; it is not today's file count.
 
 | Area | Actual implementation and evidence | Status against target |
 |---|---|---|
