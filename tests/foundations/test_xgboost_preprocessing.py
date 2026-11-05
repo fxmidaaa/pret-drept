@@ -42,7 +42,7 @@ def test_legacy_export_reloads_the_fitted_preprocessing(tmp_path, monkeypatch):
 
     monkeypatch.setattr(train, "BASE", str(tmp_path))
     monkeypatch.setattr(train.pd, "read_csv", lambda path: training)
-    monkeypatch.setattr(train, "clean_data", lambda rows: rows)
+    monkeypatch.setattr(train, "clean_data", lambda rows, **kwargs: rows)
     monkeypatch.setattr(train, "train_test_split", lambda *args, **kwargs: (training, validation))
     monkeypatch.setattr(train, "trim_ppm_outliers", lambda rows, bounds=None: (rows, bounds))
     monkeypatch.setattr(train, "LinearRegression", _StubEstimator)

@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import date
 
@@ -30,7 +31,9 @@ def main():
     # load and clean the data (999.md monthly rent)
     df = pd.read_csv(os.path.join(BASE, "data", "raw", "listings.csv"))
     print("raw rows:", len(df))
-    df = clean_data(df)
+    diagnostics = {}
+    df = clean_data(df, diagnostics=diagnostics)
+    print("normalization diagnostics:", json.dumps(diagnostics, sort_keys=True))
     print("rows after cleaning:", len(df))
 
     # split the data into train and validation first:

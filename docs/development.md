@@ -39,6 +39,24 @@ The tests require that pinned executable beside the Python interpreter, or at an
 
 The legacy feature suite runs without private data. `/health` and homepage tests run without a model. Twelve legacy prediction/options/privacy checks are marked `legacy_artifact`; they execute normally when the private `model.joblib` exists and are explicitly skipped otherwise. Missing artifacts are never replaced with fake models. A skipped private-artifact check cannot certify model behavior, privacy or runtime compatibility. Protected model acceptance must fail if its required artifact/evidence is missing; these development skips are not an acceptance policy.
 
+A15 makes `clean_price` require `UNIT_EUR`, `UNIT_MDL`, or `UNIT_USD` and a positive finite
+amount. Unsupported currencies and malformed prices become missing required values and are
+excluded during cleaning. `parse_latlon` accepts numeric JSON coordinates within the existing
+city bounds. Other coordinate representations become a missing pair for the existing imputer.
+`first_number` extracts finite signed tokens, including decimal commas, decimal fractions,
+and exponents. Negative area and room values reach the existing range filters with their signs.
+
+`clean_data(frame, diagnostics=report)` returns the cleaned DataFrame and replaces the supplied
+dictionary with per-call counts after successful cleaning. `field_issues` counts unsupported
+currencies, invalid amounts, and missing or invalid coordinate pairs across the input.
+`excluded_rows` records removals at each cleaning stage in order, so those counts sum to
+`input_rows - output_rows`. Field issues can overlap row exclusions. The legacy trainer prints
+this report as JSON containing counts and static reason codes.
+
+Legacy conversions divide MDL by `MDL_PER_EUR=19.5` and multiply USD by `EUR_PER_USD=0.92`.
+These are fixed historical constants. A dated exchange-rate policy and conversion provenance
+belong to the M2 dataset release work.
+
 `tests/test_scrape.py` exercises legacy checkpoint preservation with synthetic CSVs, blocked requests and simulated write/fsync/replacement failures. It does not scrape or migrate the real dataset. Checkpoints require a `listing_key` column with unique 16-character lowercase hexadecimal values; CSV column names/row widths and UTF-8 encoding must be unambiguous. Optional cells are loaded as text to preserve leading zeros and literal values such as `NA`. The parser accommodates long cells within the file size and restores its process-wide field limit afterward. A missing file starts empty state, an empty existing file is rejected, and a valid header-only file represents an empty checkpoint. Saves refuse to drop existing identities and validate the temporary file's population and columns before atomic replacement. Concurrent checkpoint access and power-loss recovery are not certified.
 
 A04 option 2 enforces `CHECKPOINT_FIELDS`: the existing reviewed feature/filter names plus `listing_key`, `price_value`, `price_unit`, `first_seen` and `last_seen`. One validator checks CSV headers before rows are read and checks every row submitted to saving before any output is created; the existing destination and serialized temporary file pass through the same reader. Unexpected columns, even in a header-only checkpoint, raise a safe `CheckpointError` without disclosing names/values or modifying the original. Column names match exactly; optional approved columns remain optional. Tests verify direct-save rejection, preservation of contaminated destinations, complete approved-column round trips, serialized-column injection rejection, and exclusion of unapproved fetched controls. Files with unexpected columns require a separately reviewed, versioned migration to a new destination retaining the original; no automatic cleanup/migration is provided. Column validation does not redact personal information from approved free text (A17).
