@@ -40,3 +40,11 @@ Recovery: Confirm `fix/repository-audit` at `d11304ad1534f2eae1adb30520b338c9b23
 The user approved publication by asking to push the proposed commit to the remote. Publish the five A05 files to `fix/repository-audit` with message `fix(architecture): detect forbidden import chains and source symlinks`. Inspect the resulting GitHub run and record its result locally.
 
 GitHub confirmed the push at `d11304a`. The foundations job completed workflow validation, static checks, dependency checks, tests and the distribution build. The test log reported 219 passes and 12 explicit private-model skips in 3.45 seconds. Existing deprecation warnings remain in the job log. [Run 41724876763](https://github.com/fxmidaaa/pret-drept/actions/runs/41724876763)
+
+## Current recovery pointer — 2026-11-05
+
+Earlier checkpoints above are historical evidence, including their source/CI identities.
+Current branch state and next actions are in the [audit index](../../reports/README.md#current-checkpoint-and-recovery)
+and [completion plan](../2026-11-05-audit-completion/plan.md): `fix/repository-audit` at
+`36e67b7` plus uncommitted audit work. Inspect actual status/diff and preserve all local
+changes; do not restore an older branch tip or infer publication authorization.

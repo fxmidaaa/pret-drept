@@ -21,7 +21,8 @@
     "All 256 tests and scoped source checks passed. Wheel, network-disabled Docker COPY smoke build and exported legacy API probe passed. All twelve prior evidence digests match.",
     "User approved the proposed A09 commit message and publication.",
     "Published c4b91eac786e9d1cf21058ee956b310e41bd4c43 and confirmed the remote ref. CI run 41809961842 was queued.",
-    "GitHub Actions run 41809961842 passed for c4b91ea. Foundations job 126506591055 reported 244 passed and 12 private-model skips. The distribution build passed."
+    "GitHub Actions run 41809961842 passed for c4b91ea. Foundations job 126506591055 reported 244 passed and 12 private-model skips. The distribution build passed.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
   ],
   "execution_identifiers": {
     "ci": [
@@ -69,10 +70,11 @@
   "important_decisions": [
     "Require both coordinates or neither. Keep legacy sector fallback when both are absent.",
     "Share one standard-library-only package with legacy source and installed contracts.",
-    "Use post-schema semantic checks in the canonical validator and translate only the domain error in the HTTP route."
+    "Use post-schema semantic checks in the canonical validator and translate only the domain error in the HTTP route.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm c4b91ea on fix/repository-audit and preserve local A03–A09 evidence. Obtain separate approval to publish evidence updates."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Confirm c4b91ea on fix/repository-audit and preserve local A03–A09 evidence. Obtain separate approval to publish evidence updates.",
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
   "objective": "Apply shared apartment relationship checks across legacy and canonical inputs",
   "original_authorized_request": "User approved A09 option 1 and requested no dependency changes if possible.",
   "pending_approvals": [],

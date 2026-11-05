@@ -20,7 +20,8 @@
     "Ruff, actionlint, architecture and whitespace checks passed. All 20 prior documentation edits match their starting digests.",
     "The user approved pushing the reviewed A13 patch.",
     "Published 086ef83d3d4043d89515ec2f83720d2474dc708a to fix/repository-audit and verified the remote ref.",
-    "GitHub Actions run 41847049502 passed. Job 126633187008 verified both notebooks, reported 283 checkout tests passed and 12 private-model skips, and passed 142 tests each for the extracted source and wheel."
+    "GitHub Actions run 41847049502 passed. Job 126633187008 verified both notebooks, reported 283 checkout tests passed and 12 private-model skips, and passed 142 tests each for the extracted source and wheel.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
   ],
   "execution_identifiers": {
     "ci": [
@@ -67,10 +68,11 @@
   ],
   "important_decisions": [
     "Use source-only notebooks and a structural check for saved state.",
-    "Inspect the Git-tracked notebook paths in the working tree and reject structured saved state without classifying the contents."
+    "Inspect the Git-tracked notebook paths in the working tree and reject structured saved state without classifying the contents.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm 086ef83 on fix/repository-audit and GitHub Actions run 41847049502. Preserve the local CI evidence and the 20 earlier documentation edits."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Confirm 086ef83 on fix/repository-audit and GitHub Actions run 41847049502. Preserve the local CI evidence and the 20 earlier documentation edits.",
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
   "objective": "Remove saved private listing previews from public notebook files and prevent saved output from returning",
   "original_authorized_request": "User selected A13 option 1 and requires separate approval before push.",
   "pending_approvals": [],

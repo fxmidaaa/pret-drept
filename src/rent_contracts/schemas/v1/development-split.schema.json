@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:development-split:1.0.0",
+  "$defs": {
+    "eligibility_exclusions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "invalid_non_target_domain", "unresolved_non_target_domain",
+          "temporal_evidence_missing", "temporal_order_invalid", "outside_development_windows"
+        ]
+      }
+    },
+    "unseen_property_exclusions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "not_development_validation", "listing_seen_in_training", "property_overlap_training",
+          "property_identity_unconfirmed", "training_identity_unresolved"
+        ]
+      }
+    },
+    "membership": {
+      "type": "object",
+      "properties": {
+        "observation_id": {
+          "$ref": "urn:rent:observation-reference:1.0.0#/$defs/identifier"
+        },
+        "partition": { "enum": ["training", "development_validation", "excluded"] },
+        "eligibility_exclusions": { "$ref": "#/$defs/eligibility_exclusions" },
+        "cohorts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["future_market", "unseen_property"] }
+        },
+        "unseen_property_exclusions": { "$ref": "#/$defs/unseen_property_exclusions" }
+      },
+      "required": [
+        "observation_id", "partition", "eligibility_exclusions", "cohorts",
+        "unseen_property_exclusions"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "access_domain": { "const": "development" },
+    "split_digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "dataset_ref": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "observations_digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "policy_ref": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "training_cutoff": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/instant" },
+    "validation_window": {
+      "type": "object",
+      "properties": {
+        "start_inclusive": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/instant" },
+        "end_exclusive": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/instant" }
+      },
+      "required": ["start_inclusive", "end_exclusive"],
+      "additionalProperties": false
+    },
+    "memberships": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/membership" }
+    },
+    "creation_provenance": {
+      "type": "object",
+      "properties": {
+        "source_snapshot_ref": {
+          "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest"
+        },
+        "created_at": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/instant" }
+      },
+      "required": ["source_snapshot_ref", "created_at"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contract_version", "access_domain", "split_digest", "dataset_ref", "observations_digest",
+    "policy_ref", "training_cutoff", "validation_window", "memberships", "creation_provenance"
+  ],
+  "additionalProperties": false
+}

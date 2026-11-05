@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:evaluation-policy:1.0.0",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "policy_version": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/identifier" },
+    "policy_digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "domain_policy_ref": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "property_matching_policy_ref": {
+      "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest"
+    },
+    "selection_basis": { "const": "non_target_metadata_only" },
+    "property_matching_basis": { "const": "non_target_signals_only" },
+    "eligibility_rule": { "const": "non_target_domain_and_observation_time_v1" },
+    "unseen_property_rule": { "const": "confirmed_absence_from_resolved_training_v1" },
+    "target_unit": { "const": "EUR/month" }
+  },
+  "required": [
+    "contract_version", "policy_version", "policy_digest", "domain_policy_ref",
+    "property_matching_policy_ref", "selection_basis", "property_matching_basis",
+    "eligibility_rule", "unseen_property_rule", "target_unit"
+  ],
+  "additionalProperties": false
+}

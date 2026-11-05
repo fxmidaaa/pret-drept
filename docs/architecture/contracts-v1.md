@@ -6,9 +6,31 @@ Authority: supplied specification §§7, 10–12 and §6.4. The prose fixes sema
 
 Version the domain (`apartment`), adapter interface (`RegressionAdapter`), bundle format and prediction protocol independently. Their initial versions happen to be `1.0.0`; validators reject unsupported versions instead of assuming compatibility. A future adapter can register an identifier/configuration schema without changing the experiment protocol. Registration and execution approval are separate.
 
-JSON is UTF-8. Unknown object fields, duplicate JSON keys, nonfinite numbers, unsupported Python object types, documents over 1 MiB and nesting beyond 64 levels are rejected. These parser limits are implementation choices, not resource authorization. Parquet remains the intended table transport (§12.2); no pretend CSV/Parquet training implementation is introduced in M1.
+JSON is UTF-8 without a byte-order mark (BOM). Byte input is decoded explicitly as
+UTF-8 before JSON parsing; UTF-16/32 auto-detection is disabled. `load_document` accepts
+only text or `bytes`, with the same BOM/Unicode rules for each. Unknown object fields,
+duplicate JSON keys, nonfinite numbers, unsupported Python object types, documents over
+1 MiB (counted in UTF-8 bytes) and nesting beyond 64 levels are rejected. These parser
+limits are implementation choices, not resource authorization. Parquet remains the
+intended table transport (§12.2); no pretend CSV/Parquet training implementation is introduced in M1.
 
-`load_document(raw)` performs strict decoding. `validate_document(name, document)` validates the named public **structural** schema only. `ExperimentRequest.from_document(..., model_schemas=registered_schemas)` additionally validates adapter configuration. Production callers must use the latter and independently perform channel authentication, effective task authorization, immutable-reference resolution, policy bounds and sealing. Passing schema validation never admits an experiment.
+`load_document(raw)` performs strict decoding. `validate_document(name, document)`
+validates the named public **structural** schema only.
+`ExperimentRequest.from_document(..., model_schemas=registered_schemas)` additionally
+validates adapter registration and configuration. Direct construction with
+`ExperimentRequest(payload, model_schemas=registered_schemas)` performs the same checks
+and canonicalizes the JSON before immutable storage. The registry is required and is
+not retained in the request. Construction without it fails, including replacement
+without the required registry. Callers must independently perform channel authentication,
+effective task authorization, immutable-reference resolution, policy bounds and sealing.
+Passing schema validation never admits an experiment.
+
+The additive M2 [development evaluation proposal](evaluation-contracts-v1.md) defines
+`observation-reference`, `evaluation-policy` and `development-split`, with semantic
+helpers for explicit eligibility/exclusions, temporal/property checks and fixed
+candidate populations. These development-only contracts require policy review
+before real-data use and do not expose restricted final-holdout details or certify
+feature leakage, a dataset release or the M2 exit gate.
 
 Schemas are loaded from bundled local resources. External schema lookup is denied; adapter schemas are explicitly supplied by the caller's registry. No configuration can select a Python import path, command, host mount, credentials or runtime security options.
 

@@ -27,3 +27,11 @@ Recovery: Confirm `fix/repository-audit` at `a8b6a1cf89de3b55b178032e282aebddb7f
 The user approved publication with message `fix(api): serialize nonfinite validation inputs safely` on `fix/repository-audit`. Verify CI for the published commit.
 
 GitHub confirmed `a8b6a1c` on `fix/repository-audit`. Workflow validation, static checks, dependency checks, tests and the distribution build passed. The test log reported 229 passes and 12 private-model skips in 4.20 seconds. [Run 41804561617](https://github.com/fxmidaaa/pret-drept/actions/runs/41804561617)
+
+## Current recovery pointer — 2026-11-05
+
+Earlier checkpoints above are historical evidence, including their source/CI identities.
+Current branch state and next actions are in the [audit index](../../reports/README.md#current-checkpoint-and-recovery)
+and [completion plan](../2026-11-05-audit-completion/plan.md): `fix/repository-audit` at
+`36e67b7` plus uncommitted audit work. Inspect actual status/diff and preserve all local
+changes; do not restore an older branch tip or infer publication authorization.

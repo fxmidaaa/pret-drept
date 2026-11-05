@@ -20,6 +20,9 @@ SCHEMA_NAMES = (
     "prediction-batch",
     "bundle-manifest",
     "task-record",
+    "observation-reference",
+    "evaluation-policy",
+    "development-split",
 )
 MAX_DOCUMENT_BYTES = 1_048_576
 
@@ -76,9 +79,15 @@ def _constant(_: str) -> None:
 
 
 def load_document(raw: str | bytes) -> dict[str, Any]:
+    if not isinstance(raw, (str, bytes)):
+        raise ContractError("expected JSON text or UTF-8 bytes")
     try:
         if len(raw.encode("utf-8") if isinstance(raw, str) else raw) > MAX_DOCUMENT_BYTES:
             raise ContractError("document size limit exceeded")
+        if isinstance(raw, bytes):
+            # json.loads(bytes) auto-detects UTF-16/32 and strips a UTF-8 BOM.
+            # Decode explicitly so every wire document follows the UTF-8 contract.
+            raw = raw.decode("utf-8")
         value = json.loads(raw, object_pairs_hook=_pairs, parse_constant=_constant)
         canonical_json(value)
     except (ValueError, UnicodeError, RecursionError) as exc:

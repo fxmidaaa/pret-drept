@@ -14,7 +14,8 @@
     "Six focused and 241 full-suite tests passed. Source checks passed and all ten prior evidence digests match.",
     "User approved the proposed A08 commit message and publication.",
     "Published a8b6a1cf89de3b55b178032e282aebddb7fb128c and confirmed the remote ref. CI run 41804561617 started.",
-    "GitHub Actions run 41804561617 passed for a8b6a1c. Foundations job 126488260664 reported 229 passed and 12 private-model skips. The distribution build passed."
+    "GitHub Actions run 41804561617 passed for a8b6a1c. Foundations job 126488260664 reported 229 passed and 12 private-model skips. The distribution build passed.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
   ],
   "execution_identifiers": {
     "ci": [
@@ -60,10 +61,11 @@
     "Verify and present commit proposal"
   ],
   "important_decisions": [
-    "User approved option 2: sanitize validation responses and keep the parser behavior."
+    "User approved option 2: sanitize validation responses and keep the parser behavior.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm a8b6a1c on fix/repository-audit and preserve local A03–A08 evidence. Obtain separate approval to publish evidence updates."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Confirm a8b6a1c on fix/repository-audit and preserve local A03–A08 evidence. Obtain separate approval to publish evidence updates.",
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
   "objective": "Return JSON-safe HTTP 422 responses for rejected nonfinite inputs",
   "original_authorized_request": "User approved A08 option 2 and requested a short implementation summary and proposed commit message before publication.",
   "pending_approvals": [],

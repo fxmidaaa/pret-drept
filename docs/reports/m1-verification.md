@@ -2,6 +2,12 @@
 
 Date: 2026-11-02. Baseline: `e08344dfab8ee03ef155e885c83153b5558ee178`. Scope: specification **M1**, plus M0 follow-up inspection explicitly requested by the user. No architecture decision was weakened. This is an incremental source proposal; the full architecture and protected runtime are not complete.
 
+Current recovery (2026-11-05): use the [audit checkpoint](README.md#current-checkpoint-and-recovery)
+and [completion plan](../tasks/2026-11-05-audit-completion/plan.md). The source-only,
+unpublished and unavailable-CI statements below describe the dated M1 checkpoint.
+Subsequent publication/development CI is indexed separately; it does not activate
+protected CI or certify isolation. A18 corrects the original encoding/constructor gaps.
+
 ## Implemented
 
 | Files/modules | Behavior and contract | Specification |

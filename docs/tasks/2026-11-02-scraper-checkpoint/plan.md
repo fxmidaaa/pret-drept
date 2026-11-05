@@ -44,3 +44,11 @@ published as `9341519338a35f37541b9c25b1d89ff4b9f787ba`. Its
 with 161 tests passed and 12 private-model checks skipped.
 See the [current report status](../../reports/a02-scraper-checkpoint.md#publication-reconciliation).
 Earlier pre-publication entries above are retained as historical checkpoints.
+
+## Current recovery pointer — 2026-11-05
+
+Earlier checkpoints above are historical evidence, including their source/CI identities.
+Current branch state and next actions are in the [audit index](../../reports/README.md#current-checkpoint-and-recovery)
+and [completion plan](../2026-11-05-audit-completion/plan.md): `fix/repository-audit` at
+`36e67b7` plus uncommitted audit work. Inspect actual status/diff and preserve all local
+changes; do not restore an older branch tip or infer publication authorization.

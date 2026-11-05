@@ -23,3 +23,11 @@ The full suite ran with `PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR=/private/tmp/pre
 Recovery: Confirm `fix/repository-audit` at `95b019e74e79e8b8a268acd32ff3e94928b77e36`. Preserve the local A03–A07 evidence. Publication of evidence updates requires separate approval.
 
 The user authorized publication. GitHub confirmed commit `95b019e` with message `fix(predict): serialize lazy model initialization`. Workflow validation, static checks, dependency checks, tests and the distribution build passed. The test log reported 223 passes and 12 private-model skips in 3.89 seconds. [Run 41731227832](https://github.com/fxmidaaa/pret-drept/actions/runs/41731227832)
+
+## Current recovery pointer — 2026-11-05
+
+Earlier checkpoints above are historical evidence, including their source/CI identities.
+Current branch state and next actions are in the [audit index](../../reports/README.md#current-checkpoint-and-recovery)
+and [completion plan](../2026-11-05-audit-completion/plan.md): `fix/repository-audit` at
+`36e67b7` plus uncommitted audit work. Inspect actual status/diff and preserve all local
+changes; do not restore an older branch tip or infer publication authorization.

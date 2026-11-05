@@ -31,7 +31,8 @@
     "Committed the reviewed 10-file patch as 2a5beefc74ff51f3c962156a1cf6eaf2f1ae287e with the approved message; pushed fix/repository-audit without force; remote and upstream SHA matched",
     "Exact-commit GitHub run 41520470597 and foundations job 125534882330 succeeded on Ubuntu 24.04/Python 3.13.17 x86-64; actionlint, installation, lint/format, architecture, tests and build all passed",
     "CI logs: 130 passed, 12 explicitly skipped for the absent private model, one pytest warning in 4.11 seconds; additional Node runtime deprecation warning noted without changing pins",
-    "Recorded post-CI evidence locally; only the originally approved source commit was pushed"
+    "Recorded post-CI evidence locally; only the originally approved source commit was pushed",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
   ],
   "execution_identifiers": {
     "ci": [
@@ -88,10 +89,11 @@
     "Working branch: fix/repository-audit; focus on existing audited defects with minimal necessary changes",
     "Present the branch name and proposed commit message for user approval before any push; further fix choices still require approval",
     "Approved publication: fix/repository-audit; commit message: fix(ci): correct runner context scope and validate workflows",
-    "Publication approval covered the presented A01 commit; later evidence updates remain local until branch and new commit message receive approval"
+    "Publication approval covered the presented A01 commit; later evidence updates remain local until branch and new commit message receive approval",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Continue on fix/repository-audit at published commit 2a5beefc74ff51f3c962156a1cf6eaf2f1ae287e; GitHub run 41520470597 passed. Review the two local post-CI evidence updates and present the branch/new message for approval before publishing them. Obtain a solution decision and approval before implementing A02 or another audit finding."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Continue on fix/repository-audit at published commit 2a5beefc74ff51f3c962156a1cf6eaf2f1ae287e; GitHub run 41520470597 passed. Review the two local post-CI evidence updates and present the branch/new message for approval before publishing them. Obtain a solution decision and approval before implementing A02 or another audit finding.",
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
   "objective": "Correct audit A01 option 1 and add reproducible unprivileged workflow-semantic validation",
   "original_authorized_request": "docs/tasks/2026-11-02-ci-workflow/request.md",
   "pending_approvals": [],

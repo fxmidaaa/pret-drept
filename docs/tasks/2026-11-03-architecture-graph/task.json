@@ -16,7 +16,8 @@
     "Verified all four pre-existing A03/A04 evidence digests.",
     "User approved publishing the reviewed A05 patch with the proposed branch and commit message.",
     "Published the five A05 files as d11304ad1534f2eae1adb30520b338c9b239839c. Confirmed the remote ref. CI run 41724876763 started.",
-    "GitHub Actions run 41724876763 completed successfully for d11304a. Foundations job 126226919063 reported 219 passed and 12 private-model skips. The distribution build passed."
+    "GitHub Actions run 41724876763 completed successfully for d11304a. Foundations job 126226919063 reported 219 passed and 12 private-model skips. The distribution build passed.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
   ],
   "execution_identifiers": {
     "ci": [
@@ -64,10 +65,11 @@
   "important_decisions": [
     "User chose option 1: extend the existing checker without another dependency",
     "Classify tests, scripts and rent_checks as tooling. Reject application imports into tooling and excluded root artifact locations.",
-    "Recognized dynamic loaders require a literal absolute target. Arbitrary runtime loading is outside this static checker."
+    "Recognized dynamic loaders require a literal absolute target. Arbitrary runtime loading is outside this static checker.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm d11304a on fix/repository-audit and preserve the local A03/A04/A05 evidence updates. Obtain separate approval to publish the evidence files."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Confirm d11304a on fix/repository-audit and preserve the local A03/A04/A05 evidence updates. Obtain separate approval to publish the evidence files.",
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
   "objective": "Detect forbidden indirect imports and source symlinks in the existing static architecture checker",
   "original_authorized_request": "User chose A05 option 1 in the conversation. See plan.md.",
   "pending_approvals": [],

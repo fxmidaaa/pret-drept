@@ -16,7 +16,8 @@
     "Scoped lint and format, workflow validation, architecture checks, and whitespace checks passed. All 18 prior documentation edits match their starting digests.",
     "The user approved pushing the reviewed A12 patch.",
     "Published d5583a537eaf6b9e637fcd2bfb8149657eec539a to fix/repository-audit and verified the remote ref.",
-    "GitHub Actions run 41821705819 passed. Job 126546185591 reported 273 checkout tests passed and 12 private-model skips. The extracted source and wheel each passed 142 tests."
+    "GitHub Actions run 41821705819 passed. Job 126546185591 reported 273 checkout tests passed and 12 private-model skips. The extracted source and wheel each passed 142 tests.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
   ],
   "execution_identifiers": {
     "ci": [
@@ -63,10 +64,11 @@
   ],
   "important_decisions": [
     "Keep the fix in the independently usable JSON Schemas and preserve exact identity values.",
-    "Use independent JSON Schema constraints for the first character, allowed alphabet, and string length. Keep the tests in the existing packaged contract suite."
+    "Use independent JSON Schema constraints for the first character, allowed alphabet, and string length. Keep the tests in the existing packaged contract suite.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm d5583a5 on fix/repository-audit and GitHub Actions run 41821705819. Preserve the local CI evidence and the 18 earlier documentation edits."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Confirm d5583a5 on fix/repository-audit and GitHub Actions run 41821705819. Preserve the local CI evidence and the 18 earlier documentation edits.",
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
   "objective": "Reject malformed identifier and digest strings at the public schema boundary",
   "original_authorized_request": "User selected A12 option 1 and requires separate approval before push.",
   "pending_approvals": [],

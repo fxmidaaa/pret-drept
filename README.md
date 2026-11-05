@@ -199,16 +199,17 @@ Worth being upfront about a few things:
 
 ## Running it
 
-Python 3.13. First:
+For the legacy application runtime, use Python 3.13 in a virtual environment:
 
 ```bash
-pip install -r requirements.txt
+python3.13 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
 Start the app (you need a trained `model.joblib` for this):
 
 ```bash
-uvicorn api:app --reload
+.venv/bin/python -m uvicorn api:app --reload
 # then open http://127.0.0.1:8000
 ```
 
@@ -248,11 +249,25 @@ retry queue or guarantee that a listing will appear in a later search.
 Or try a single prediction from the terminal: `python predict.py` runs the example apartment at the
 bottom of that file.
 
-Run the tests (they cover the cleaning rules, features, API, and checkpoint preservation):
+The runtime requirements do not include pytest, build tools or the foundations'
+`jsonschema` dependency. Installing the foundations with `python -m pip install .`
+provides the public contracts/checker packages, not the legacy API, frontend or model.
+
+For development and the full checkout tests (cleaning, features, API, contracts and
+checkpoint preservation), install the hash-locked development environment and the
+foundations package. This can reuse the Python 3.13 environment above:
 
 ```bash
-python -m pytest
+.venv/bin/python -m pip install --require-hashes -r requirements-dev.lock
+.venv/bin/python -m pip install --no-deps --no-build-isolation -e .
+.venv/bin/python scripts/install_actionlint.py --directory .venv/bin
+.venv/bin/python -m pytest -q -ra
+node --test tests/frontend/*.test.cjs
 ```
+
+Frontend tests use Node.js 24.21.0 with no npm install or page build step. The
+[development guide](docs/development.md) lists native prerequisites and all checks.
+The development lock is not a certified inference runtime.
 
 If you'd rather not install Python at all, there's a Dockerfile. It copies the inference code and the
 local `model.joblib`; it does not perform a privacy review. Training happens separately from the build.

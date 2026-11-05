@@ -32,7 +32,8 @@
     "Verified the existing GitHub account as fxmidaaa and committed only the eleven-file A17 tree at ee4b5552885e6ec0ebef3a73cdc295a7f6b16e45. Shared index staging excluded the A16 row.",
     "Pushed A17 normally to fix/repository-audit and independently verified the remote SHA. All nine prior A16/evidence files remained byte-identical.",
     "Exact-source GitHub CI run 42074089595 succeeded. Job 127409503574 passed all steps: 322 checkout tests passed with 12 private-model skips; source archive and wheel each passed 142 tests.",
-    "Recorded source publication and CI evidence in the A17 report, index and task plan. A16 remains local and no model/data artifacts were published."
+    "Recorded source publication and CI evidence in the A17 report, index and task plan. A16 remains local and no model/data artifacts were published.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
   ],
   "execution_identifiers": {
     "ci": [
@@ -77,10 +78,11 @@
     "Correct unsupported assurances without silently changing privacy, normalization, serving or retention behavior.",
     "Treat publication guidance as reviewable source; it grants no authorization or active enforcement.",
     "Keep artifact review summaries to approved field names, object types, shapes/counts and explicit limits.",
-    "The observed helper maps have scalar or coordinate-pair values and no group memberships/support counts; their sizes do not certify original cohort sizes or distinct-property counts."
+    "The observed helper maps have scalar or coordinate-pair values and no group memberships/support counts; their sizes do not certify original cohort sizes or distinct-property counts.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm published source ee4b555 and successful CI run 42074089595 using the report/plan recovery command. Review the publication-evidence follow-up and branch CI as needed. A16 remains local awaiting its separate publication decision; A18 is the next audit decision. No data/model distribution or deployment was authorized."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Confirm published source ee4b555 and successful CI run 42074089595 using the report/plan recovery command. Review the publication-evidence follow-up and branch CI as needed. A16 remains local awaiting its separate publication decision; A18 is the next audit decision. No data/model distribution or deployment was authorized.",
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
   "objective": "Reconcile privacy claims with implemented controls and review the existing legacy artifact without changing behavior",
   "original_authorized_request": "The user approved A17 option 1: correct documentation and misleading comments, review the existing legacy bundle locally without private-value disclosure, and document stronger publication controls as an M2/M4 handoff. Commit/push approval remains separate.",
   "pending_approvals": [],

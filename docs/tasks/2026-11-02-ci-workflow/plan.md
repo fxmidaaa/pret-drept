@@ -40,3 +40,11 @@ Recovery: read `task.json`, reconcile Git state, complete the bounded implementa
 Option 1 is implemented and locally verified. The full suite passed **142 tests, zero failures/skips**; the six focused CI/tool checks, pinned semantic validation, scoped lint/format, architecture command, dependency compatibility, build, and input/source-preservation checks passed. One existing deprecation warning remains. See [A01 evidence and engineering review](../../reports/a01-ci-workflow.md) for commands, reasoning, limitations and setup recovery. Current lifecycle/evidence is in `task.json`; publication and actual GitHub execution remain pending separately approved action.
 
 Publication update: the user subsequently approved committing/pushing the reviewed A01 patch to `fix/repository-audit` with message `fix(ci): correct runner context scope and validate workflows`. Publish that patch and inspect its exact-commit GitHub run; no other audit fix is authorized by this publication approval.
+
+## Current recovery pointer — 2026-11-05
+
+Earlier checkpoints above are historical evidence, including their source/CI identities.
+Current branch state and next actions are in the [audit index](../../reports/README.md#current-checkpoint-and-recovery)
+and [completion plan](../2026-11-05-audit-completion/plan.md): `fix/repository-audit` at
+`36e67b7` plus uncommitted audit work. Inspect actual status/diff and preserve all local
+changes; do not restore an older branch tip or infer publication authorization.

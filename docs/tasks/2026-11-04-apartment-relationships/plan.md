@@ -30,3 +30,11 @@ Recovery: Confirm `fix/repository-audit` at `c4b91eac786e9d1cf21058ee956b310e41b
 The user approved publication with message `fix(validation): enforce apartment field relationships` on `fix/repository-audit`. Verify CI for the published commit.
 
 GitHub confirmed `c4b91ea` on `fix/repository-audit`. Workflow validation, static checks, dependency checks, tests and the distribution build passed. The test log reported 244 passes and 12 private-model skips in 2.70 seconds. [Run 41809961842](https://github.com/fxmidaaa/pret-drept/actions/runs/41809961842)
+
+## Current recovery pointer — 2026-11-05
+
+Earlier checkpoints above are historical evidence, including their source/CI identities.
+Current branch state and next actions are in the [audit index](../../reports/README.md#current-checkpoint-and-recovery)
+and [completion plan](../2026-11-05-audit-completion/plan.md): `fix/repository-audit` at
+`36e67b7` plus uncommitted audit work. Inspect actual status/diff and preserve all local
+changes; do not restore an older branch tip or infer publication authorization.

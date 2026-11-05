@@ -6,6 +6,18 @@ and remaining work. Maintain both the summary and task evidence when an audit in
 
 Use Python 3.13. The M1 evidence uses CPython 3.13.16 on macOS ARM64. The original application's direct pins remain in `requirements.txt`; `requirements-dev.lock` pins their transitive closure plus test/build tools with hashes, resolved universally for Python 3.13 with platform markers for Mac/Linux/Windows. Local installation is verified; each published revision also needs a successful Linux CI run. This is a development/test environment lock, not a certified inference image.
 
+Installation has three distinct scopes. The legacy application runs from the checkout
+with `python -m pip install -r requirements.txt` and a separately supplied local model.
+Those runtime pins do not install pytest, Ruff, build tooling or `jsonschema`.
+`python -m pip install .` installs the foundations packages and declared `jsonschema`
+dependency; it does not install the legacy API/frontend/model. For repository work, use
+the locked development setup below, including the editable foundations install and
+explicit actionlint installation. It includes the runtime pins plus test/build tools.
+
+Frontend checks additionally use Node.js **24.21.0**, pinned in checkout CI. This is a
+development prerequisite; the served page needs no Node runtime, framework or build step.
+The tests use Node's built-in runner and require no npm installation.
+
 On macOS, the existing XGBoost wheel also needs the native OpenMP library (`brew install libomp`). Discovery reached the real model and demonstrated a missing `libomp.dylib`; libomp **23.1.4** was installed to resolve this environment prerequisite without changing ML code or Python pins. Python package hashes do not cover native libraries. A future certified inference image must preserve and verify its complete runtime. See [XGBoost installation guidance](https://xgboost.readthedocs.io/en/stable/install.html).
 
 ```bash
@@ -15,6 +27,7 @@ python3.13 -m venv .venv
 .venv/bin/python scripts/install_actionlint.py --directory .venv/bin
 .venv/bin/actionlint -shellcheck= -pyflakes=
 .venv/bin/python scripts/check_notebooks.py
+node --test tests/frontend/*.test.cjs
 .venv/bin/python -m ruff check src scripts scrape.py tests/foundations tests/test_scrape.py tests/conftest.py
 .venv/bin/python -m ruff format --check src scripts scrape.py tests/foundations tests/test_scrape.py tests/conftest.py
 .venv/bin/rent-check-architecture --root .
@@ -27,7 +40,7 @@ the self-contained contract, prediction and bundle, task lifecycle, and architec
 tests that require the application, workflow files, or project task records in checkout CI.
 `scripts/check_distribution.py` builds the wheel from the source archive and runs the shipped
 suite twice from a temporary extraction. The source run imports from the extracted `src/` tree.
-The wheel run imports from the wheel and exercises all seven packaged schemas. Both runs bypass
+The wheel run imports from the wheel and exercises all ten packaged schemas. Both runs bypass
 the checkout's editable install and use dependencies from the locked development environment.
 
 Tracked notebooks are published as source with cleared outputs. Keep executed copies that use
@@ -42,6 +55,25 @@ Workflow validation uses development-only **actionlint 1.7.12**. The explicit in
 The tests require that pinned executable beside the Python interpreter, or at an explicitly supplied `ACTIONLINT` path. A missing/wrong validator fails with setup instructions rather than silently skipping. Regression fixtures move each runner-dependent directory back to job-level `env` and require a semantic error. Run the standalone actionlint command **before publication**: a GitHub-rejected workflow cannot start its own validation. These checks establish workflow semantics, not successful remote execution or protected policy enforcement.
 
 The legacy feature suite runs without private data. `/health` and homepage tests run without a model. Twelve legacy prediction/options/privacy checks are marked `legacy_artifact`; they execute normally when the private `model.joblib` exists and are explicitly skipped otherwise. Missing artifacts are never replaced with fake models. A skipped private-artifact check cannot certify model behavior, privacy or runtime compatibility. Protected model acceptance must fail if its required artifact/evidence is missing; these development skips are not an acceptance policy.
+
+The frontend validates response fields it displays before rendering. A valid estimate has a
+positive finite `fair_price`; omitted drivers are allowed, while supplied drivers need text
+labels and a known effect. A supplied verdict needs a known value and finite `deviation_pct`.
+Unused response fields are ignored. Dropdowns need nonempty text lists for all four categories
+before submission is enabled. Loading failures instruct the user to refresh the page.
+
+HTTP 422 responses show recognized form-field messages as text, associate errors with controls,
+and omit raw input/context objects. Unknown or unusable details use a generic validation
+summary. Other HTTP errors use a service message; network failures and malformed responses
+have separate messages. Dynamic rendering uses DOM text APIs. New requests clear stale results
+and field errors, prevent duplicate submissions, and restore the button after completion.
+
+`tests/frontend/app.test.cjs` executes the actual inline script with synthetic fetch responses
+and a narrow DOM double that rejects HTML-writing APIs. It covers response validation,
+rendering and controller state without accessing a model or the network. It does not emulate
+a complete browser. When changing this boundary, also smoke-check the served page in a real
+browser with synthetic responses, including literal HTML-like labels, field errors and
+recovery. See the [A16 report](reports/a16-frontend-responses.md) for recorded browser evidence.
 
 A15 makes `clean_price` require `UNIT_EUR`, `UNIT_MDL`, or `UNIT_USD` and a positive finite
 amount. Unsupported currencies and malformed prices become missing required values and are
@@ -69,6 +101,13 @@ A03 option 2 keeps failed, unavailable and malformed detail retrievals outside c
 
 New deterministic tests cover public request rejection, registered configuration validation, no remote schema resolution, prediction identity/population checks, manifest identities/paths, task transitions/recovery/failed writes and dependency violations. No model training, scraping, protected holdout access, promotion or deployment is performed by these tests. Contract fixtures do not simulate successful model integrations.
 
+`load_document` decodes byte input strictly as UTF-8 without a BOM. UTF-16/32, malformed
+Unicode and unsupported wire input types are rejected; the 1 MiB limit counts UTF-8
+bytes. Both `ExperimentRequest.from_document` and ordinary payload construction require
+`model_schemas` and validate the envelope, adapter registration and configuration.
+The canonical immutable payload does not retain caller-owned state or the registry.
+These are public syntax checks, not trusted execution admission.
+
 To intentionally refresh the lock, use `uv pip compile requirements-dev.in --python-version 3.13 --universal --generate-hashes --output-file requirements-dev.lock` in an authorized dependency-resolution environment, review the diff and rerun checks. Do not silently update legacy pins merely to make tests pass.
 
 The workflow in `.github/workflows/validate.yml` is unprivileged PR validation source: read-only content token, no persisted checkout credentials, no secrets/OIDC, no shared package cache, pinned action commits and a timeout. It does not run protected rebuild, data access or promotion. Its source tests do not prove that GitHub rulesets, reviewer requirements or host permissions are configured. See [CI activation](operations/ci-activation.md).
@@ -80,3 +119,19 @@ The checker parses each source once and reports a shortest forbidden import chai
 Task record reads and saves share a 1 MiB limit on the stored UTF-8 JSON, including indentation and the final newline. A save that exceeds the limit fails before creating output. Store large execution logs separately and reference them from the task record.
 
 Current implementation/evidence: [M1 verification](reports/m1-verification.md). Data limitations: [M0 audit](reports/m0-alignment.md), including the user-provided historical snapshot addendum. The full system is not production-ready. `train` and `predict-batch` wire contracts exist; their new operational implementations, DVC/MLflow, trusted runner, native model adapters, protected verification and deployment remain subsequent milestones.
+
+Use the audit index's [current checkpoint and recovery](reports/README.md#current-checkpoint-and-recovery)
+for today's Git state and uncommitted work. Earlier task plans and CI counts are historical
+evidence. [A10](reports/a10-xgboost-preprocessing.md#incomplete-artifact-prerequisites)
+and [A14](reports/a14-evaluation-handoff.md#incomplete-benchmark-prerequisites) remain
+incomplete; documentation does not close their artifact/evaluation gaps.
+
+M2's first increment adds self-contained synthetic evaluation-contract tests, shipped
+in the source distribution and exercised against the wheel. Run
+`.venv/bin/python -m pytest -q tests/foundations/test_evaluation_contracts.py` for the
+focused checks, then the relevant aggregate checks above after edits. The
+[development evaluation proposal](architecture/evaluation-contracts-v1.md) requires
+semantic helpers in addition to low-level schema validation. Tests cover declared
+eligibility, time/property overlap and fixed populations; they do not validate real
+features, target-aggregate lineage, dataset release/restoration or isolation.
+Policy review and authorized evidence precede any real-data application.

@@ -53,3 +53,13 @@ On recovery, confirm the revision with `git ls-remote origin refs/heads/fix/repo
 and the run with `gh run view 42026575076 --repo fxmidaaa/pret-drept --json headSha,conclusion,jobs`.
 Preserve this local CI evidence and the 22 earlier documentation edits. Resume A14 benchmark
 implementation in M2 using the handoff above.
+
+## Current recovery pointer — 2026-11-05
+
+Earlier checkpoints above are historical evidence, including their source/CI identities.
+Current branch state and next actions are in the [audit index](../../reports/README.md#current-checkpoint-and-recovery)
+and [completion plan](../2026-11-05-audit-completion/plan.md): `fix/repository-audit` at
+`36e67b7` plus uncommitted audit work. Inspect actual status/diff and preserve all local
+changes; do not restore an older branch tip or infer publication authorization.
+
+A14 remains incomplete: `train.py` still filters validation using observed asking prices and the dual benchmarks are absent. See the [benchmark prerequisites](../../reports/a14-evaluation-handoff.md#incomplete-benchmark-prerequisites). The earlier COMPLETED state refers only to the documentation handoff. Next propose/version evaluation eligibility and split contracts with synthetic leakage/population tests, then resolve the M2 prerequisites above.

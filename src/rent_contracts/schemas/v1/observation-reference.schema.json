@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:observation-reference:1.0.0",
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9]",
+      "not": { "pattern": "[^A-Za-z0-9_.-]" }
+    },
+    "digest": {
+      "type": "string",
+      "minLength": 71,
+      "maxLength": 71,
+      "pattern": "^sha256:[a-f0-9]{64}"
+    },
+    "instant": {
+      "type": "string",
+      "format": "date-time",
+      "not": { "pattern": "-00:00$" },
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,6})?(Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "nullable_instant": {
+      "anyOf": [{ "$ref": "#/$defs/instant" }, { "type": "null" }]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "observation_id": { "$ref": "#/$defs/identifier" },
+    "listing_id": { "$ref": "#/$defs/identifier" },
+    "property_identity": {
+      "type": "object",
+      "properties": {
+        "policy_ref": { "$ref": "#/$defs/digest" },
+        "status": { "enum": ["confirmed", "probable", "unresolved"] },
+        "property_id": {
+          "anyOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }]
+        },
+        "confidence": {
+          "anyOf": [
+            { "type": "number", "minimum": 0, "maximum": 1 },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["policy_ref", "status", "property_id", "confidence"],
+      "additionalProperties": false,
+      "if": { "properties": { "status": { "const": "unresolved" } } },
+      "then": {
+        "properties": {
+          "property_id": { "type": "null" },
+          "confidence": { "type": "null" }
+        }
+      },
+      "else": { "properties": { "property_id": { "$ref": "#/$defs/identifier" } } }
+    },
+    "domain_policy_ref": { "$ref": "#/$defs/digest" },
+    "domain_status": { "enum": ["valid", "invalid", "unresolved"] },
+    "published_at": { "$ref": "#/$defs/nullable_instant" },
+    "collected_at": { "$ref": "#/$defs/nullable_instant" },
+    "features_available_at": { "$ref": "#/$defs/nullable_instant" },
+    "prediction_cutoff_at": { "$ref": "#/$defs/nullable_instant" },
+    "temporal_evidence_ref": {
+      "anyOf": [{ "$ref": "#/$defs/digest" }, { "type": "null" }]
+    }
+  },
+  "required": [
+    "contract_version", "observation_id", "listing_id", "property_identity",
+    "domain_policy_ref", "domain_status", "published_at", "collected_at",
+    "features_available_at", "prediction_cutoff_at", "temporal_evidence_ref"
+  ],
+  "additionalProperties": false
+}

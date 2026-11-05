@@ -29,7 +29,8 @@
     "Exact-commit push run 41631390504 started; foundations job 125901557634 is in progress",
     "Exact-commit GitHub run 41631390504 and foundations job 125901557634 succeeded; all workflow/static/architecture/test/build steps passed",
     "CI: 205 passed, 12 explicit absent-private-model skips, zero failures, one pytest warning in 4.20 seconds; existing action-runtime warnings also recorded",
-    "Saved post-publication A04 evidence locally; two pre-existing A03 evidence updates remain byte-identical and unpublished; no further commit/push"
+    "Saved post-publication A04 evidence locally; two pre-existing A03 evidence updates remain byte-identical and unpublished; no further commit/push",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
   ],
   "execution_identifiers": {
     "ci": [
@@ -84,10 +85,11 @@
     "Validate headers explicitly so empty checkpoints cannot bypass field checks",
     "Validate every input row before serialization; the existing reader also validates destinations and temporary output",
     "Reject incompatible files without silent projection; leave source acquisition/filtering and A02/A03 behavior intact",
-    "Approved publication: fix/repository-audit; fix(scraper): reject unapproved checkpoint columns. The two A03 local evidence updates are excluded; post-publication A04 evidence stays local until separately approved."
+    "Approved publication: fix/repository-audit; fix(scraper): reject unapproved checkpoint columns. The two A03 local evidence updates are excluded; post-publication A04 evidence stays local until separately approved.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Published fix/repository-audit is at af574c9ffa31c47b53e3b3de459e984a685e46df; exact-commit CI passed. Preserve the four local post-CI evidence files (A03/A04 reports and task records). Obtain user approval of a new branch/message proposal before publishing them; other fixes and collection/migration require separate decisions."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Published fix/repository-audit is at af574c9ffa31c47b53e3b3de459e984a685e46df; exact-commit CI passed. Preserve the four local post-CI evidence files (A03/A04 reports and task records). Obtain user approval of a new branch/message proposal before publishing them; other fixes and collection/migration require separate decisions.",
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
   "objective": "Enforce the approved checkpoint storage fields and reject unexpected columns without data changes",
   "original_authorized_request": "docs/tasks/2026-11-03-scraper-fields/request.md",
   "pending_approvals": [],

@@ -31,3 +31,11 @@ Read `task.json`, reconcile Git against baseline and preserve the two A03 update
 Approved option 2 is implemented and locally verified. **75 scraper tests and all 217 local tests passed**, with zero final failures/skips and one existing deprecation warning. Scoped lint/format, workflow semantics, architecture, preservation and context checks passed. See [verification and engineering rationale](../../reports/a04-scraper-fields.md). The source correction adds 14 lines; no dependency or migration infrastructure was introduced. No commit/push, live collection, data migration or training occurred. Next action: review the local A04 patch; publication requires separate branch/message approval.
 
 Publication update: the user approved the presented branch and message. Commit the eight reviewed A04 files as `fix(scraper): reject unapproved checkpoint columns`, push `fix/repository-audit` without force, and inspect exact-commit CI. Preserve the two local A03 evidence updates. Record post-publication results locally; further publication needs separate approval.
+
+## Current recovery pointer — 2026-11-05
+
+Earlier checkpoints above are historical evidence, including their source/CI identities.
+Current branch state and next actions are in the [audit index](../../reports/README.md#current-checkpoint-and-recovery)
+and [completion plan](../2026-11-05-audit-completion/plan.md): `fix/repository-audit` at
+`36e67b7` plus uncommitted audit work. Inspect actual status/diff and preserve all local
+changes; do not restore an older branch tip or infer publication authorization.

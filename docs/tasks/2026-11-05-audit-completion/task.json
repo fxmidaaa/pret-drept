@@ -1,0 +1,167 @@
+{
+  "acceptance_criteria": [
+    "UTF-8 byte input succeeds; UTF-16/32, BOM and malformed encodings fail with safe diagnostics.",
+    "All ordinary ExperimentRequest construction requires a registry and validates request/configuration before canonical immutable storage.",
+    "A16 status/schema, 422 text, literal rendering, option failures and submission recovery pass offline and synthetic browser checks.",
+    "M0 inventory is verifiably 25 files/five root Python modules; runtime and development installs are distinct.",
+    "Current recovery matches fix/repository-audit at 36e67b7 and the uncommitted scope; historical checkpoints and unrelated evidence are retained.",
+    "A10/A14 remain incomplete with exact prerequisites and next steps; final relevant checks and limitations are persisted."
+  ],
+  "affected_modules": [
+    "src/rent_contracts/validation.py",
+    "src/rent_contracts/requests.py",
+    "tests/foundations/test_contracts.py",
+    "app/index.html",
+    "tests/frontend",
+    ".github/workflows/validate.yml",
+    "README.md",
+    "docs/development.md",
+    "docs/architecture/contracts-v1.md",
+    "docs/reports",
+    "docs/tasks"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Read the frozen specification, AGENTS.md, M0/M1 evidence, development guide, report index and relevant task records.",
+    "Confirmed fix/repository-audit at 36e67b7; saved starting uncommitted diff/file digests under /private/tmp/pret-drept-audit-final-w6tw2k5l.",
+    "Reviewed A16 response adapter/controller/text rendering and 38 existing regressions; identified A18 parser and constructor bypasses.",
+    "Reproduced A18 with 14 pre-fix failures and two passing boundary checks, then enforced explicit UTF-8 decoding and required registry validation in ordinary construction.",
+    "Focused contract suite passed 84 tests and the existing 38 frontend tests passed. Added a no-registry replacement assertion; its first broader run expected the wrong built-in exception. Corrected it to check rejection across supported Python exception variants.",
+    "Fresh synthetic Chrome checks passed all documented paths. Loopback bind was initially denied; automatic review approved the same fixture. Closed the browser tab and stopped the fixture server.",
+    "Corrected the exact M0 inventory and installation scopes; added A18 report and explicit A10/A14 incomplete prerequisites. Reconciled 18 historical task pointers while retaining history, previous recovery actions and all existing verification evidence.",
+    "Offline documentation/scope/preservation probe passed: 56 changed files including prior work, 30 Markdown files, 125 local links/anchors, 20 task records; five candidate/reporting digests preserved and existing model digest unchanged.",
+    "Final aggregate verification is running after the last test edit; no publication or protected action is authorized.",
+    "Final rerun passed 353 checkout tests with zero failures/skips and one existing deprecation warning; source and wheel each passed 161 tests. All 38 frontend tests passed.",
+    "Final scoped Ruff lint/format, architecture, actionlint and notebook publication passed. Optional pip check was unavailable; offline uv check with a writable cache passed for all 58 packages without installation.",
+    "Final evidence records the corrected test expectation, initial encoding/constructor reproductions, exact commands, synthetic browser observations, preservation and A10/A14 prerequisites. Final documentation checks follow this evidence edit.",
+    "Final documentation/task/preservation verification passed after evidence edits: 128 links/anchors across 30 Markdown files, 20 task records, 18 historical recovery pointers, five unchanged starting digests, exact 25-file/five-module baseline, unchanged legacy model identity and clean whitespace. No unresolved source/test failures remain."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A16 candidate reviewed and locally verified without changing its source/tests/CI bytes. A18 encoding/construction and documentation/recovery fixes are complete locally: 353 checkout tests, 38 frontend tests and 161 tests per distribution passed, plus synthetic browser/static/docs checks. Existing work and historical evidence preserved. Uncommitted on 36e67b7; A10 and A14 remain explicitly incomplete. No model/data/policy/publication operation performed.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-05T21:04:48.620112+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-05T21:04:48.645862+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-05T21:04:48.646191+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-05T21:04:48.646511+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-05T21:12:50.053635+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-05T21:15:13.896876+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Capture Git/uncommitted baseline and preserve prior work; review required architecture and task context.",
+    "Add encoding and direct-constructor regressions, implement shared validation, review A16 and rerun frontend/browser checks.",
+    "Correct documentation and reconcile current recovery pointers with retained historical evidence.",
+    "Run final contract/full/frontend/static/architecture/workflow/notebook/distribution/docs checks; persist results and blockers."
+  ],
+  "important_decisions": [
+    "Keep from_document API; require registered schemas for direct canonical-payload construction too.",
+    "A10 source export repair and A14 documentation handoff do not close artifact/evaluation findings.",
+    "Keep unrelated report-consistency evidence byte-identical and make central current recovery override its historical pointers."
+  ],
+  "known_blockers": [
+    "Residual A10 finding outside this completed source increment: the existing artifact lacks original fitted medians/provenance; independent fitted-state recovery or a separately authorized isolated rebuild and exact-artifact verification are required.",
+    "Residual A14 finding outside this completed source increment: evaluation still filters on targets and lacks fixed temporal/unseen-property benchmarks; timestamped history, reviewed identities, immutable releases, versioned cohort/split contracts and isolated evaluation are prerequisites."
+  ],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery. Confirm fix/repository-audit at 36e67b7, inspect all uncommitted work and this plan, and review the locally verified A16/A18 diff. Preserve unrelated reporting evidence. Rerun relevant checks after any edit. No commit, push, rebuild, private-data work or protected action is authorized; A10/A14 prerequisites remain open in their reports.",
+  "objective": "Complete A16 review and A18 fixes; retain explicit A10/A14 blockers and reconcile current audit recovery",
+  "original_authorized_request": "2026-11-05 user request: complete remaining audit fixes; preserve existing work; no retraining, scraping, private-data migration, protected-label access, history rewrite, policy activation, promotion, deployment, commit or push.",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Frozen architecture and legacy API interfaces; validation grants no execution authority.",
+    "Preserve existing A16 work and unrelated report-consistency plan/task bytes.",
+    "No model/data writes, protected labels, experiments, acquisition, trusted-policy activation, promotion, deployment, commits or pushes.",
+    "Retain historical task evidence, source and CI references; distinguish current recovery from history."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "A16 existing candidate, offline regressions and synthetic real-browser checks.",
+    "A18 public UTF-8 decoding and validated request construction, baseline inventory, install documentation and recovery pointers.",
+    "Document A10/A14 incomplete findings and concrete prerequisites without changing model/evaluation behavior."
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261105-AUDIT-FINAL",
+  "verification_evidence": [
+    {
+      "check": "contracts",
+      "reference": "docs/tasks/2026-11-05-audit-completion/plan.md#final-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "frontend",
+      "reference": "docs/tasks/2026-11-05-audit-completion/plan.md#final-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "synthetic-browser",
+      "reference": "docs/tasks/2026-11-05-audit-completion/plan.md#final-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "repository",
+      "reference": "docs/tasks/2026-11-05-audit-completion/plan.md#final-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "documentation-and-preservation",
+      "reference": "docs/tasks/2026-11-05-audit-completion/plan.md#final-verification",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "docs/tasks/2026-11-05-audit-completion/plan.md#final-verification",
+      "required": false,
+      "status": "unavailable"
+    },
+    {
+      "check": "full-inference-protected-runtime",
+      "reference": "docs/tasks/2026-11-05-audit-completion/plan.md#final-verification",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "a10-artifact-closure",
+      "reference": "docs/reports/a10-xgboost-preprocessing.md#incomplete-artifact-prerequisites",
+      "required": false,
+      "status": "unavailable"
+    },
+    {
+      "check": "a14-official-benchmarks",
+      "reference": "docs/reports/a14-evaluation-handoff.md#incomplete-benchmark-prerequisites",
+      "required": false,
+      "status": "unavailable"
+    }
+  ],
+  "verification_requirements": [
+    "contracts",
+    "frontend",
+    "synthetic-browser",
+    "repository",
+    "documentation-and-preservation"
+  ]
+}

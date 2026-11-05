@@ -11,4 +11,5 @@ include tests/foundations/conftest.py
 include tests/foundations/test_architecture.py
 include tests/foundations/test_contracts.py
 include tests/foundations/test_predictions_bundles.py
+include tests/foundations/test_evaluation_contracts.py
 include tests/foundations/test_tasks.py

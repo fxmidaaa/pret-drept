@@ -1,0 +1,137 @@
+{
+  "acceptance_criteria": [
+    "Valid predictions with and without verdicts render correctly; invalid status/payloads cannot enter the success renderer.",
+    "Field errors are useful and safe, and response-derived text cannot create markup.",
+    "Dropdown readiness, stale results, duplicate submissions, button restoration and recovery are verified.",
+    "Focused frontend and existing relevant checks pass with explicit limits and preserved prior evidence."
+  ],
+  "affected_modules": [
+    "app/index.html",
+    "tests/frontend",
+    ".github/workflows/validate.yml",
+    "docs/development.md",
+    "docs/reports",
+    "docs/tasks/2026-11-05-frontend-responses"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Confirmed fix/repository-audit at d9ac405 and recorded the user's option 2 approval.",
+    "Recorded baseline digests of prior local evidence and the L1 implementation/verification plan.",
+    "Implemented the frontend response boundary, DOM text rendering, dropdown gating, field associations and request recovery.",
+    "Added 38 offline frontend regressions and a commit-pinned Node 24.21.0 setup/test step with package-manager caching disabled.",
+    "Real-browser checks passed using loopback-only synthetic responses, including literal HTML-like labels and recovery.",
+    "Repository checks passed: 334 checkout tests, 142 tests for each distribution, Ruff, actionlint, architecture and notebook checks.",
+    "Added the A16 report, audit-index status and development/recovery guidance; final documentation checks remain.",
+    "Final verification passed for eight A16 files, 23 local links/anchors, task records, whitespace and both byte-identical pre-existing evidence files.",
+    "Final screenshot review found the invalid-control border selector needed equal specificity to the existing input styles. Corrected the selector and am repeating final source/browser checks before review.",
+    "Final rechecks passed: 38 frontend tests, 334 Python tests and browser verification of the red invalid-control border, recovery and literal labels. Temporary server/tab closed; final screenshots saved.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index.",
+    "Reviewed the existing page/controller and retained its source and 38 regression tests byte-identically. Fresh synthetic browser checks verified 422 associations/red border, recovery, literal labels/no injected elements, optional verdict, malformed/503 failures and dropdown failure/reload recovery. Final aggregate evidence is in the completion plan."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A16 candidate reviewed and retained, with 38 frontend regressions and fresh synthetic real-browser checks passed on 36e67b7 plus the working diff. Final combined repository evidence and recovery are in docs/tasks/2026-11-05-audit-completion/plan.md. No commit or push has been made; earlier counts remain historical evidence.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-05T16:18:27+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-05T16:18:27+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-05T16:18:27+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-05T16:18:27+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-05T16:29:47.506886+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-05T16:31:05.072599+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-05T16:31:33.023779+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-05T16:31:33.024952+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-05T16:33:28.033748+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Separate typed response decoding, transport classification, safe DOM rendering and form orchestration in the existing page.",
+    "Add synthetic offline regressions and checkout CI execution; verify the page in a real browser.",
+    "Run relevant repository checks and document the approved change, results and recovery actions."
+  ],
+  "important_decisions": [
+    "Use plain JavaScript with documented result types and runtime checks; keep inference free of frontend test dependencies.",
+    "Keep frontend code in the existing served page and preserve legacy success semantics and routes.",
+    "Test the actual inline script with Node built-ins and a narrow DOM double; record real-browser observations separately without claiming full browser/security emulation.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Await separate publication approval for the reviewed eight-file A16 increment and proposed message fix(frontend): validate responses and render errors safely. Preserve both prior local evidence files outside A16. If approved, publish only the reviewed A16 scope to fix/repository-audit and verify its exact-revision CI."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
+  "objective": "Correct frontend response handling and safe rendering with a small validated response adapter",
+  "original_authorized_request": "The user approved A16 option 2 with the proposed response adapter, safe rendering, dropdown failure handling, regression checks and L1 evidence. Push requires separate approval.",
+  "pending_approvals": [
+    "Separate authorization is required before any commit or push; neither is part of this request."
+  ],
+  "protected_invariants": [
+    "Preserve legacy API routes, wire behavior, successful UI behavior, ML code and architecture v1 decisions.",
+    "Preserve the two pre-existing report-consistency evidence files byte-for-byte.",
+    "Do not push, deploy, scrape, train models, access protected labels or change effective trusted policy."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Frontend response parsing, request classification, safe rendering and submission/loading state.",
+    "Offline frontend tests, unprivileged checkout CI integration, development guidance and A16 report/task evidence."
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261105-A16",
+  "verification_evidence": [
+    {
+      "check": "frontend-regressions",
+      "reference": "docs/tasks/2026-11-05-frontend-responses/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "browser-smoke",
+      "reference": "docs/tasks/2026-11-05-frontend-responses/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "repository-checks",
+      "reference": "docs/tasks/2026-11-05-frontend-responses/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "documentation-and-preservation",
+      "reference": "docs/tasks/2026-11-05-frontend-responses/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "frontend-regressions",
+    "browser-smoke",
+    "repository-checks",
+    "documentation-and-preservation"
+  ]
+}

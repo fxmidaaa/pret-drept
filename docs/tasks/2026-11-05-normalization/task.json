@@ -20,7 +20,8 @@
     "Source checks passed. All 24 prior documentation edits match their starting digests.",
     "The user approved publishing the seven reviewed A15 files.",
     "Verified the fxmidaaa GitHub login and pushed ad34828915a61930b82049fc41343bf05622769b to fix/repository-audit. GitHub confirmed the remote revision.",
-    "GitHub Actions run 42035675032 passed. Job 127273057403 reported 322 checkout tests passed and 12 private-model skips, and passed 142 tests each for the extracted source and wheel."
+    "GitHub Actions run 42035675032 passed. Job 127273057403 reported 322 checkout tests passed and 12 private-model skips, and passed 142 tests each for the extracted source and wheel.",
+    "2026-11-05 recovery reconciliation: current branch is fix/repository-audit at 36e67b7 with uncommitted A16/A18 audit work. Earlier branch-tip/publication checkpoints remain historical; current recovery is centralized in the audit index."
   ],
   "execution_identifiers": {
     "ci": [
@@ -67,10 +68,11 @@
   ],
   "important_decisions": [
     "Keep normalization in the existing shared module. Reject unsupported coordinate representations and retain missing-coordinate imputation.",
-    "Use aggregate counts for field issues and sequential row exclusions while retaining the DataFrame result."
+    "Use aggregate counts for field issues and sequential row exclusions while retaining the DataFrame result.",
+    "Historical recovery pointer retained before the 2026-11-05 final audit reconciliation: Confirm ad34828 on fix/repository-audit and GitHub Actions run 42035675032. Preserve the local CI evidence and the 24 prior documentation edits."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Confirm ad34828 on fix/repository-audit and GitHub Actions run 42035675032. Preserve the local CI evidence and the 24 prior documentation edits.",
+  "next_recovery_action": "Use docs/reports/README.md#current-checkpoint-and-recovery and docs/tasks/2026-11-05-audit-completion/plan.md. Reconcile actual Git status/diff against fix/repository-audit at 36e67b7 plus uncommitted A16/A18 work; preserve all local work and historical evidence. Rerun relevant checks after further edits. Commit/push and protected actions require separate authorization.",
   "objective": "Reject unsupported normalization inputs safely and report aggregate field and exclusion reasons",
   "original_authorized_request": "User selected A15 option 1. Push requires separate approval.",
   "pending_approvals": [],

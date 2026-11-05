@@ -31,3 +31,11 @@ Recovery: read `task.json`, reconcile Git state, run the documented focused/full
 Approved option 2 is implemented and locally verified. **63 scraper tests and all 205 local tests passed**, with zero final failures/skips and one existing deprecation warning. Source/workflow/architecture, preservation and context checks passed. See [verification and review](../../reports/a03-scraper-retry.md). No commit/push, live collection, migration or training occurred. Next action: review this local patch; publication and subsequent audit fixes need separate user approval.
 
 Publication update: the user approved the presented branch/message with "push". Commit the reviewed A03 patch as `fix(scraper): keep failed fetches retryable and flag incomplete runs`, push `fix/repository-audit` without force, and inspect exact-commit CI. Persist the resulting evidence locally without publishing another commit under this approval.
+
+## Current recovery pointer — 2026-11-05
+
+Earlier checkpoints above are historical evidence, including their source/CI identities.
+Current branch state and next actions are in the [audit index](../../reports/README.md#current-checkpoint-and-recovery)
+and [completion plan](../2026-11-05-audit-completion/plan.md): `fix/repository-audit` at
+`36e67b7` plus uncommitted audit work. Inspect actual status/diff and preserve all local
+changes; do not restore an older branch tip or infer publication authorization.

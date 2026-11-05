@@ -1,4 +1,6 @@
 import copy
+import json
+from dataclasses import replace
 
 import pytest
 
@@ -17,6 +19,57 @@ def test_request_is_independent_of_mutable_caller_state(request_document, model_
     exported["configuration"]["n_estimators"] = 800
     assert request.request_digest == identity
     assert request.to_document()["configuration"]["n_estimators"] == 3
+
+
+def test_direct_request_construction_requires_registered_schemas(request_document):
+    with pytest.raises(TypeError, match="model_schemas"):
+        ExperimentRequest(canonical_json(request_document))
+
+
+def test_direct_request_construction_validates_and_canonicalizes(request_document, model_schemas):
+    request = ExperimentRequest(json.dumps(request_document, indent=2), model_schemas=model_schemas)
+    parsed = ExperimentRequest.from_document(request_document, model_schemas=model_schemas)
+    assert request == parsed
+    assert request.canonical_payload == canonical_json(request_document)
+    assert request.request_digest == parsed.request_digest
+    with pytest.raises((TypeError, ValueError), match="model_schemas"):
+        replace(request)
+    model_schemas.clear()
+    request_document["configuration"]["n_estimators"] = 900
+    assert request.to_document()["configuration"]["n_estimators"] == 3
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("operation", "promote"),
+        ("model_family", "unregistered"),
+        ("configuration", {"n_estimators": 0}),
+        ("configuration", {"n_estimators": 3, "secret-option": "private-value"}),
+    ],
+)
+def test_direct_and_replacement_requests_cannot_bypass_validation(
+    request_document, model_schemas, field, value
+):
+    request = ExperimentRequest.from_document(request_document, model_schemas=model_schemas)
+    request_document[field] = value
+    payload = canonical_json(request_document)
+    with pytest.raises(ContractError) as failure:
+        ExperimentRequest(payload, model_schemas=model_schemas)
+    assert "private-value" not in str(failure.value)
+    with pytest.raises(ContractError):
+        replace(request, canonical_payload=payload, model_schemas=model_schemas)
+
+
+def test_direct_request_construction_rejects_unregistered_registry_and_ambiguous_json(
+    request_document, model_schemas
+):
+    with pytest.raises(ContractError, match="unregistered"):
+        ExperimentRequest(canonical_json(request_document), model_schemas={})
+    with pytest.raises(ContractError, match="duplicate"):
+        ExperimentRequest(
+            '{"operation":"train","operation":"promote"}', model_schemas=model_schemas
+        )
 
 
 @pytest.mark.parametrize(
@@ -78,6 +131,8 @@ def test_configuration_validation_never_fetches_remote_schema(request_document):
     schemas = {"xgboost": {"$ref": "https://invalid.example/secret-schema"}}
     with pytest.raises(ContractError, match="unresolved"):
         ExperimentRequest.from_document(request_document, model_schemas=schemas)
+    with pytest.raises(ContractError, match="unresolved"):
+        ExperimentRequest(canonical_json(request_document), model_schemas=schemas)
 
 
 @pytest.mark.parametrize(
@@ -96,6 +151,37 @@ def test_configuration_validation_never_fetches_remote_schema(request_document):
 def test_non_json_and_ambiguous_documents_are_rejected(raw):
     with pytest.raises(ContractError):
         load_document(raw)
+
+
+@pytest.mark.parametrize(
+    "encoding",
+    ["utf-16", "utf-16-le", "utf-16-be", "utf-32", "utf-32-le", "utf-32-be", "utf-8-sig"],
+)
+def test_only_utf8_byte_documents_are_accepted(encoding):
+    with pytest.raises(ContractError, match="invalid JSON document") as failure:
+        load_document('{"text":"private-value"}'.encode(encoding))
+    assert "private-value" not in str(failure.value)
+
+
+def test_utf8_text_and_bytes_preserve_unicode_and_reject_bom():
+    raw = '{"text":"Chișinău, Кишинёв 🏠"}'
+    assert load_document(raw.encode("utf-8")) == load_document(raw)
+    with pytest.raises(ContractError, match="invalid JSON document"):
+        load_document("\ufeff" + raw)
+
+
+@pytest.mark.parametrize("raw", [bytearray('{"a":1}', "utf-16"), memoryview(b"{}"), None])
+def test_unsupported_wire_types_cannot_bypass_utf8_decoding(raw):
+    with pytest.raises(ContractError, match="JSON text or UTF-8 bytes"):
+        load_document(raw)
+
+
+def test_document_limit_counts_utf8_bytes():
+    raw = '{"text":"' + "ș" * (MAX_DOCUMENT_BYTES // 2) + '"}'
+    assert len(raw) < MAX_DOCUMENT_BYTES
+    for value in (raw, raw.encode("utf-8")):
+        with pytest.raises(ContractError, match="size limit"):
+            load_document(value)
 
 
 @pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf"), (1, 2), {1: "bad"}])

@@ -30,6 +30,12 @@ jobs:
           "$RUNNER_TEMP/rent-actionlint/actionlint" -shellcheck= -pyflakes=
       - name: Check public notebooks for saved output
         run: python scripts/check_notebooks.py
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0, resolved 2026-11-05
+        with:
+          node-version: "24.21.0"
+          package-manager-cache: false
+      - name: Frontend response and rendering regressions (offline)
+        run: node --test tests/frontend/*.test.cjs
       - name: Install hash-locked dependencies
         run: python -m pip install --require-hashes -r requirements-dev.lock
       - name: Install source without resolving dependencies or build requirements
