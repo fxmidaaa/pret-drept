@@ -17,14 +17,19 @@
     "Cleared 26 saved outputs and reset execution counts across the two notebooks. Parsed JSON comparison preserved the rest of each notebook.",
     "The publication check passed on both notebooks and all 10 synthetic checker tests passed.",
     "Full checkout passed 295 tests. The extracted source archive and wheel each passed 142 tests.",
-    "Ruff, actionlint, architecture and whitespace checks passed. All 20 prior documentation edits match their starting digests."
+    "Ruff, actionlint, architecture and whitespace checks passed. All 20 prior documentation edits match their starting digests.",
+    "The user approved pushing the reviewed A13 patch.",
+    "Published 086ef83d3d4043d89515ec2f83720d2474dc708a to fix/repository-audit and verified the remote ref.",
+    "GitHub Actions run 41847049502 passed. Job 126633187008 verified both notebooks, reported 283 checkout tests passed and 12 private-model skips, and passed 142 tests each for the extracted source and wheel."
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41847049502"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "Local A13 patch verified and ready for review. Remote CI is pending push approval.",
+  "final_outcome": "Published A13 to fix/repository-audit at 086ef83 and verified passing GitHub CI.",
   "history": [
     {
       "state": "PROPOSED",
@@ -49,6 +54,10 @@
     {
       "state": "READY_FOR_REVIEW",
       "timestamp": "2026-11-04T14:22:03.337613+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-04T14:24:52.619407+00:00"
     }
   ],
   "implementation_plan": [
@@ -61,12 +70,10 @@
     "Inspect the Git-tracked notebook paths in the working tree and reject structured saved state without classifying the contents."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Await user approval to push. After approval, commit only the reviewed A13 files, push to fix/repository-audit, and verify GitHub CI on the published revision. Preserve the 20 pre-existing edits.",
+  "next_recovery_action": "Confirm 086ef83 on fix/repository-audit and GitHub Actions run 41847049502. Preserve the local CI evidence and the 20 earlier documentation edits.",
   "objective": "Remove saved private listing previews from public notebook files and prevent saved output from returning",
   "original_authorized_request": "User selected A13 option 1 and requires separate approval before push.",
-  "pending_approvals": [
-    "Approval to push the reviewed A13 patch to fix/repository-audit."
-  ],
+  "pending_approvals": [],
   "protected_invariants": [
     "Preserve notebook source and metadata, existing CI privileges, historical Git revisions, and prior local evidence. Do not execute notebook cells or access the private CSV."
   ],
@@ -74,7 +81,7 @@
   "scope_boundaries": [
     "Tracked notebook saved state, its unprivileged CI check, synthetic tests, and publication documentation."
   ],
-  "state": "READY_FOR_REVIEW",
+  "state": "COMPLETED",
   "task_id": "RP-20261104-A13",
   "verification_evidence": [
     {
@@ -112,6 +119,12 @@
       "reference": "docs/tasks/2026-11-04-notebook-publication/plan.md#verification",
       "required": true,
       "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41847049502",
+      "required": true,
+      "status": "passed"
     }
   ],
   "verification_requirements": [
@@ -120,6 +133,7 @@
     "checkout-suite",
     "distributions",
     "source-checks",
-    "preservation"
+    "preservation",
+    "remote-ci"
   ]
 }

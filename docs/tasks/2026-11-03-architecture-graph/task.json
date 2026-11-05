@@ -14,14 +14,18 @@
     "30 focused and 231 full-suite tests passed. Ruff, actionlint and architecture CLI passed.",
     "A synthetic 2,002-file graph reported the expected long forbidden chain in 0.181 seconds.",
     "Verified all four pre-existing A03/A04 evidence digests.",
-    "User approved publishing the reviewed A05 patch with the proposed branch and commit message."
+    "User approved publishing the reviewed A05 patch with the proposed branch and commit message.",
+    "Published the five A05 files as d11304ad1534f2eae1adb30520b338c9b239839c. Confirmed the remote ref. CI run 41724876763 started.",
+    "GitHub Actions run 41724876763 completed successfully for d11304a. Foundations job 126226919063 reported 219 passed and 12 private-model skips. The distribution build passed."
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41724876763"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "A05 option 1 implemented and locally verified. 231 tests passed with one existing warning. Ready for publication review.",
+  "final_outcome": "A05 published as d11304a on fix/repository-audit. GitHub Actions passed with 219 tests passed and 12 private-model skips.",
   "history": [
     {
       "state": "PROPOSED",
@@ -63,7 +67,7 @@
     "Recognized dynamic loaders require a literal absolute target. Arbitrary runtime loading is outside this static checker."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Commit the five A05 files with the approved message and push fix/repository-audit. Verify CI for the published commit.",
+  "next_recovery_action": "Confirm d11304a on fix/repository-audit and preserve the local A03/A04/A05 evidence updates. Obtain separate approval to publish the evidence files.",
   "objective": "Detect forbidden indirect imports and source symlinks in the existing static architecture checker",
   "original_authorized_request": "User chose A05 option 1 in the conversation. See plan.md.",
   "pending_approvals": [],
@@ -105,15 +109,16 @@
     },
     {
       "check": "remote-ci",
-      "reference": "docs/tasks/2026-11-03-architecture-graph/plan.md#verification",
-      "required": false,
-      "status": "unavailable"
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41724876763",
+      "required": true,
+      "status": "passed"
     }
   ],
   "verification_requirements": [
     "architecture-regressions",
     "full-suite",
     "static-and-cli",
-    "preservation"
+    "preservation",
+    "remote-ci"
   ]
 }

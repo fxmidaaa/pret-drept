@@ -34,8 +34,8 @@ The [M2 exit gate](../../architecture/specification-v1.md#m2--data-versioning-an
 | Existing focused tests | 11 passed, covering persisted task records and the notebook checker. |
 | Prior evidence | All 22 pre-existing local documentation edits match their starting digests. |
 | Patch scope and whitespace | The patch contains documentation and notebook Markdown changes. Whitespace checks passed. |
-| Full application and distributions | Skipped for this documentation increment. |
-| Remote CI | Pending separate push approval. |
+| Local full application and distributions | Skipped for this documentation increment. |
+| Remote CI | Passed on `a78f927`. Both tracked notebooks passed. Checkout tests reported 283 passed and 12 private-model skips. The extracted source and wheel each passed 142 tests. [Run 42026575076](https://github.com/fxmidaaa/pret-drept/actions/runs/42026575076) |
 
 Run `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest -p no:cacheprovider -q tests/foundations/test_repository_tasks.py tests/foundations/test_notebook_publication.py`
 for the existing focused checks, `.venv/bin/python scripts/check_notebooks.py` for publication,
@@ -43,6 +43,13 @@ and `git diff --check` for whitespace. The link and notebook preservation probe 
 `/private/tmp/pret-drept-a14-verification.CC4uSU/check_documentation.py` and runs from the repository
 with `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python /private/tmp/pret-drept-a14-verification.CC4uSU/check_documentation.py`.
 
-On recovery, confirm `fix/repository-audit` at `086ef83`, review the five A14 documentation files,
-and preserve the 22 prior evidence edits. After push approval, publish the reviewed documentation
-patch and verify GitHub CI. Resume A14 benchmark implementation in M2 using the handoff above.
+The user approved publication and requested a GitHub account switch first. Switched the active
+GitHub login to `fxmidaaa`, verified it through the GitHub user endpoint, and used that login
+for the push. GitHub confirmed `a78f927fc22976c80ea6e2a1c765f78d99d903b1` on
+`fix/repository-audit`. Foundations job `127242164657` passed. GitHub reported the existing
+Node.js 20 deprecation warning for the pinned checkout and Python setup actions.
+
+On recovery, confirm the revision with `git ls-remote origin refs/heads/fix/repository-audit`
+and the run with `gh run view 42026575076 --repo fxmidaaa/pret-drept --json headSha,conclusion,jobs`.
+Preserve this local CI evidence and the 22 earlier documentation edits. Resume A14 benchmark
+implementation in M2 using the handoff above.

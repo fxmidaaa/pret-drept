@@ -1,5 +1,9 @@
 # A02 option 1 — checkpoint preservation and engineering review
 
+Current publication status was reconciled on 2026-11-05. The approved fix is published and its
+exact-commit CI passed. See [publication reconciliation](#publication-reconciliation).
+The dated local review below is retained as a historical checkpoint.
+
 Date: **2026-11-02**. Task: [RP-20261102-A02](../tasks/2026-11-02-scraper-checkpoint/task.json). Branch: `fix/repository-audit`, baseline `2a5beefc74ff51f3c962156a1cf6eaf2f1ae287e`. Status: **implemented and locally verified; ready for review**. No A02 commit/push, real collection, migration, training or protected operation occurred. The two pre-existing local A01 evidence updates remain byte-identical.
 
 ## Implemented behavior and architectural fit
@@ -51,3 +55,16 @@ A03 retry/completeness behavior and A04 resumed-field minimization remain open. 
 ## Exact next recovery action
 
 Read the task record, inspect the A02 diff and preserve the two prior local A01 evidence updates. Proposed A02 commit message: `fix(scraper): preserve checkpoints with validated atomic saves`; branch: `fix/repository-audit`. Obtain user publication approval before commit/push. After approved publication, inspect the exact new GitHub run and record its actual result and any private-artifact skips. A real migration, live collection and other audit fixes each require their own approval.
+
+## Publication reconciliation
+
+Git history and GitHub CI were reconciled on 2026-11-05. The approved A02 fix was published as
+[`9341519`](https://github.com/fxmidaaa/pret-drept/commit/9341519338a35f37541b9c25b1d89ff4b9f787ba)
+on `fix/repository-audit`. [Run 41526231926](https://github.com/fxmidaaa/pret-drept/actions/runs/41526231926)
+matches that exact source and passed. Its test log reports 161 passed, 12 private-model checks
+skipped, and one existing warning.
+
+The earlier local suite recorded above had 173 passes with the private artifact available.
+The task record now includes the published revision and CI reference. Current recovery starts
+by confirming this revision in Git history and reading the run. A02's checkpoint fix is
+published. Historical-data migration remains a separate decision.

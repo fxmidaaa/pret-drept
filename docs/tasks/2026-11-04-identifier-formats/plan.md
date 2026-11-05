@@ -27,7 +27,7 @@ out-of-format values. The existing tests cover the nullable checkpoint and revie
 | Extracted source archive and wheel | 142 passed in each, zero failed or skipped. |
 | Source checks | Scoped Ruff lint and format, pinned actionlint, architecture checks, and whitespace checks passed. |
 | Prior evidence | All 18 pre-existing local documentation edits match their starting digests. |
-| Remote CI | Pending separate push approval. |
+| Remote CI | Passed on `d5583a5`. Checkout tests reported 273 passed and 12 private-model skips. The extracted source and wheel each passed 142 tests. [Run 41821705819](https://github.com/fxmidaaa/pret-drept/actions/runs/41821705819) |
 
 Run `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest -p no:cacheprovider -q tests/foundations/test_contracts.py -k test_identifier_formats`
 for the focused regressions. For the full checkout run
@@ -37,6 +37,11 @@ for the source and wheel. The standalone probe and logs are in
 `/private/tmp/pret-drept-a12-verification.mASAPI`. Run the probe with
 `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python /private/tmp/pret-drept-a12-verification.mASAPI/check_schema_grammar.py`.
 
-On recovery, confirm `fix/repository-audit` at `ee6549a` and review the A12 files separately
-from the pre-existing documentation edits. After push approval, commit the reviewed A12 files,
-push to the fix branch, and verify GitHub CI on the published revision.
+The user approved pushing the reviewed A12 patch. GitHub confirmed
+`d5583a537eaf6b9e637fcd2bfb8149657eec539a` on `fix/repository-audit`. Foundations
+job `126546185591` passed. GitHub reported the existing Node.js 20 deprecation warning
+for the pinned checkout and Python setup actions.
+
+On recovery, confirm the revision with `git ls-remote origin refs/heads/fix/repository-audit`
+and the run with `gh run view 41821705819 --repo fxmidaaa/pret-drept --json headSha,conclusion,jobs`.
+Preserve the local CI evidence and the 18 earlier documentation edits.

@@ -30,7 +30,7 @@ JSON diagnostic report. The reviewed synthetic sample matches the prior cleaned 
 | Compatibility | The three-row reviewed synthetic sample matches `a78f927`. Existing currency conversions and seven downstream feature and evaluation functions match the baseline. |
 | Source checks | Scoped Ruff lint and format, explicit legacy feature/training/test lint, pinned actionlint, architecture, notebook publication, and whitespace checks passed. |
 | Prior evidence | All 24 pre-existing local documentation edits match their starting digests. |
-| Remote CI | Pending separate push approval. |
+| Remote CI | Passed on `ad34828`. Checkout tests reported 322 passed and 12 private-model skips. The extracted source and wheel each passed 142 tests. [Run 42035675032](https://github.com/fxmidaaa/pret-drept/actions/runs/42035675032) |
 
 Run `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest -p no:cacheprovider -q tests/test_features.py tests/foundations/test_xgboost_preprocessing.py`
 for focused normalization and legacy export checks. For the full checkout use
@@ -41,6 +41,11 @@ Logs and the compatibility probe are under `/private/tmp/pret-drept-a15-verifica
 Run the probe from the checkout with
 `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python /private/tmp/pret-drept-a15-verification.kADBpo/check_compatibility.py`.
 
-On recovery, confirm `fix/repository-audit` at `a78f927` and review the seven A15 files separately
-from prior documentation edits. After push approval, commit the reviewed patch, publish to the
-fix branch, and verify GitHub CI on that revision.
+The user approved publishing the seven reviewed A15 files. Verified the active GitHub account
+as `fxmidaaa` and used it for the push. GitHub confirmed
+`ad34828915a61930b82049fc41343bf05622769b` on `fix/repository-audit`. Foundations job
+`127273057403` passed.
+
+On recovery, confirm the revision with `git ls-remote origin refs/heads/fix/repository-audit`
+and the run with `gh run view 42035675032 --repo fxmidaaa/pret-drept --json headSha,conclusion,jobs`.
+Preserve this local CI evidence and the 24 earlier documentation edits.

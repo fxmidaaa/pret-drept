@@ -21,10 +21,12 @@ Before the fix, all twelve invalid-input cases failed their new checks across HT
 | Legacy import | Imported the exported domain package with site packages disabled. Imported the exported API in the existing development environment and verified HTTP 422 with a stubbed model boundary. |
 | Full inference container runtime | Skipped. Verification used a source-copy smoke build and the exported source. |
 | Preservation | All twelve earlier evidence files match their pre-edit digests. Requirements, lock and package dependency declarations match Git. |
-| Remote CI | Unavailable for the local patch |
+| Remote CI | Passed for c4b91ea. 244 passed, 12 skipped because the private model is absent, one test warning. [Run 41809961842](https://github.com/fxmidaaa/pret-drept/actions/runs/41809961842) |
 
 Run `PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR=/private/tmp/pret-drept-a07-probe-mpl NUMBA_CACHE_DIR=/private/tmp/pret-drept-a09-20261104/numba .venv/bin/python -m pytest -p no:cacheprovider -q -ra --tb=short` for the full suite. Add `tests/foundations/test_apartment_relationships.py` for the focused checks. Build and Docker smoke artifacts are under `/private/tmp/pret-drept-a09-20261104`. The wheel uses the existing discovery under `src`. The legacy app imports the same source via the checkout's `src` namespace.
 
-Recovery: Review A09 at `a8b6a1c` on `fix/repository-audit`. Keep the twelve prior evidence files separate. Proposed commit message is `fix(validation): enforce apartment field relationships`. Obtain publication approval before committing or pushing, then verify CI for that commit.
+Recovery: Confirm `fix/repository-audit` at `c4b91eac786e9d1cf21058ee956b310e41bd4c43`. Preserve local A03–A09 evidence. Publication of evidence updates requires separate approval.
 
 The user approved publication with message `fix(validation): enforce apartment field relationships` on `fix/repository-audit`. Verify CI for the published commit.
+
+GitHub confirmed `c4b91ea` on `fix/repository-audit`. Workflow validation, static checks, dependency checks, tests and the distribution build passed. The test log reported 244 passes and 12 private-model skips in 2.70 seconds. [Run 41809961842](https://github.com/fxmidaaa/pret-drept/actions/runs/41809961842)

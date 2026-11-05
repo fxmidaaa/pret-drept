@@ -16,10 +16,12 @@ The one-byte-over regression failed before the change because saving succeeded. 
 | Full local suite | 233 passed, zero failed or skipped, one existing Starlette warning |
 | Source checks | Ruff lint and format, pinned actionlint, architecture CLI and whitespace checks passed |
 | Preservation | All six pre-existing evidence files match their pre-edit digests |
-| Remote CI | Unavailable for the local patch |
+| Remote CI | Passed for 894a016. 221 passed, 12 skipped because the private model is absent, one test warning. [Run 41728652619](https://github.com/fxmidaaa/pret-drept/actions/runs/41728652619) |
 
 Run `.venv/bin/python -m pytest -p no:cacheprovider -q tests/foundations/test_tasks.py` for the focused regressions and the commands in the development guide for the full check set. The full run used `PYTHONDONTWRITEBYTECODE=1` and Matplotlib and Numba caches under `/private/tmp/pret-drept-a06-20261104`.
 
-Recovery: Review the A06 patch on `fix/repository-audit` at `d11304a`, keeping prior A03–A05 evidence separate. Obtain approval of the proposed commit and publication, then verify CI for the pushed commit.
+Recovery: Confirm `fix/repository-audit` at `894a01675425bcf1e8cf05bab28dd42a47b419af`. Preserve the local A03–A06 evidence. Publication of evidence updates requires separate approval.
 
 The user approved publication by asking to push. Publish the five A06 files to `fix/repository-audit` with message `fix(tasks): enforce the storage byte limit before saving`. Verify CI for the published commit.
+
+GitHub confirmed `894a016` on `fix/repository-audit`. The foundations job passed workflow validation, static checks, dependency checks, tests and the distribution build. The test log reported 221 passes and 12 private-model skips in 3.45 seconds. [Run 41728652619](https://github.com/fxmidaaa/pret-drept/actions/runs/41728652619)

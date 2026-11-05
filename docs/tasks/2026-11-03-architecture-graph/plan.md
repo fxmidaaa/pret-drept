@@ -19,7 +19,7 @@ The two original fixtures each returned zero violations before implementation. T
 | Full local suite | 231 passed, zero failed or skipped, one existing Starlette warning |
 | Source and workflow checks | Scoped Ruff lint and format, pinned actionlint, architecture CLI and whitespace checks passed |
 | Preservation | Four pre-existing A03/A04 evidence files verified against pre-edit digests |
-| Remote CI | Unavailable for the local patch |
+| Remote CI | Passed for d11304a. 219 passed, 12 skipped because the private model is absent, one warning. [Run 41724876763](https://github.com/fxmidaaa/pret-drept/actions/runs/41724876763) |
 
 A temporary 2,002-file source tree produced the expected 2,001-edge forbidden chain in 0.181 seconds on this workstation. This is one synthetic run. Parsing happens once per file. A reverse traversal per domain finds shortest paths through cycles without recursion.
 
@@ -35,6 +35,8 @@ PYTHONDONTWRITEBYTECODE=1 .venv/bin/rent-check-architecture --root .
 git diff --check
 ```
 
-Recovery: Review the A05 patch on `fix/repository-audit` at `af574c9` and keep the four local A03/A04 evidence files separate. Obtain the user's approval of the proposed publication before committing or pushing. After publication, verify CI for the resulting commit.
+Recovery: Confirm `fix/repository-audit` at `d11304ad1534f2eae1adb30520b338c9b239839c`. Preserve the local A03, A04 and A05 evidence updates. Publication of the evidence files requires separate approval.
 
 The user approved publication by asking to push the proposed commit to the remote. Publish the five A05 files to `fix/repository-audit` with message `fix(architecture): detect forbidden import chains and source symlinks`. Inspect the resulting GitHub run and record its result locally.
+
+GitHub confirmed the push at `d11304a`. The foundations job completed workflow validation, static checks, dependency checks, tests and the distribution build. The test log reported 219 passes and 12 explicit private-model skips in 3.45 seconds. Existing deprecation warnings remain in the job log. [Run 41724876763](https://github.com/fxmidaaa/pret-drept/actions/runs/41724876763)

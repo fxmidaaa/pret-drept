@@ -1,5 +1,9 @@
 # Development and verification
 
+Audit fixes use a [report index](reports/README.md) and one summary report per handled finding.
+Each report links the detailed task plan and record, the published source, recorded verification,
+and remaining work. Maintain both the summary and task evidence when an audit increment is published.
+
 Use Python 3.13. The M1 evidence uses CPython 3.13.16 on macOS ARM64. The original application's direct pins remain in `requirements.txt`; `requirements-dev.lock` pins their transitive closure plus test/build tools with hashes, resolved universally for Python 3.13 with platform markers for Mac/Linux/Windows. Local installation is verified; each published revision also needs a successful Linux CI run. This is a development/test environment lock, not a certified inference image.
 
 On macOS, the existing XGBoost wheel also needs the native OpenMP library (`brew install libomp`). Discovery reached the real model and demonstrated a missing `libomp.dylib`; libomp **23.1.4** was installed to resolve this environment prerequisite without changing ML code or Python pins. Python package hashes do not cover native libraries. A future certified inference image must preserve and verify its complete runtime. See [XGBoost installation guidance](https://xgboost.readthedocs.io/en/stable/install.html).

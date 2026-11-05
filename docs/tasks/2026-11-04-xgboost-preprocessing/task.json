@@ -16,14 +16,18 @@
     "Synthetic regression through legacy export failed before the patch because the bundle contained 25 instead of the fitted 20.",
     "Model-specific state now exports the original medians, feature names and vectorizer. Prediction restores the state and legacy bundles use their stored defaults.",
     "All 257 tests passed. Wheel, source checks and Docker source-copy and import checks passed. All fourteen prior evidence digests match.",
-    "User approved publication by requesting the proposed patch be pushed."
+    "User approved publication by requesting the proposed patch be pushed.",
+    "Published bcc143b0869f3ad232632b7b07d7e20e167ae4f9 and confirmed the remote ref. CI run 41812320589 started.",
+    "GitHub Actions run 41812320589 passed for bcc143b. Foundations job 126514352327 reported 245 passed and 12 private-model skips. The distribution build passed."
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41812320589"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "A10 bounded option 2 increment implemented locally. Exact fitted medians and encoded inputs survive export and reload. 257 tests passed. Ready for publication review.",
+  "final_outcome": "A10 published as bcc143b on fix/repository-audit. GitHub Actions passed with 245 tests passed and 12 private-model skips.",
   "history": [
     {
       "state": "PROPOSED",
@@ -64,7 +68,7 @@
     "Keep preprocessing state as an in-memory component and serialize legacy bundle values. Use an additive imputation_medians key and retain effective numeric_defaults for compatibility."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Commit the A10 files as fix(xgboost): preserve fitted preprocessing in legacy bundles, push fix/repository-audit and verify CI.",
+  "next_recovery_action": "Confirm bcc143b on fix/repository-audit and preserve local A03–A10 evidence. Obtain separate approval to publish evidence updates.",
   "objective": "Preserve the original fitted XGBoost preprocessing across bundle export and prediction",
   "original_authorized_request": "User approved option 2 and its bounded first increment in conversation.",
   "pending_approvals": [],
@@ -117,9 +121,9 @@
     },
     {
       "check": "remote-ci",
-      "reference": "docs/tasks/2026-11-04-xgboost-preprocessing/plan.md#verification",
-      "required": false,
-      "status": "unavailable"
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41812320589",
+      "required": true,
+      "status": "passed"
     }
   ],
   "verification_requirements": [
@@ -127,6 +131,7 @@
     "full-suite",
     "source-checks",
     "packaging",
-    "preservation"
+    "preservation",
+    "remote-ci"
   ]
 }

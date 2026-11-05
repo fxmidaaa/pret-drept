@@ -1,6 +1,6 @@
 # A04 option 2 — enforce approved checkpoint columns
 
-Date: **2026-11-03**. Task: [RP-20261103-A04](../tasks/2026-11-03-scraper-fields/task.json). Branch: `fix/repository-audit`; source baseline `7e12d691575b3a1e06277c1900c6f9637314bd4a`. Status: **implemented and locally verified**. No commit/push, live acquisition, migration or training occurred. The two pre-existing local A03 evidence updates are byte-identical.
+Date: **2026-11-03**. Task: [RP-20261103-A04](../tasks/2026-11-03-scraper-fields/task.json). Branch: `fix/repository-audit`; source baseline `7e12d691575b3a1e06277c1900c6f9637314bd4a`. Approved source commit `af574c9ffa31c47b53e3b3de459e984a685e46df` is pushed and its exact-commit CI passed. This post-publication evidence update is local. No live acquisition, migration or training occurred. The two pre-existing local A03 evidence updates are byte-identical and remain unpublished.
 
 ## Changes and engineering rationale
 
@@ -30,7 +30,7 @@ Environment: existing **CPython 3.13.16, macOS ARM64**, unchanged dependencies a
 | Architecture dependency command | **Passed** | Existing A05 limits and runtime isolation remain separate |
 | Preservation | **Passed** | Four private/prior-evidence digests, nine unchanged scraper functions and protected source/configuration checks |
 | Final task reload, changed-document links, scope and whitespace checks | **Passed** | Includes new evidence files and the pre-existing A03 updates |
-| A04 exact-commit remote CI | **Unavailable** | This patch is local; A03's successful CI does not verify A04 |
+| A04 exact-commit remote CI | **Passed**; [run 41631390504](https://github.com/fxmidaaa/pret-drept/actions/runs/41631390504), foundations job `125901557634` | 205 passed, 12 private-model checks skipped, 0 failures, one pytest warning in 4.20 s |
 
 New regression coverage includes unexpected headers with/without rows, exact-name rejection, safe diagnostics, collection rejection before fetching, direct saves before output creation, contaminated destinations, all approved fields round-tripping unchanged, injected serialized columns being rejected before replacement, and synthetic new listings dropping unapproved controls/source-supplied metadata. Rejection tests compare original file bytes and check that no temporary output remains. Existing optional-subset, empty-checkpoint, long-field, write/fsync/replace and acquisition-retry cases continue to pass.
 
@@ -46,10 +46,18 @@ PYTHONDONTWRITEBYTECODE=1 .venv/bin/rent-check-architecture --root .
 git diff --check
 ```
 
-Logs and preservation identities are under `/private/tmp/pret-drept-a04-20261103`. No large logs, private records or model payloads were added to task documentation. Only the six intentional pre-fix reproductions failed; all final local checks passed without skips.
+Local verification logs, preservation identities and the compact publication record are under `/private/tmp/pret-drept-a04-20261103`. No large logs, private records or model payloads were added to task documentation. Only the six intentional pre-fix reproductions failed; all final local checks passed without skips. Remote private-model skips are reported separately above.
+
+## Publication and remote verification
+
+The user approved branch `fix/repository-audit` and message `fix(scraper): reject unapproved checkpoint columns`. Exactly the eight reviewed A04 files were committed as `af574c9` and pushed without force. Local HEAD, tracking ref and a queried remote branch ref all matched the full commit SHA. The two existing A03 evidence updates were excluded from the commit and remain unchanged.
+
+The exact-commit push run above completed successfully on Ubuntu 24.04.5 / CPython 3.13.17 x86-64. All foundations steps passed: pinned actionlint, hash-locked dependency/source installation, scoped lint/format, architecture, tests and wheel/sdist build. The GitHub job log confirms 205 passed and 12 explicitly skipped checks due to absent private `model.joblib`; the local model-backed suite had 217 passes without skips. Existing Starlette/httpx and action-runtime Node deprecation warnings remain; dependency/action pins were not changed. The archive build does not resolve the separate A11 extracted-distribution finding.
+
+The run's exact SHA and final conclusion were verified through GitHub's CLI; job steps and logs were inspected through the connector. This report and the A04 task record now contain local post-publication evidence. No additional commit or push occurred; the two prior local A03 evidence updates remain intact.
 
 ## Limits and exact recovery action
 
 Column validation does not detect personal information inside approved free text or establish anonymity (A17). It adds no migration tool, concurrent-writer coordination, immutable observation history or dataset-release procedure. Contaminated files must be retained and migrated separately under reviewed source/destination schemas. Runtime isolation, model acceptance and deployment are not certified. This review was performed by the implementing agent, not independent protected verification.
 
-Recovery: read the [task record](../tasks/2026-11-03-scraper-fields/task.json), confirm `fix/repository-audit` remains at `7e12d69` plus the bounded local A04 patch, and preserve the two pre-existing A03 evidence updates. Review the A04 diff and reproduce the commands above. The approved local implementation is complete; obtain separate branch/message approval before any commit/push. Other audit findings, live acquisition and migration require separate decisions.
+Recovery: read the [task record](../tasks/2026-11-03-scraper-fields/task.json), confirm `fix/repository-audit` is at published commit `af574c9ffa31c47b53e3b3de459e984a685e46df`, and preserve the four local post-CI evidence files (A03/A04 reports and task records). The approved implementation, publication and exact-commit CI inspection are complete. Obtain approval of a new branch/message proposal before publishing those evidence updates. Other audit findings, live acquisition and migration require separate decisions.

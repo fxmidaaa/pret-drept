@@ -16,8 +16,10 @@ Both synthetic tests failed before the patch because the shared bundle already h
 | Full local suite | 235 passed, zero failed or skipped, one existing Starlette warning |
 | Source checks | Scoped Ruff lint and format, Ruff lint for predict.py, pinned actionlint, architecture CLI and whitespace checks passed |
 | Preservation | All eight pre-existing evidence files match their pre-edit digests |
-| Remote CI | Unavailable for the local patch |
+| Remote CI | Passed for 95b019e. 223 passed, 12 skipped because the private model is absent, one test warning. [Run 41731227832](https://github.com/fxmidaaa/pret-drept/actions/runs/41731227832) |
 
 The full suite ran with `PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR=/private/tmp/pret-drept-a07-probe-mpl NUMBA_CACHE_DIR=/private/tmp/pret-drept-a07-20261104/numba .venv/bin/python -m pytest -p no:cacheprovider -q -ra --tb=short`. To reproduce the synthetic tests alone, add `tests/foundations/test_prediction_initialization.py` to that command. Source checks follow the development guide, plus `.venv/bin/ruff check predict.py` and `git diff --check`.
 
-Recovery: Review A07 on `fix/repository-audit` at `894a016` and preserve the eight local A03–A06 evidence files. Obtain approval of the proposed publication, then verify CI for the pushed commit.
+Recovery: Confirm `fix/repository-audit` at `95b019e74e79e8b8a268acd32ff3e94928b77e36`. Preserve the local A03–A07 evidence. Publication of evidence updates requires separate approval.
+
+The user authorized publication. GitHub confirmed commit `95b019e` with message `fix(predict): serialize lazy model initialization`. Workflow validation, static checks, dependency checks, tests and the distribution build passed. The test log reported 223 passes and 12 private-model skips in 3.89 seconds. [Run 41731227832](https://github.com/fxmidaaa/pret-drept/actions/runs/41731227832)

@@ -18,10 +18,12 @@ The five nonfinite raw request cases returned HTTP 500 before the change. They n
 | Full local suite | 241 passed, zero failures or skips, one existing Starlette warning |
 | Source checks | Scoped Ruff lint and format, Ruff lint for api.py, pinned actionlint, architecture CLI and whitespace checks passed |
 | Preservation | All ten pre-existing evidence files match their pre-edit digests |
-| Remote CI | Unavailable for the local patch |
+| Remote CI | Passed for a8b6a1c. 229 passed, 12 skipped because the private model is absent, one test warning. [Run 41804561617](https://github.com/fxmidaaa/pret-drept/actions/runs/41804561617) |
 
 Run `PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR=/private/tmp/pret-drept-a07-probe-mpl NUMBA_CACHE_DIR=/private/tmp/pret-drept-a08-20261104/numba .venv/bin/python -m pytest -p no:cacheprovider -q -ra --tb=short` for the full suite. Add `tests/foundations/test_api_validation.py` for the focused tests. Follow the development guide for source checks, plus `.venv/bin/ruff check api.py` and `git diff --check`.
 
-Recovery: Review the four A08 files on `fix/repository-audit` at `95b019e` and preserve the ten local A03–A07 evidence files. The proposed message is `fix(api): serialize nonfinite validation inputs safely`. Obtain publication approval before committing or pushing, then verify CI for the resulting commit.
+Recovery: Confirm `fix/repository-audit` at `a8b6a1cf89de3b55b178032e282aebddb7fb128c`. Preserve local A03–A08 evidence. Publication of evidence updates requires separate approval.
 
 The user approved publication with message `fix(api): serialize nonfinite validation inputs safely` on `fix/repository-audit`. Verify CI for the published commit.
+
+GitHub confirmed `a8b6a1c` on `fix/repository-audit`. Workflow validation, static checks, dependency checks, tests and the distribution build passed. The test log reported 229 passes and 12 private-model skips in 4.20 seconds. [Run 41804561617](https://github.com/fxmidaaa/pret-drept/actions/runs/41804561617)

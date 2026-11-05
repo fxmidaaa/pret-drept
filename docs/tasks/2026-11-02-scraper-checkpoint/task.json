@@ -24,14 +24,17 @@
     "Scoped Ruff check/format passed on 23 files; actionlint and architecture commands passed",
     "Private data/model and pre-existing A01 evidence hashes unchanged; AST/source checks preserve existing acquisition logic, ML/API/training and dependency/architecture contracts",
     "Completed engineering review and documentation; no source publication, real acquisition or migration performed",
-    "User approved the presented A02 branch/message with push; publication authorized and pending execution"
+    "User approved the presented A02 branch/message with push; publication authorized and pending execution",
+    "Publication reconciled on 2026-11-05. Git history contains approved source 9341519338a35f37541b9c25b1d89ff4b9f787ba. GitHub confirmed its exact CI run 41526231926 succeeded with 161 tests passed and 12 private-model checks skipped."
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41526231926"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "A02 option 1 implemented and locally verified: 31 new regressions and all 173 local tests passed. User approved publication; commit/push and exact-commit GitHub verification are next. No real collection or migration occurred.",
+  "final_outcome": "A02 approved source was published as 9341519 and its exact-commit GitHub CI passed. Publication status reconciled on 2026-11-05. Historical-data migration remains separate.",
   "history": [
     {
       "state": "PROPOSED",
@@ -56,6 +59,10 @@
     {
       "state": "READY_FOR_REVIEW",
       "timestamp": "2026-11-02T21:10:16.580750+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-05T15:56:49.213544+00:00"
     }
   ],
   "implementation_plan": [
@@ -75,10 +82,11 @@
     "Temporarily accommodate long fields within the open file size and restore CSV parser state; concurrent access is not certified",
     "CLI help is tested in-process with file reads and requests blocked; all collection fixtures remain synthetic",
     "Proposed publication message: fix(scraper): preserve checkpoints with validated atomic saves; branch fix/repository-audit; approval pending",
-    "Approved publication: fix/repository-audit; fix(scraper): preserve checkpoints with validated atomic saves; prior A01 local evidence updates are outside this commit"
+    "Approved publication: fix/repository-audit; fix(scraper): preserve checkpoints with validated atomic saves; prior A01 local evidence updates are outside this commit",
+    "The reconciliation transition is recorded at the current time. Earlier local checkpoints and their original timestamps remain as history."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Commit the reviewed A02 files with the approved message and push fix/repository-audit without force. Preserve the two prior local A01 evidence updates. Inspect the exact-commit GitHub run and record its result; other fixes, collection and migration need separate approval.",
+  "next_recovery_action": "Confirm 9341519 in the fix/repository-audit history and GitHub Actions run 41526231926. Use the report publication-reconciliation section for current status.",
   "objective": "Repair legacy checkpoint validation and atomic saving without rewriting historical data",
   "original_authorized_request": "docs/tasks/2026-11-02-scraper-checkpoint/request.md",
   "pending_approvals": [],
@@ -92,7 +100,7 @@
     "A02 option 1: existing scraper storage, offline tests, verification instructions and records",
     "User approved publication of the reviewed A02 patch to fix/repository-audit; no data migration, live collection, training, protected operations, A03 retry changes or A04 field policy changes"
   ],
-  "state": "READY_FOR_REVIEW",
+  "state": "COMPLETED",
   "task_id": "RP-20261102-A02",
   "verification_evidence": [
     {
@@ -127,9 +135,9 @@
     },
     {
       "check": "remote-ci",
-      "reference": "docs/reports/a02-scraper-checkpoint.md#exact-next-recovery-action",
-      "required": false,
-      "status": "unavailable"
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41526231926",
+      "required": true,
+      "status": "passed"
     }
   ],
   "verification_requirements": [
@@ -137,6 +145,7 @@
     "local-suite",
     "lint-format",
     "workflow-architecture",
-    "preservation-context-diff"
+    "preservation-context-diff",
+    "remote-ci"
   ]
 }

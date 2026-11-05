@@ -13,14 +13,19 @@
     "All 28 regressions using complete synthetic documents failed before the schema change and passed afterward.",
     "All seven updated schemas passed standalone format comparisons against the intended complete-string grammars.",
     "The full checkout passed 285 tests. The extracted source distribution and wheel each passed 142 tests.",
-    "Scoped lint and format, workflow validation, architecture checks, and whitespace checks passed. All 18 prior documentation edits match their starting digests."
+    "Scoped lint and format, workflow validation, architecture checks, and whitespace checks passed. All 18 prior documentation edits match their starting digests.",
+    "The user approved pushing the reviewed A12 patch.",
+    "Published d5583a537eaf6b9e637fcd2bfb8149657eec539a to fix/repository-audit and verified the remote ref.",
+    "GitHub Actions run 41821705819 passed. Job 126546185591 reported 273 checkout tests passed and 12 private-model skips. The extracted source and wheel each passed 142 tests."
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41821705819"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "Local A12 patch verified and ready for review. Remote CI is pending push approval.",
+  "final_outcome": "Published A12 to fix/repository-audit at d5583a5 and verified passing GitHub CI.",
   "history": [
     {
       "state": "PROPOSED",
@@ -45,6 +50,10 @@
     {
       "state": "READY_FOR_REVIEW",
       "timestamp": "2026-11-04T11:13:40.052250+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-04T11:33:56.939506+00:00"
     }
   ],
   "implementation_plan": [
@@ -57,12 +66,10 @@
     "Use independent JSON Schema constraints for the first character, allowed alphabet, and string length. Keep the tests in the existing packaged contract suite."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Await user approval to push. After approval, commit only the reviewed A12 files, push to fix/repository-audit, and verify GitHub CI on the published revision. Preserve the 18 pre-existing edits.",
+  "next_recovery_action": "Confirm d5583a5 on fix/repository-audit and GitHub Actions run 41821705819. Preserve the local CI evidence and the 18 earlier documentation edits.",
   "objective": "Reject malformed identifier and digest strings at the public schema boundary",
   "original_authorized_request": "User selected A12 option 1 and requires separate approval before push.",
-  "pending_approvals": [
-    "Approval to push the reviewed A12 patch to fix/repository-audit."
-  ],
+  "pending_approvals": [],
   "protected_invariants": [
     "Preserve existing valid values, nullable alternatives, schema identities, exact comparisons, legacy interfaces, and prior local evidence."
   ],
@@ -70,7 +77,7 @@
   "scope_boundaries": [
     "The 28 existing identifier and digest patterns across the seven public v1 schemas, targeted tests, packaging of the tests, and contract documentation."
   ],
-  "state": "READY_FOR_REVIEW",
+  "state": "COMPLETED",
   "task_id": "RP-20261104-A12",
   "verification_evidence": [
     {
@@ -102,6 +109,12 @@
       "reference": "docs/tasks/2026-11-04-identifier-formats/plan.md#verification",
       "required": true,
       "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41821705819",
+      "required": true,
+      "status": "passed"
     }
   ],
   "verification_requirements": [
@@ -109,6 +122,7 @@
     "checkout-suite",
     "distributions",
     "source-checks",
-    "preservation"
+    "preservation",
+    "remote-ci"
   ]
 }

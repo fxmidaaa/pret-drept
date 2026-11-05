@@ -22,10 +22,12 @@ The synthetic legacy export failed its regression before the fix. It saved 25 fl
 | Docker source packaging | Network-disabled scratch build exercised the actual ignore file and Dockerfile COPY instructions. The exported legacy API imported the component and all exclusion canaries stayed out. |
 | Full inference container runtime | Skipped. Verification used a source-copy build and import probe. |
 | Preservation | All fourteen prior evidence digests match. Requirements, lock and package dependency declarations match Git. |
-| Remote CI | Unavailable for the local patch |
+| Remote CI | Passed for bcc143b. 245 passed, 12 skipped because the private model is absent, one test warning. [Run 41812320589](https://github.com/fxmidaaa/pret-drept/actions/runs/41812320589) |
 
 Run `PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR=/private/tmp/pret-drept-a07-probe-mpl NUMBA_CACHE_DIR=/private/tmp/pret-drept-a10-20261104/numba .venv/bin/python -m pytest -p no:cacheprovider -q -ra --tb=short` for the full suite. Add `tests/foundations/test_xgboost_preprocessing.py` for the focused round-trip test. Use the development guide's source checks plus `.venv/bin/ruff check train.py predict.py` and `git diff --check`. The isolated package and Docker smoke artifacts are under `/private/tmp/pret-drept-a10-20261104`.
 
-Recovery: Review the A10 patch at `c4b91ea` on `fix/repository-audit`. Keep the fourteen earlier evidence files separate. Obtain publication approval for `fix(xgboost): preserve fitted preprocessing in legacy bundles` and verify CI for the pushed commit.
+Recovery: Confirm `fix/repository-audit` at `bcc143b0869f3ad232632b7b07d7e20e167ae4f9`. Preserve local A03–A10 evidence. Publication of evidence updates requires separate approval.
 
 The user approved publication by asking to push the proposed commit. Verify CI after publishing `fix(xgboost): preserve fitted preprocessing in legacy bundles` to `fix/repository-audit`.
+
+GitHub confirmed `bcc143b` on `fix/repository-audit`. Workflow validation, static checks, dependency checks, tests and the distribution build passed. The test log reported 245 passes and 12 private-model skips in 3.83 seconds. [Run 41812320589](https://github.com/fxmidaaa/pret-drept/actions/runs/41812320589)

@@ -22,14 +22,22 @@
     "Final full suite: 205 passed, zero failed/skipped in 4.03 seconds; one existing deprecation warning",
     "Scoped Ruff check/format (23 files), pinned actionlint, architecture and preservation checks passed",
     "Recorded engineering review, limits and exact recovery; publication/live collection remain outside scope",
-    "User approved the presented branch and commit message with push; publication of the reviewed A03 patch is authorized and pending execution"
+    "User approved the presented branch and commit message with push; publication of the reviewed A03 patch is authorized and pending execution",
+    "Committed exactly the eight reviewed A03 files as 7e12d691575b3a1e06277c1900c6f9637314bd4a with the approved message",
+    "Pushed fix/repository-audit without force; local HEAD, tracking ref and queried remote branch all match",
+    "Exact-commit push run 41616714577 started; foundations job 125851855286 is in progress",
+    "Exact-commit GitHub run 41616714577 and foundations job 125851855286 succeeded; all workflow/static/architecture/test/build steps passed",
+    "CI: 193 passed, 12 explicit absent-private-model skips, zero failures, one pytest warning in 2.73 seconds; action-runtime warnings also recorded",
+    "Saved post-publication evidence locally in this record and a03-scraper-retry.md; no additional commit/push"
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41616714577"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "Approved A03 option 2 implemented and locally verified: 63 focused/205 total tests passed. User has approved publication; commit/push and exact-commit CI inspection are next. No live acquisition or migration.",
+  "final_outcome": "A03 option 2 source commit 7e12d69 pushed to fix/repository-audit with the approved message; local suite 205 passed, exact-commit GitHub CI passed with 193 passed/12 explicit absent-private-model skips. Post-CI evidence saved locally; no further publication, live acquisition or migration.",
   "history": [
     {
       "state": "PROPOSED",
@@ -77,7 +85,7 @@
     "Approved publication: fix/repository-audit; fix(scraper): keep failed fetches retryable and flag incomplete runs. Post-publication evidence remains local until separately approved."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Commit the reviewed A03 files with approved message fix(scraper): keep failed fetches retryable and flag incomplete runs, then push fix/repository-audit without force. Inspect exact-commit CI and persist the result locally; further publication and other fixes need separate approval.",
+  "next_recovery_action": "Published fix/repository-audit is at 7e12d691575b3a1e06277c1900c6f9637314bd4a; exact-commit CI passed. Preserve the two local post-CI evidence updates (this task record and docs/reports/a03-scraper-retry.md). Obtain user approval of a new commit message before publishing them; other audit fixes and collection/migration require separate decisions.",
   "objective": "Correct A03 option 2: keep failed acquisition outside completed state and report incomplete collection",
   "original_authorized_request": "docs/tasks/2026-11-03-scraper-retry/request.md",
   "pending_approvals": [],
@@ -120,15 +128,16 @@
     },
     {
       "check": "remote-ci",
-      "reference": "docs/reports/a03-scraper-retry.md#limits-and-exact-next-recovery-action",
-      "required": false,
-      "status": "unavailable"
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41616714577",
+      "required": true,
+      "status": "passed"
     }
   ],
   "verification_requirements": [
     "acquisition-regressions",
     "local-suite",
     "source-checks",
-    "preservation-context-diff"
+    "preservation-context-diff",
+    "remote-ci"
   ]
 }

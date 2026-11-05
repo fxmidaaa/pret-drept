@@ -12,14 +12,18 @@
     "Before the fix, five raw requests returned 500 and the finite control passed.",
     "Added an HTTP request validation handler using FastAPI encoding and a float encoder that converts nonfinite values to null.",
     "Six focused and 241 full-suite tests passed. Source checks passed and all ten prior evidence digests match.",
-    "User approved the proposed A08 commit message and publication."
+    "User approved the proposed A08 commit message and publication.",
+    "Published a8b6a1cf89de3b55b178032e282aebddb7fb128c and confirmed the remote ref. CI run 41804561617 started.",
+    "GitHub Actions run 41804561617 passed for a8b6a1c. Foundations job 126488260664 reported 229 passed and 12 private-model skips. The distribution build passed."
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41804561617"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "A08 option 2 implemented locally. Nonfinite validation details now encode as null in HTTP 422. All 241 tests passed. Ready for publication review.",
+  "final_outcome": "A08 published as a8b6a1c on fix/repository-audit. GitHub Actions passed with 229 tests passed and 12 private-model skips.",
   "history": [
     {
       "state": "PROPOSED",
@@ -59,7 +63,7 @@
     "User approved option 2: sanitize validation responses and keep the parser behavior."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Commit the four A08 files as fix(api): serialize nonfinite validation inputs safely, push fix/repository-audit and verify CI.",
+  "next_recovery_action": "Confirm a8b6a1c on fix/repository-audit and preserve local A03–A08 evidence. Obtain separate approval to publish evidence updates.",
   "objective": "Return JSON-safe HTTP 422 responses for rejected nonfinite inputs",
   "original_authorized_request": "User approved A08 option 2 and requested a short implementation summary and proposed commit message before publication.",
   "pending_approvals": [],
@@ -100,15 +104,16 @@
     },
     {
       "check": "remote-ci",
-      "reference": "docs/tasks/2026-11-04-api-validation-json/plan.md#verification",
-      "required": false,
-      "status": "unavailable"
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41804561617",
+      "required": true,
+      "status": "passed"
     }
   ],
   "verification_requirements": [
     "http-regressions",
     "full-suite",
     "source-checks",
-    "preservation"
+    "preservation",
+    "remote-ci"
   ]
 }

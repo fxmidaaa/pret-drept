@@ -23,14 +23,22 @@
     "Scoped Ruff check/format (23 files), pinned actionlint and architecture command passed",
     "Four private/prior-evidence identities unchanged; nine existing scraper functions and protected source/configuration unchanged",
     "Recorded engineering rationale, limitations and exact recovery; no commit/push or real-data operation",
-    "User approved the presented branch and commit message; publication of the reviewed A04 patch is authorized and pending execution"
+    "User approved the presented branch and commit message; publication of the reviewed A04 patch is authorized and pending execution",
+    "Committed exactly the eight reviewed A04 files as af574c9ffa31c47b53e3b3de459e984a685e46df with the approved message",
+    "Pushed fix/repository-audit without force; local HEAD, tracking ref and queried remote branch all match",
+    "Exact-commit push run 41631390504 started; foundations job 125901557634 is in progress",
+    "Exact-commit GitHub run 41631390504 and foundations job 125901557634 succeeded; all workflow/static/architecture/test/build steps passed",
+    "CI: 205 passed, 12 explicit absent-private-model skips, zero failures, one pytest warning in 4.20 seconds; existing action-runtime warnings also recorded",
+    "Saved post-publication A04 evidence locally; two pre-existing A03 evidence updates remain byte-identical and unpublished; no further commit/push"
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41631390504"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "Approved A04 option 2 is locally verified: 75 focused/217 total tests passed. User approved publication with the presented message; commit/push and exact-commit CI inspection are next. Two local A03 evidence updates preserved.",
+  "final_outcome": "A04 option 2 source commit af574c9 pushed to fix/repository-audit with the approved message; local suite 217 passed and exact-commit GitHub CI passed with 205 passed/12 explicit absent-private-model skips. Post-CI A04 evidence saved locally; prior A03 evidence unchanged and unpublished. No migration or live acquisition.",
   "history": [
     {
       "state": "PROPOSED",
@@ -79,7 +87,7 @@
     "Approved publication: fix/repository-audit; fix(scraper): reject unapproved checkpoint columns. The two A03 local evidence updates are excluded; post-publication A04 evidence stays local until separately approved."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Commit exactly the eight reviewed A04 files with fix(scraper): reject unapproved checkpoint columns and push fix/repository-audit without force. Preserve the two existing local A03 evidence updates. Inspect exact-commit CI and record its result locally; further publication and other fixes need separate approval.",
+  "next_recovery_action": "Published fix/repository-audit is at af574c9ffa31c47b53e3b3de459e984a685e46df; exact-commit CI passed. Preserve the four local post-CI evidence files (A03/A04 reports and task records). Obtain user approval of a new branch/message proposal before publishing them; other fixes and collection/migration require separate decisions.",
   "objective": "Enforce the approved checkpoint storage fields and reject unexpected columns without data changes",
   "original_authorized_request": "docs/tasks/2026-11-03-scraper-fields/request.md",
   "pending_approvals": [],
@@ -122,15 +130,16 @@
     },
     {
       "check": "remote-ci",
-      "reference": "docs/reports/a04-scraper-fields.md#limits-and-exact-recovery-action",
-      "required": false,
-      "status": "unavailable"
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41631390504",
+      "required": true,
+      "status": "passed"
     }
   ],
   "verification_requirements": [
     "field-regressions",
     "local-suite",
     "source-checks",
-    "preservation-context-diff"
+    "preservation-context-diff",
+    "remote-ci"
   ]
 }

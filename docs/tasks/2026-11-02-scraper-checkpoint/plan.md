@@ -35,3 +35,12 @@ Recovery: read `task.json`, reconcile the diff with this scope and preserve the 
 The approved storage repair is implemented in the existing script. **31 checkpoint regressions and all 173 local tests passed**, with zero failures/skips and one existing deprecation warning. Scoped static/formatting, workflow semantics, architecture, preservation and context checks passed. Review caught and corrected long-field parsing compatibility and strengthened CLI test isolation. See [verification and engineering review](../../reports/a02-scraper-checkpoint.md). Publication remains pending user approval of the branch and proposed commit message; no A02 remote run is claimed.
 
 Publication update: the user subsequently approved the presented branch/message with "push". Commit/push the reviewed A02 files with `fix(scraper): preserve checkpoints with validated atomic saves`, then inspect the exact-commit GitHub run. Preserve the unrelated local A01 evidence updates.
+
+## Publication reconciliation
+
+Reconciled on 2026-11-05 during the audit-report consistency task. The approved fix was
+published as `9341519338a35f37541b9c25b1d89ff4b9f787ba`. Its
+[exact-commit CI run](https://github.com/fxmidaaa/pret-drept/actions/runs/41526231926) passed,
+with 161 tests passed and 12 private-model checks skipped.
+See the [current report status](../../reports/a02-scraper-checkpoint.md#publication-reconciliation).
+Earlier pre-publication entries above are retained as historical checkpoints.

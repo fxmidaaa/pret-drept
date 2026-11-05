@@ -19,14 +19,18 @@
     "Before the fix twelve invalid-input regressions failed and three valid controls passed.",
     "Shared the standard-library rules between the legacy source and the installed contract package. The API translates domain errors to field-specific 422 details.",
     "All 256 tests and scoped source checks passed. Wheel, network-disabled Docker COPY smoke build and exported legacy API probe passed. All twelve prior evidence digests match.",
-    "User approved the proposed A09 commit message and publication."
+    "User approved the proposed A09 commit message and publication.",
+    "Published c4b91eac786e9d1cf21058ee956b310e41bd4c43 and confirmed the remote ref. CI run 41809961842 was queued.",
+    "GitHub Actions run 41809961842 passed for c4b91ea. Foundations job 126506591055 reported 244 passed and 12 private-model skips. The distribution build passed."
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/41809961842"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "A09 option 1 implemented and locally verified. HTTP, direct prediction and canonical validation share the rules. 256 tests and wheel and Docker source packaging checks passed. Ready for publication review.",
+  "final_outcome": "A09 published as c4b91ea on fix/repository-audit. GitHub Actions passed with 244 tests passed and 12 private-model skips.",
   "history": [
     {
       "state": "PROPOSED",
@@ -68,7 +72,7 @@
     "Use post-schema semantic checks in the canonical validator and translate only the domain error in the HTTP route."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Commit the A09 files as fix(validation): enforce apartment field relationships, push fix/repository-audit and verify CI.",
+  "next_recovery_action": "Confirm c4b91ea on fix/repository-audit and preserve local A03–A09 evidence. Obtain separate approval to publish evidence updates.",
   "objective": "Apply shared apartment relationship checks across legacy and canonical inputs",
   "original_authorized_request": "User approved A09 option 1 and requested no dependency changes if possible.",
   "pending_approvals": [],
@@ -121,9 +125,9 @@
     },
     {
       "check": "remote-ci",
-      "reference": "docs/tasks/2026-11-04-apartment-relationships/plan.md#verification",
-      "required": false,
-      "status": "unavailable"
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/41809961842",
+      "required": true,
+      "status": "passed"
     }
   ],
   "verification_requirements": [
@@ -131,6 +135,7 @@
     "full-suite",
     "source-checks",
     "packaging",
-    "preservation"
+    "preservation",
+    "remote-ci"
   ]
 }

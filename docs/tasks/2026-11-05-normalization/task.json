@@ -17,14 +17,19 @@
     "clean_data reports aggregate field issues and sequential row exclusion counts. The training entry point prints safe JSON diagnostics.",
     "All 334 checkout tests passed. The extracted source archive and wheel each passed 142 tests.",
     "The reviewed synthetic sample matches the prior cleaned DataFrame and existing currency conversions. Seven downstream feature and evaluation functions match the baseline.",
-    "Source checks passed. All 24 prior documentation edits match their starting digests."
+    "Source checks passed. All 24 prior documentation edits match their starting digests.",
+    "The user approved publishing the seven reviewed A15 files.",
+    "Verified the fxmidaaa GitHub login and pushed ad34828915a61930b82049fc41343bf05622769b to fix/repository-audit. GitHub confirmed the remote revision.",
+    "GitHub Actions run 42035675032 passed. Job 127273057403 reported 322 checkout tests passed and 12 private-model skips, and passed 142 tests each for the extracted source and wheel."
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/42035675032"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "Local A15 normalization patch is verified and ready for review. Remote CI is pending push approval.",
+  "final_outcome": "Published A15 to fix/repository-audit at ad34828 and verified passing GitHub CI.",
   "history": [
     {
       "state": "PROPOSED",
@@ -49,6 +54,10 @@
     {
       "state": "READY_FOR_REVIEW",
       "timestamp": "2026-11-05T12:48:55.138434+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-05T13:27:27.134893+00:00"
     }
   ],
   "implementation_plan": [
@@ -61,12 +70,10 @@
     "Use aggregate counts for field issues and sequential row exclusions while retaining the DataFrame result."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Await separate push approval for the seven reviewed A15 files. After approval, publish to fix/repository-audit and verify CI. Preserve the 24 pre-existing documentation edits.",
+  "next_recovery_action": "Confirm ad34828 on fix/repository-audit and GitHub Actions run 42035675032. Preserve the local CI evidence and the 24 prior documentation edits.",
   "objective": "Reject unsupported normalization inputs safely and report aggregate field and exclusion reasons",
   "original_authorized_request": "User selected A15 option 1. Push requires separate approval.",
-  "pending_approvals": [
-    "Approval to push the reviewed A15 patch to fix/repository-audit."
-  ],
+  "pending_approvals": [],
   "protected_invariants": [
     "Preserve existing supported conversions, caller interfaces, training and evaluation policy, existing artifacts and dependencies, and prior local evidence. Use synthetic data for normalization verification."
   ],
@@ -74,7 +81,7 @@
   "scope_boundaries": [
     "Legacy normalization helpers, optional aggregate clean_data diagnostics, legacy training report, regression tests, and documentation."
   ],
-  "state": "READY_FOR_REVIEW",
+  "state": "COMPLETED",
   "task_id": "RP-20261105-A15",
   "verification_evidence": [
     {
@@ -106,6 +113,12 @@
       "reference": "docs/tasks/2026-11-05-normalization/plan.md#verification",
       "required": true,
       "status": "passed"
+    },
+    {
+      "check": "remote-ci",
+      "reference": "https://github.com/fxmidaaa/pret-drept/actions/runs/42035675032",
+      "required": true,
+      "status": "passed"
     }
   ],
   "verification_requirements": [
@@ -113,6 +126,7 @@
     "checkout-suite",
     "distributions",
     "source-checks",
-    "preservation"
+    "preservation",
+    "remote-ci"
   ]
 }

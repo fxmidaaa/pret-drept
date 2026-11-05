@@ -30,7 +30,7 @@ checkout's editable install.
 | Full local checkout | 257 passed, zero failed or skipped, one existing Starlette warning |
 | Source and dependencies | Scoped Ruff lint and format, pinned actionlint, architecture checks, whitespace checks, and `uv pip check` passed. The local virtual environment has no pip module. |
 | Prior evidence | All 16 pre-existing local documentation edits match their starting digests. |
-| Remote CI | Pending separate push approval. |
+| Remote CI | Passed on `ee6549a`. Checkout tests reported 245 passed and 12 private-model skips. The extracted source and wheel each passed 114 tests. [Run 41815850090](https://github.com/fxmidaaa/pret-drept/actions/runs/41815850090) |
 
 Run `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python scripts/check_distribution.py` to rebuild and
 test both artifacts. For the checkout suite, run
@@ -40,6 +40,12 @@ The canary probe and logs are in `/private/tmp/pret-drept-a11-verification.edRuD
 the probe, copy `check_scope.py` to a new temporary directory and run it with the checkout's
 `.venv/bin/python` from the repository root.
 
-Recovery starts at `fix/repository-audit` revision `bcc143b`. Review the A11 files separately
-from the existing documentation edits. After push approval, commit only the reviewed A11
-files, push to the fix branch, and verify the unprivileged workflow on the published revision.
+The user approved pushing the reviewed A11 patch. GitHub confirmed
+`ee6549a9b64a8a2a5250613855598b549d766f86` on `fix/repository-audit`, and the
+foundations job `126526272266` passed. GitHub reported that the pinned checkout and setup
+actions target deprecated Node.js 20 and ran them on Node.js 24.
+
+On recovery, confirm the published revision with
+`git ls-remote origin refs/heads/fix/repository-audit` and the run with
+`gh run view 41815850090 --repo fxmidaaa/pret-drept --json headSha,conclusion,jobs`.
+Preserve the local CI evidence and the 16 earlier documentation edits.
