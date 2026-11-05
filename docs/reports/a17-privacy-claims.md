@@ -1,7 +1,9 @@
 # A17 — Accurate privacy claims and legacy artifact review
 
-Date: 2026-11-05. Status: option 1 approved for publication on `fix/repository-audit`,
-based on `d9ac405`; source commit and exact-revision CI pending. Risk: L0. The patch changes
+Date: 2026-11-05. Status: option 1 published on `fix/repository-audit` at
+[`ee4b555`](https://github.com/fxmidaaa/pret-drept/commit/ee4b5552885e6ec0ebef3a73cdc295a7f6b16e45),
+with successful exact-source [CI run 42074089595](https://github.com/fxmidaaa/pret-drept/actions/runs/42074089595).
+Risk: L0. The patch changes
 documentation and Python comments; it introduces no runtime privacy mechanism.
 
 ## Approved change
@@ -90,16 +92,19 @@ bypass is already fixed; its separate content-redaction limit remains.
 | Relevant existing tests | 139 passed, 0 skipped | Feature/scraper/bundle/task tests; one existing Starlette/httpx deprecation warning |
 | Scoped Ruff lint/format | Passed; 34 files already formatted | Existing development profile, not whole-repository lint certification |
 | Architecture and notebook checks | Passed; both tracked notebooks checked | No runtime isolation assessment or notebook execution |
-| Scope, prior work and documentation | Passed: 11 A17 files, 9 prior files byte-identical, shared-index A17-only change, 40 local links/anchors, task records and whitespace | Final task evidence is linked below |
+| Scope, prior work and documentation | Passed: 11 A17 files, 9 prior files byte-identical, shared-index A17-only change, task records and whitespace | Original review checked 40 local links/anchors; publication follow-up checked 41 |
 | Full application/frontend/browser/distribution reruns | Skipped | A17 changes prose/comments; unchanged Python ASTs and preserved A16 files bound this scope |
-| Remote CI | Pending approved publication | Approval recorded below; no result claimed before execution |
+| Published-source CI | 322 passed, 12 private-model skips; source archive and wheel each passed 142 tests | Run 42074089595 matches source `ee4b555`; private artifact absent in CI |
 
 Exact commands and outcomes are recorded in the [task plan](../tasks/2026-11-05-privacy-claims/plan.md)
 and [task record](../tasks/2026-11-05-privacy-claims/task.json).
 
-The user approved source publication with "push please" on 2026-11-05. Publish only
-the eleven-file A17 increment; A16 and the earlier local evidence remain outside this
-push. Follow the published revision's CI and record its exact identity and result.
+The user approved source publication with "push please" on 2026-11-05. The eleven-file
+A17 increment was committed and pushed after confirming the existing `fxmidaaa` account
+and branch. GitHub independently confirmed the published SHA. Foundations job
+`127409503574` passed all workflow steps on that source. Private-model skips in CI are
+distinct from the model-backed local review and tests. A16 and the earlier local evidence
+remain outside this publication. A documentation follow-up records this source/CI evidence.
 Stronger runtime controls, key management, content-redaction rules,
 aggregation/fallback changes, data migration, experiments and historical-publication
 review require their own decisions. Frozen architecture and retention requirements

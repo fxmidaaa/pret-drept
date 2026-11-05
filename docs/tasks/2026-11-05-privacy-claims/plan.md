@@ -1,5 +1,10 @@
 # RP-20261105-A17 privacy claims and artifact review
 
+Current status: A17 source is published at `ee4b555` on `fix/repository-audit` and its
+exact-revision CI passed. See [publication evidence](#publication-evidence) for the
+verified source/run and current recovery action. The original plan/checkpoints below
+are retained as history.
+
 The user approved A17 option 1 on 2026-11-05: accurate privacy claims, an explicit
 local review of the existing legacy bundle, and an M2/M4 handoff for stronger
 publication controls. Commit and push approval remain separate.
@@ -121,3 +126,29 @@ updates remain local. Stage only the A17 index-row change in the shared audit in
 The remote branch was independently checked at `d9ac405` before preparing the commit.
 Publish the reviewed source without force and follow CI for the exact new revision.
 Older pending-approval statements above are pre-publication checkpoints.
+
+## Publication evidence
+
+- Published source: [`ee4b5552885e6ec0ebef3a73cdc295a7f6b16e45`](https://github.com/fxmidaaa/pret-drept/commit/ee4b5552885e6ec0ebef3a73cdc295a7f6b16e45).
+  Its committed tree matched the prepared eleven-file A17 tree exactly. The shared
+  index contains only the A17 row change; no A16 source or prior evidence was staged.
+- The existing GitHub account was verified as `fxmidaaa`. A normal push advanced
+  `fix/repository-audit` from `d9ac405` to `ee4b555`; GitHub independently confirmed the SHA.
+- [CI run 42074089595](https://github.com/fxmidaaa/pret-drept/actions/runs/42074089595)
+  completed successfully for the exact source SHA. Foundations job `127409503574`
+  passed all steps. Checkout tests: **322 passed, 12 skipped**, one existing warning.
+  Source archive and wheel: **142 passed each**. The skips require the absent private model.
+- All nine prior A16/evidence files remained byte-identical after the push. The A16
+  row remains a local change. The model file is unchanged and was not published.
+- This documentation follow-up records the completed source publication and exact-source
+  CI. It does not activate privacy policy, approve a model/data export or deploy anything.
+- Follow-up documentation checks passed after the evidence edits: 41 local links/anchors,
+  unchanged Python ASTs/model identity, preserved prior files and valid task records.
+  `tests/foundations/test_repository_tasks.py` passed again. The follow-up contains
+  only the four A17 report/index/task evidence files.
+
+Current recovery: confirm the published source and run with
+`gh run view 42074089595 --repo fxmidaaa/pret-drept --json headSha,conclusion,jobs`.
+The source SHA must be `ee4b5552885e6ec0ebef3a73cdc295a7f6b16e45` and conclusion `success`.
+Use the A17 report/index for current status; retain the original local checks as historical
+evidence. A16 publication still requires its separate decision. A18 remains pending review.
