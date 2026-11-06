@@ -204,3 +204,31 @@ requirements-data-tools.lock requirements-data-tools.in` (resolution here used u
 0.13.1). Review the dependency/build-backend and supported metadata profile together,
 update both applicable locks, and rerun all relevant checks including real integration.
 Do not change ML pins to accommodate DVC.
+
+## Development split materialization
+
+M2 increment 4 adds a pure release-bound split builder and thin local artifact I/O
+with the existing fifteen schemas and locked environments. See the
+[materialization design](architecture/development-splits-v1.md). Run focused checks:
+
+```bash
+.venv/bin/python -m pytest -p no:cacheprovider -q -ra tests/foundations/test_development_splits.py tests/foundations/test_split_io.py tests/foundations/test_evaluation_contracts.py tests/foundations/test_release_io.py
+.venv/bin/python -m pytest -p no:cacheprovider -q -ra tests/integration/test_dvc_restoration.py
+```
+
+Then run the relevant aggregate commands above after the final source edit. The
+source/wheel suites ship the deterministic builder/I/O fixtures; actual DVC tests
+remain checkout-only. The new integration restores A after B independently twice,
+materializes and reads back identical split bytes with explicit synthetic provenance,
+and preserves both release payloads. No real observation dates or benchmark results
+are inferred. New split output lives outside the restored workspace; creating it
+never runs DVC or modifies the release. Missing/wrong DVC tooling remains an explicit
+setup failure rather than an automatic installation or skip.
+
+The shared atomic JSON primitive stages `.artifact-*` files for both restoration
+reports and split files. Interrupted outputs without a valid final artifact are
+incomplete; use a fresh destination, or inspect/remove only owned disposable failed
+resources. This does not establish concurrent/power-loss guarantees or trusted
+verification. Fixed membership alone cannot certify feature/target-lineage leakage
+freedom. Policy review, real chronology/identity, scalable transport, isolation and
+the M2 exit gate remain later prerequisites.

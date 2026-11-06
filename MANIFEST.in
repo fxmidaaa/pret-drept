@@ -18,4 +18,6 @@ include tests/foundations/test_observation_candidates.py
 include tests/foundations/test_dataset_releases.py
 include tests/foundations/test_release_io.py
 include tests/foundations/test_dvc_local.py
+include tests/foundations/test_development_splits.py
+include tests/foundations/test_split_io.py
 include tests/foundations/test_tasks.py

@@ -188,7 +188,7 @@ def test_interrupted_finalization_has_no_success_marker(release_case, monkeypatc
         )
     assert "private diagnostic" not in str(failure.value)
     assert not (destination / COMPLETION_FILE).exists()
-    assert not list(destination.glob(".restore-*"))
+    assert not list(destination.glob(".artifact-*"))
     with pytest.raises(ReleaseError):
         read_verified_restore(
             destination,

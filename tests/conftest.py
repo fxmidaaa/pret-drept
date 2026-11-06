@@ -78,3 +78,123 @@ def release_input_factory():
         }
 
     return make
+
+
+@pytest.fixture(scope="session")
+def split_input_factory(release_input_factory):
+    """Invented split metadata/provenance only; no clock, private rows or DVC claim."""
+    import copy
+
+    from rent_contracts.evaluation import evaluation_policy_digest
+    from rent_data.candidates import build_observation_candidate
+    from rent_data.releases import content_digest
+
+    def make(*, observations=None):
+        base = release_input_factory()
+        template = base["candidate"]["observations"][0]
+
+        def row(key, listing, property_id, instant, *, status="confirmed", domain="valid"):
+            value = copy.deepcopy(template)
+            value.update(observation_id=key, listing_id=listing, domain_status=domain)
+            value["property_identity"].update(status=status, property_id=property_id)
+            for field in (
+                "published_at",
+                "collected_at",
+                "features_available_at",
+                "prediction_cutoff_at",
+            ):
+                value[field] = instant
+            value["temporal_evidence_ref"] = (
+                content_digest(b"synthetic temporal evidence") if instant else None
+            )
+            return value
+
+        if observations is None:
+            observations = [
+                row("obs-train-a", "listing-a", "property-a", "2026-01-10T12:00:00Z"),
+                row("obs-train-b", "listing-b", "property-b", "2026-01-11T12:00:00Z"),
+                row("obs-seen", "listing-seen", "property-a", "2026-02-10T12:00:00Z"),
+                row("obs-refresh", "listing-a", "property-a", "2026-02-11T12:00:00Z"),
+                row("obs-new", "listing-new", "property-new", "2026-02-12T12:00:00Z"),
+                row(
+                    "obs-probable",
+                    "listing-probable",
+                    "property-probable",
+                    "2026-02-13T12:00:00Z",
+                    status="probable",
+                ),
+                row(
+                    "obs-unresolved",
+                    "listing-unresolved",
+                    None,
+                    "2026-02-14T12:00:00Z",
+                    status="unresolved",
+                ),
+                row("obs-notime", "listing-notime", "property-notime", None),
+                row(
+                    "obs-invalid",
+                    "listing-invalid",
+                    "property-invalid",
+                    "2026-02-15T12:00:00Z",
+                    domain="invalid",
+                ),
+                row(
+                    "obs-pending",
+                    "listing-pending",
+                    "property-pending",
+                    "2026-02-16T12:00:00Z",
+                    domain="unresolved",
+                ),
+                row("obs-gap", "listing-gap", "property-gap", "2026-01-25T12:00:00Z"),
+                row("obs-end", "listing-end", "property-end", "2026-03-01T00:00:00Z"),
+                row(
+                    "obs-multi",
+                    "listing-multi",
+                    "property-multi",
+                    "2026-03-02T12:00:00Z",
+                    domain="invalid",
+                ),
+            ]
+            observations[-1]["features_available_at"] = "2026-03-03T12:00:00Z"
+            observations[-1]["temporal_evidence_ref"] = None
+        groups = [observations] if len(observations) <= 2 else [observations[:2], observations[2:]]
+        sources = []
+        for raw, group in zip(base["sources"], groups):
+            source = json.loads(raw)
+            source["records"] = [
+                {"source_record_id": f"synthetic-capture-{index}", "observation": item}
+                for index, item in enumerate(group)
+            ]
+            sources.append(json.dumps(source, ensure_ascii=False, indent=2).encode("utf-8"))
+        candidate = build_observation_candidate(sources, **base["recipe"])
+        policy = {
+            "contract_version": "1.0.0",
+            "policy_version": "synthetic-split-v1",
+            "domain_policy_ref": base["recipe"]["domain_policy_ref"],
+            "property_matching_policy_ref": base["recipe"]["property_matching_policy_ref"],
+            "selection_basis": "non_target_metadata_only",
+            "property_matching_basis": "non_target_signals_only",
+            "eligibility_rule": "non_target_domain_and_observation_time_v1",
+            "unseen_property_rule": "confirmed_absence_from_resolved_training_v1",
+            "target_unit": "EUR/month",
+        }
+        policy["policy_digest"] = evaluation_policy_digest(policy)
+        return {
+            "candidate": candidate,
+            "sources": sources,
+            "recipe": base["recipe"],
+            "policy": policy,
+            "parameters": {
+                "training_cutoff": "2026-01-20T00:00:00Z",
+                "validation_window": {
+                    "start_inclusive": "2026-02-01T00:00:00Z",
+                    "end_exclusive": "2026-03-01T00:00:00Z",
+                },
+                "creation_provenance": {
+                    "source_snapshot_ref": content_digest(b"synthetic split source snapshot"),
+                    "created_at": "2026-03-03T12:00:00Z",
+                },
+            },
+        }
+
+    return make

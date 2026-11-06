@@ -145,6 +145,14 @@ Existing 1 MiB JSON limits apply; scalable table transport/sharding is deferred.
 Changing referenced policies, metadata, assignments, exclusions, cutoffs or provenance
 changes identity. Recomputing a digest is not authorization or evidence of review.
 
+M2 increment 4's [materializer](development-splits-v1.md) now generates this same v1
+envelope from a complete release-bound metadata inventory. The additive public
+`derive_development_memberships` helper shares the existing semantic calculation
+with validation; generated arrays are deterministic while previous valid ordering
+remains accepted. Required creation provenance is explicit, so reproducing identical
+bytes requires preserving it too. The local I/O path rechecks restored bytes; it
+does not make this proposal an effective real-data policy or an official evaluation.
+
 This development envelope intentionally has no final-holdout period, membership,
 counts, labels, storage location or reference. It is **not** the full protected
 §9.4 manifest. Later trusted code must manage restricted details separately and bind

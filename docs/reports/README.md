@@ -10,6 +10,31 @@ revision. Test counts in the summaries describe the checks recorded for those re
 
 ## Current checkpoint and recovery
 
+**Increment-4 source publication follow-up — 2026-11-06:** the user reviewed the
+implementation, clarified feature-leakage limits, then requested **"push please"**.
+Source commit/push is authorized on `feat/m2-development-splits`; earlier no-push/
+second-HITL-wait statements below are historical. Follow the
+[publication plan](../tasks/2026-11-06-m2-development-splits/plan.md#source-publication-follow-up),
+preserving both unrelated reporting edits locally. No merge, new PR, data/split
+publication, experiment or protected action is included.
+
+**Current M2 increment 4 — 2026-11-06:** the user selected Option A after the first
+HITL: deterministic development split materialization using existing v1 semantics,
+a pure release-bound builder and verified local artifact I/O. Local branch
+`feat/m2-development-splits` starts from `e56c115`; work is **READY_FOR_REVIEW**. Preserve
+the two unrelated report-consistency edits. No repository commit/push or real-data
+application is authorized before the second HITL and a later publication instruction.
+Current scope/recovery: [split plan](../tasks/2026-11-06-m2-development-splits/plan.md),
+[record](../tasks/2026-11-06-m2-development-splits/task.json),
+[design](../architecture/development-splits-v1.md) and
+[increment report](m2-development-splits.md). Local verification: 779 checkout
+passes, 575 per distribution, 223 focused checks, 11 actual DVC integration cases
+and 38 frontend passes; static/architecture/workflow/notebook checks passed. All
+15 schemas, original evaluation fixtures and both unrelated edits are preserved.
+Final task/link/preservation checks follow the evidence update with 11 implementation
+hashes unchanged. Stop uncommitted with results/proposed commit message for the
+second HITL; M2's exit gate remains open.
+
 **Source publication follow-up — 2026-11-06:** after reviewing increment 3, the user
 requested **"push please"**, authorizing source commit/push on
 `feat/m2-local-dvc-releases`, including its uncommitted increment-2 dependency.

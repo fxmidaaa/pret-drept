@@ -173,9 +173,20 @@ def finalize_restoration(
         report, manifest=manifest, expected_release_ref=expected_release_ref
     )
     verify_payload(manifest, destination / "payload", expected_release_ref=expected_release_ref)
-    payload = canonical_json(report).encode("utf-8")
+    create_json_artifact(destination / COMPLETION_FILE, report)
+
+
+def create_json_artifact(path: Path, document: dict) -> None:
+    """Atomically create one bounded JSON artifact, refusing any existing leaf.
+
+    Callers validate document semantics first. This single-writer primitive supplies
+    no authorization, power-loss certification or directory transaction semantics.
+    """
+    path = Path(path)
+    destination = _owned_directory(path.parent)
+    payload = canonical_json(document).encode("utf-8")
     try:
-        descriptor, temporary = tempfile.mkstemp(prefix=".restore-", dir=destination)
+        descriptor, temporary = tempfile.mkstemp(prefix=".artifact-", dir=destination)
     except OSError:
         raise ReleaseError("FINALIZATION_FAILED") from None
     try:
@@ -184,7 +195,7 @@ def finalize_restoration(
             stream.flush()
             os.fsync(stream.fileno())
         # Link is atomic and fails if the destination exists; replacing it is forbidden.
-        os.link(temporary, destination / COMPLETION_FILE)
+        os.link(temporary, path)
     except FileExistsError:
         raise ReleaseError("OUTPUT_EXISTS") from None
     except OSError:

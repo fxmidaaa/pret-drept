@@ -12,7 +12,7 @@ remain later work.
 | `src/rent_contracts` | Versioned public documents/validation | Standard library, JSON schema validation |
 | `src/rent_agent` | Local task context/lifecycle | Public contracts; no ML business logic or platform internals |
 | future `src/rent_platform` | Trusted admission/execution/verification/promotion source | Public contracts and protected runtime adapters; never experimental ML implementations |
-| `src/rent_data` | Non-publishing metadata candidates, development release integrity and local DVC CLI restoration; reviewed splits later | Domain/public contracts, optional safe YAML parser and public CLI; no agent or runner internals |
+| `src/rent_data` | Non-publishing metadata candidates, release integrity/local DVC restoration and deterministic development split materialization; real-data policy review remains external | Domain/public contracts, optional safe YAML parser and public CLI; no agent or runner internals |
 | `src/rent_checks` | Static development checks | AST parsing without importing inspected code |
 
 The future `rent_platform` name avoids shadowing Python's standard-library `platform`. Direct and aliased imports, absolute `from` imports, package-escaping relative imports, and common explicit dynamic import calls are inspected. Nonliteral dynamic targets fail the check. Tests inject negative fixtures and verify no fixture is executed.

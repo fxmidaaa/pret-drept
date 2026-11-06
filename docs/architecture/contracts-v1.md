@@ -46,6 +46,14 @@ and existing candidate provenance. Actual local restoration rehashes bytes and
 rebuilds the complete candidate before a completion report is written. There is no
 publication, retention approval, protected resolver or evaluation-policy change.
 
+M2's fourth increment adds [development split materialization](development-splits-v1.md)
+using the existing `development-split` and `evaluation-policy` wire contracts.
+A public membership derivation helper shares v1 semantics with validation; the
+independent data builder binds complete release metadata, policy and explicit
+temporal/provenance inputs. Verified local I/O reconstructs the restored candidate
+and writes a separate split artifact. No new schema, effective policy or benchmark
+is introduced.
+
 Schemas are loaded from bundled local resources. External schema lookup is denied; adapter schemas are explicitly supplied by the caller's registry. No configuration can select a Python import path, command, host mount, credentials or runtime security options.
 
 Identifiers such as `record_id` and `task_id` contain 1 to 128 characters. The first

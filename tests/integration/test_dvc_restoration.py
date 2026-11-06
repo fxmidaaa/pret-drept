@@ -9,6 +9,8 @@ from pathlib import Path
 import pytest
 
 from rent_contracts import ContractError
+from rent_contracts.evaluation import validate_development_population
+from rent_contracts.validation import canonical_json
 from rent_data.dvc_local import LocalDvcStore
 from rent_data.release_io import (
     COMPLETION_FILE,
@@ -22,6 +24,11 @@ from rent_data.releases import (
     content_digest,
     data_tool_profile_digest,
     dataset_release_digest,
+)
+from rent_data.split_io import (
+    SPLIT_FILE,
+    materialize_development_split,
+    read_verified_development_split,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -243,3 +250,106 @@ def test_existing_destinations_and_changed_config_are_preserved(local_dvc, revis
     with pytest.raises(ReleaseError, match="WORKSPACE_CONFIGURATION_CHANGED"):
         local_dvc.track_payload(workspace)
     assert not (workspace.root / "payload.dvc").exists()
+
+
+def test_old_release_materializes_identical_split_from_independent_actual_restores(
+    local_dvc, revisions, split_input_factory, tmp_path
+):
+    case = revisions["releases"]["A"]
+    release = case["manifest"]
+    assert (
+        payload_inventory(revisions["workspace"].root / "payload")
+        == revisions["releases"]["B"]["manifest"]["artifacts"]
+    )
+    metadata = split_input_factory()
+    policy = metadata["policy"]
+    parameters = metadata["parameters"] | {
+        "training_cutoff": "2026-01-11T00:00:00Z",
+        "validation_window": {
+            "start_inclusive": "2026-01-11T00:00:00Z",
+            "end_exclusive": "2026-01-20T00:00:00Z",
+        },
+    }
+    artifacts = []
+    for index in range(2):
+        restored = tmp_path / f"restored-{index}"
+        output = tmp_path / f"split-{index}"
+        local_dvc.restore(
+            release,
+            metadata_workspace=revisions["workspace"],
+            destination=restored,
+            expected_release_ref=release["release_digest"],
+        )
+        context = {
+            "release": release,
+            "policy": policy,
+            "expected_release_ref": release["release_digest"],
+            "expected_policy_ref": policy["policy_digest"],
+        }
+        split = materialize_development_split(restored, output, **context, **parameters)
+        assert (
+            read_verified_development_split(
+                output,
+                restored_directory=restored,
+                expected_split_ref=split["split_digest"],
+                **context,
+            )
+            == split
+        )
+        # Handwritten assignments for the original four-record DVC fixture.
+        assert split["memberships"] == [
+            {
+                "observation_id": "synthetic-A-0",
+                "partition": "training",
+                "eligibility_exclusions": [],
+                "cohorts": [],
+                "unseen_property_exclusions": ["not_development_validation"],
+            },
+            {
+                "observation_id": "synthetic-A-1",
+                "partition": "development_validation",
+                "eligibility_exclusions": [],
+                "cohorts": ["future_market"],
+                "unseen_property_exclusions": [
+                    "listing_seen_in_training",
+                    "property_overlap_training",
+                ],
+            },
+            {
+                "observation_id": "synthetic-A-2",
+                "partition": "excluded",
+                "eligibility_exclusions": ["temporal_evidence_missing"],
+                "cohorts": [],
+                "unseen_property_exclusions": ["not_development_validation"],
+            },
+            {
+                "observation_id": "synthetic-A-3",
+                "partition": "excluded",
+                "eligibility_exclusions": ["invalid_non_target_domain", "temporal_order_invalid"],
+                "cohorts": [],
+                "unseen_property_exclusions": ["not_development_validation"],
+            },
+        ]
+        assert len(split["memberships"]) == release["observation_count"] == 4
+        assert split["dataset_ref"] == release["release_digest"]
+        validate_development_population(
+            split,
+            ["synthetic-A-1"],
+            cohort="future_market",
+            expected_split_ref=split["split_digest"],
+        )
+        with pytest.raises(ContractError):
+            validate_development_population(
+                split,
+                ["synthetic-A-1", "synthetic-A-3"],
+                cohort="future_market",
+                expected_split_ref=split["split_digest"],
+            )
+        assert payload_inventory(restored / "payload") == release["artifacts"]
+        artifacts.append((output / SPLIT_FILE).read_bytes())
+        assert artifacts[-1] == canonical_json(split).encode("utf-8")
+    assert artifacts[0] == artifacts[1]
+    assert (
+        payload_inventory(revisions["workspace"].root / "payload")
+        == revisions["releases"]["B"]["manifest"]["artifacts"]
+    )
