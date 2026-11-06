@@ -75,3 +75,26 @@ eligibility/cutoff/unseen and matching policies; provide authorized defensible
 chronology or approved remediation and reviewed property pairs; and decide storage/
 access/retention/quality requirements. M0/A14's historical chronology and scraper
 limitations remain unresolved. This next increment is not started here.
+
+## Source publication
+
+The user's subsequent **"push please"** request was fulfilled on
+[`feat/m2-development-splits`](https://github.com/fxmidaaa/pret-drept/tree/feat/m2-development-splits).
+Source [52654bc](https://github.com/fxmidaaa/pret-drept/commit/52654bc23fe54b8d529d476f8c87ae53a9c1652a)
+contains the exact 21 reviewed paths and unchanged 11 implementation hashes. The
+remote feature ref matched that exact SHA after push. Both unrelated reporting
+edits remain local and byte-identical; `main` was not changed and no new PR/merge
+or data publication was created.
+
+[Linux CI 42206582156](https://github.com/fxmidaaa/pret-drept/actions/runs/42206582156)
+passed for the exact source SHA: **767 passes / 12 private-model skips**,
+**575 tests per distribution**, **38 frontend passes**, and all remaining workflow,
+notebook, static/architecture and DVC setup/integration checks. The private model
+is absent in CI; no fake model or training hides its skips. Earlier unavailable
+Linux CI/no-push statements describe the implementation checkpoint.
+
+The bounded engineering/source-publication task is **COMPLETED**. This evidence-only
+follow-up records the source anchor; resolve the actual feature branch HEAD/CI for
+recovery. Exact [publication verification](../tasks/2026-11-06-m2-development-splits/plan.md#publication-verification)
+and remaining gates are in the task. Source publication does not establish feature
+leakage freedom, protected acceptance or the M2 exit gate.

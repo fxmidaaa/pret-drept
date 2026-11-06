@@ -18,7 +18,18 @@ second-HITL-wait statements below are historical. Follow the
 preserving both unrelated reporting edits locally. No merge, new PR, data/split
 publication, experiment or protected action is included.
 
-**Current M2 increment 4 — 2026-11-06:** the user selected Option A after the first
+Publication succeeded: source
+[52654bc](https://github.com/fxmidaaa/pret-drept/commit/52654bc23fe54b8d529d476f8c87ae53a9c1652a)
+was pushed on `feat/m2-development-splits` and its exact remote SHA verified.
+[Linux CI](https://github.com/fxmidaaa/pret-drept/actions/runs/42206582156) passed:
+767 checkout passes / 12 private-model skips, 575 per distribution, 38 frontend
+passes and all static/workflow/notebook/architecture/DVC checks. The bounded source
+task is **COMPLETED**; M2/A14 and feature-lineage/real-data/protected gates remain
+open. This documentation follow-up records evidence; resolve actual branch HEAD/CI
+for recovery. Only the two unrelated reporting edits remain local. See
+[publication verification](../tasks/2026-11-06-m2-development-splits/plan.md#publication-verification).
+
+**Implementation checkpoint, M2 increment 4 — 2026-11-06:** the user selected Option A after the first
 HITL: deterministic development split materialization using existing v1 semantics,
 a pure release-bound builder and verified local artifact I/O. Local branch
 `feat/m2-development-splits` starts from `e56c115`; work is **READY_FOR_REVIEW**. Preserve

@@ -1,6 +1,7 @@
 # RP-20261106-M2-SPLITS — deterministic development split materialization
 
-State: READY_FOR_REVIEW. Risk: **L1 engineering** under frozen architecture §§4–6, 8–9,
+State: COMPLETED — bounded source increment and authorized source publication only.
+Risk: **L1 engineering** under frozen architecture §§4–6, 8–9,
 15–16. This implements existing proposed v1 rules on synthetic metadata; it does
 not change evaluation methodology or activate trusted policy. The first HITL
 approved Option A. Stop for the second HITL after implementation/verification.
@@ -248,3 +249,44 @@ the affected operation. Never force push, reset prior work, infer credentials or
 silently treat pending/failed CI as passed. Source changes require affected checks;
 evidence-only changes require final task/link/preservation checks. M2/A14 and actual
 feature/target-lineage leakage verification remain open.
+
+## Publication verification
+
+The reviewed increment was committed as
+[52654bc](https://github.com/fxmidaaa/pret-drept/commit/52654bc23fe54b8d529d476f8c87ae53a9c1652a)
+with the proposed title, after exact index/content checks for all **21 paths**.
+`git push --set-upstream origin HEAD:refs/heads/feat/m2-development-splits` succeeded
+without force. `git ls-remote --heads origin refs/heads/feat/m2-development-splits`
+independently confirmed source SHA `52654bc23fe54b8d529d476f8c87ae53a9c1652a`.
+No change to `main`, new PR, merge, data publication or experiment occurred.
+
+[Linux CI run 42206582156](https://github.com/fxmidaaa/pret-drept/actions/runs/42206582156)
+completed successfully for the `push` event and that exact source SHA. Inspected
+run metadata, job/step conclusions and logs: **767 passed / 12 private-model checks
+skipped**, **575 passed per distribution**, **38 frontend passes**, plus all
+workflow/notebook/static/format/architecture and separate DVC installation/integration
+steps. One existing Starlette/httpx warning remains. CI has no private model, which
+explains its 12 skips versus 779 local passes; no substitute model or training was
+used. Skips do not certify private-artifact behavior.
+
+Publication baseline/proofs: `/private/tmp/pret-drept-m2-splits-publish-ho_rfili`
+contains 193 starting file hashes, diff/status and source/final index/content
+proofs. All **11 implementation hashes** still match local verification. Only five
+authorization/evidence documents changed during publication; all other reviewed
+files and both unrelated edits remain byte-identical. After the source commit/push,
+the index was empty and only the two unrelated reporting edits remained local.
+
+This documentation-only follow-up records source publication and CI. Its final
+task/link/preservation, task tests, standalone workflow and notebook checks run
+before commit/push; it changes no implementation. Resolve the feature branch's actual
+HEAD and its own CI for recovery rather than resetting to the source anchor above.
+The source task is complete after user review/publication. M2/A14, real-data policy,
+chronology/identity/transport, actual feature/target-lineage leakage verification,
+protected acceptance and deployment gates remain open. No next increment started.
+
+Current recovery: inspect actual local/remote `feat/m2-development-splits` HEAD,
+status/index/diff and exact-head CI; expect only the two original report-consistency
+edits to be dirty. Check publication proofs and original source hashes. Retain
+commits and record/repair actual push/CI failures if interrupted; never force push,
+reset prior work or infer production readiness. Propose any next increment under
+the user's intent/proposals/HITL/implementation/HITL workflow before coding it.
