@@ -1,6 +1,7 @@
 # RP-20261106-M2-RELEASES — local DVC restoration
 
-State: READY_FOR_REVIEW. Risk: **L1 engineering** under architecture v1 §§4–6, 8, 9 and
+State: COMPLETED — this source increment and its authorized publication only.
+Risk: **L1 engineering** under architecture v1 §§4–6, 8, 9 and
 15–16. This implements the explicitly approved Option A: immutable development
 release manifests and verified local DVC restoration using synthetic metadata.
 No evaluation methodology, effective trusted policy or data access is changed.
@@ -294,3 +295,52 @@ Preserve all working-tree files and the two unrelated edits. If push fails, reta
 local commits and retry only the same feature branch after inspecting the remote;
 do not force push, reset, merge or recreate credentials. A pending/failed Linux run
 must remain explicit until its exact revision passes.
+
+## Publication verification
+
+The user-authorized source push succeeded on `feat/m2-local-dvc-releases`:
+
+- Increment 2 dependency: [4ad339e](https://github.com/fxmidaaa/pret-drept/commit/4ad339edc5bd7b6cebbfbe766d3ca0dd7b5350e4),
+  exactly 19 staged paths and bytes matched the saved, verified pre-increment-3 baseline.
+- Increment 3: [0c23de6](https://github.com/fxmidaaa/pret-drept/commit/0c23de6ee8aa78043ef44ec6a5ed93c8a51e07d5),
+  exactly 29 staged paths matched the reviewed working tree, including the explicit
+  source-publication authorization. Combined source scope is 42 files.
+- `git push --set-upstream origin HEAD:refs/heads/feat/m2-local-dvc-releases`
+  succeeded without force. `git ls-remote --heads origin
+  refs/heads/feat/m2-local-dvc-releases` independently confirmed source SHA
+  `0c23de6ee8aa78043ef44ec6a5ed93c8a51e07d5`. `main` was not changed;
+  no new PR or merge was created.
+- [Linux CI run 42190500570](https://github.com/fxmidaaa/pret-drept/actions/runs/42190500570)
+  completed successfully for that exact SHA and the `push` event. Checked run
+  metadata, job/step conclusions and job logs: **678 passed / 12 private-model
+  checks skipped**, **487 passed per distribution**, **38 frontend passes**, plus
+  separate locked DVC installation/build, Ruff/format, architecture, actionlint and
+  two-notebook checks. The one existing Starlette/httpx warning remains. The absent
+  private model explains the 12 skips versus 690 local passes; no substitute model
+  or training was used. These skips do not certify the private artifact.
+
+Publication evidence lives under `/private/tmp/pret-drept-m2-publish-3e8pmrf0`:
+184 pre-publication file hashes/status/diff; candidate/release/final path/content
+proofs. All 20 implementation hashes still match final local verification. Only the
+five authorization/evidence documents changed during publication; all other content,
+including both unrelated report-consistency files, remains byte-identical. After
+the source push, only those two unrelated local edits remained, with an empty index.
+Before committing this documentation follow-up, rerun its task/link/preservation
+proof, repository/task tests, standalone actionlint and notebook checks. Preserve
+the exact two unrelated edits. This follow-up changes publication evidence only;
+resolve the feature branch's actual HEAD and its own CI for the latest evidence
+commit rather than treating the source SHA above as an instruction to reset.
+
+This closes the bounded source task and source-publication follow-up, not M2, A10,
+A14, dataset approval, protected verification, model acceptance or deployment. All
+real-data/chronology/identity/transport/policy/runtime prerequisites described above
+remain outstanding outside this task. No further increment was started.
+
+Current recovery: inspect `git branch --show-current`, `git rev-parse HEAD`,
+`git status --short`, `git diff --check`, the remote feature ref and exact-head CI.
+Expect only the two pre-existing report-consistency edits to remain local. Verify
+against the publication baseline and original implementation hashes. If a push or
+CI run fails, retain commits, record the actual failure, inspect the remote and
+repair/recheck only the affected source or infrastructure; never force push or
+infer production readiness. The single next increment remains the synthetic-first
+development split materializer, under the user's plan/approval workflow.

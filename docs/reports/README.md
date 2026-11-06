@@ -18,7 +18,19 @@ Earlier no-commit/no-push and review-wait statements below are historical. The
 records exact scope/recovery; both unrelated report-consistency edits stay local.
 No merge, data publication, experiment or deployment is included.
 
-**Current M2 increment 3 — 2026-11-06:** local branch
+Publication succeeded: increment-2 dependency
+[4ad339e](https://github.com/fxmidaaa/pret-drept/commit/4ad339edc5bd7b6cebbfbe766d3ca0dd7b5350e4),
+increment-3 source [0c23de6](https://github.com/fxmidaaa/pret-drept/commit/0c23de6ee8aa78043ef44ec6a5ed93c8a51e07d5).
+The remote feature ref matched source SHA `0c23de6`. Its
+[Linux CI](https://github.com/fxmidaaa/pret-drept/actions/runs/42190500570) passed:
+678 checkout passes / 12 private-model skips, 487 per distribution, 38 frontend
+passes and the static/workflow/architecture/notebook/DVC checks. This bounded source
+task is **COMPLETED**; M2/A10/A14 and protected/real-data gates remain open. The
+documentation follow-up records publication evidence; resolve the actual feature
+branch HEAD/CI for recovery. Only the two unrelated report-consistency edits remain
+local. See [publication verification](../tasks/2026-11-06-m2-local-dvc-releases/plan.md#publication-verification).
+
+**Implementation checkpoint, M2 increment 3 — 2026-11-06:** local branch
 `feat/m2-local-dvc-releases` at unchanged `d920ffc`, carrying the prior increment-2
 implementation and two unrelated report-consistency edits. The user approved Option A:
 immutable development release contracts and actual synthetic local DVC restoration,

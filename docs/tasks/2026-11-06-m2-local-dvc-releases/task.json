@@ -28,14 +28,20 @@
     "Baseline proof accounts for all 167 starting files, preserving prior increment 2 and the two unrelated edits; 12 scoped shared edits plus 17 new files; no staged changes or HEAD change",
     "Persisted design, passed/failed/skipped/unavailable evidence and exact recovery; stop for user review with commit message, not M2 completion",
     "User reviewed the implementation and requested \"push please\": source commit/push of increments 2 and 3 is authorized on the feature branch. Captured the 184-file publication baseline in /private/tmp/pret-drept-m2-publish-3e8pmrf0; 20 frozen implementation hashes and original preservation proof still match. Two unrelated reporting edits remain excluded.",
-    "Committed increment 2 as 4ad339edc5bd7b6cebbfbe766d3ca0dd7b5350e4: exact 19 staged paths/content matched its saved pre-increment-3 baseline. Working-tree release source hashes and both unrelated reporting edits remain unchanged. Prepared the separate 29-file increment-3 source commit; publication/CI verification follows."
+    "Committed increment 2 as 4ad339edc5bd7b6cebbfbe766d3ca0dd7b5350e4: exact 19 staged paths/content matched its saved pre-increment-3 baseline. Working-tree release source hashes and both unrelated reporting edits remain unchanged. Prepared the separate 29-file increment-3 source commit; publication/CI verification follows.",
+    "Published increment-2 dependency 4ad339edc5bd7b6cebbfbe766d3ca0dd7b5350e4 and increment-3 source 0c23de6ee8aa78043ef44ec6a5ed93c8a51e07d5 to origin/feat/m2-local-dvc-releases without force; remote ref independently matched source SHA; no main change or new PR/merge.",
+    "Linux push CI 42190500570 passed for source 0c23de6ee8aa78043ef44ec6a5ed93c8a51e07d5: 678 passed / 12 private-model skips, 487 per distribution, 38 frontend passes; DVC install/integration, workflow/static/architecture/notebook steps passed. Run metadata, steps and logs checked.",
+    "Publication proof preserves the entire 184-file starting tree except five authorization/evidence documents; all 20 frozen implementation hashes remain unchanged. Staged exact verified 19-file dependency and 29-file release separately, 42 combined paths. Both unrelated files preserved byte-identically, index empty after source push.",
+    "Recording publication evidence only; rerun task/link/preservation, task tests, actionlint and notebooks before the documentation follow-up commit/push. The bounded source task is complete after user review/publication; no next increment started and no M2 gate claim."
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/42190500570"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": null,
+  "final_outcome": "COMPLETED bounded increment 3 and authorized source-publication follow-up only. Reviewed source and its increment-2 dependency were committed separately and pushed to feat/m2-local-dvc-releases; exact remote source SHA and successful Linux CI verified (678 passes/12 private-model skips, 487 per distribution, 38 frontend passes). Earlier local evidence remains 690 checkout passes and unchanged source hashes. Two unrelated reporting edits preserved locally. No merge, new PR, data publication, scraping, experiment, effective-policy change, protected verification, promotion, deployment or M2 exit-gate success is claimed. Documentation follow-up records source anchors; inspect actual branch head/CI for recovery.",
   "history": [
     {
       "state": "PROPOSED",
@@ -68,6 +74,14 @@
     {
       "state": "VERIFYING",
       "timestamp": "2026-11-06T08:49:19.223707+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-06T08:55:17.507953+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-06T08:55:17.509041+00:00"
     }
   ],
   "implementation_plan": [
@@ -81,13 +95,13 @@
     "Canonical candidate/quality artifacts plus exact original source envelopes; rebuild full population, lineage, quality and unknown facts before writing completion marker",
     "Both data-tool and build-backend locks contribute to the tool profile; ML/runtime lock bytes unchanged; local version/pin checks are not runtime attestation",
     "Single-writer exclusive outputs and atomic non-replacing completion marker; failures may leave an incomplete new workspace, and readers rehash all payload bytes",
-    "Latest user source-publication request supersedes earlier no-commit/no-push and second-review-wait restrictions; use separate increment commits and explicit index path/content proofs, preserving both unrelated edits."
+    "Latest user source-publication request supersedes earlier no-commit/no-push and second-review-wait restrictions; use separate increment commits and explicit index path/content proofs, preserving both unrelated edits.",
+    "Historical/future-gate context outside the completed source task: No current required local check is blocked. Later real-data use needs reviewed policy/projection, authorized chronology or approved remediation, reviewed identity pairs, scalable inventory transport and approved storage/access/retention/quality.",
+    "Historical/future-gate context outside the completed source task: New-revision Linux CI, trusted-runtime/protected verification and the M2 reproducible-run/development-evaluation exit gate remain unavailable; prior milestone evidence is not this revision evidence.",
+    "The user source-publication request approved this bounded implementation; source push and exact-source Linux CI are verified. Task completion is engineering/source publication only; M2, A10/A14, real-data and protected acceptance remain incomplete."
   ],
-  "known_blockers": [
-    "No current required local check is blocked. Later real-data use needs reviewed policy/projection, authorized chronology or approved remediation, reviewed identity pairs, scalable inventory transport and approved storage/access/retention/quality.",
-    "New-revision Linux CI, trusted-runtime/protected verification and the M2 reproducible-run/development-evaluation exit gate remain unavailable; prior milestone evidence is not this revision evidence."
-  ],
-  "next_recovery_action": "Source publication authorized by user \"push please\". Read plan.md#source-publication-follow-up; inspect feat/m2-local-dvc-releases branch, actual HEAD/index/status and remote before resuming. Prove staged increment-2 bytes against /private/tmp/pret-drept-m2-releases-vjccaxd5/starting-files.json, then stage only increment-3 paths; preserve both unrelated reporting edits and all 20 verified implementation hashes. Commit each increment, push this feature branch without force, verify exact remote SHA and Linux CI, and persist evidence. No merge, new PR, data publication, ML experiment or protected action.",
+  "known_blockers": [],
+  "next_recovery_action": "Source task completed after user review and source publication. Resolve actual local/remote feat/m2-local-dvc-releases HEAD and exact-head Linux CI, inspect status/index/diff and plan.md#publication-verification. Source anchors: dependency 4ad339edc5bd7b6cebbfbe766d3ca0dd7b5350e4 and release 0c23de6ee8aa78043ef44ec6a5ed93c8a51e07d5; source CI 42190500570 passed. The final documentation-only evidence commit records these anchors; do not reset to them. Expect only the two pre-existing unrelated report-consistency edits. Publication baseline/proofs are /private/tmp/pret-drept-m2-publish-3e8pmrf0; 20 implementation hashes remain under the original release evidence. Preserve all changes, never force push or merge. Propose the synthetic-first development split materializer under the user approval workflow before implementing anything else; real-data/protected prerequisites and M2 exit gate remain open.",
   "objective": "Implement approved Option A: immutable development release manifests and verified synthetic local DVC restoration; stop for review with commit message",
   "original_authorized_request": "docs/tasks/2026-11-06-m2-local-dvc-releases/request.md",
   "pending_approvals": [],
@@ -102,7 +116,7 @@
     "Temporary synthetic fixture commits/store writes permitted; no repository commit/push, real/private data, cloud or ML experiment",
     "Publication follow-up explicitly authorized by user: commit reviewed increment-2 dependency and increment 3, then push feat/m2-local-dvc-releases without force; verify remote SHA and Linux CI. No merge, new PR, data publication or deployment."
   ],
-  "state": "VERIFYING",
+  "state": "COMPLETED",
   "task_id": "RP-20261106-M2-RELEASES",
   "verification_evidence": [
     {
@@ -185,9 +199,9 @@
     },
     {
       "check": "linux-ci",
-      "reference": "This increment is intentionally uncommitted/unpushed. Recovery: wait for user review and explicit source-publication authorization, then inspect Linux CI for the exact approved revision. Prior merged PR CI cannot certify this diff; do not commit/push now.",
+      "reference": "Supersedes implementation-phase unavailable result: https://github.com/fxmidaaa/pret-drept/actions/runs/42190500570 completed successfully for push event and exact source 0c23de6ee8aa78043ef44ec6a5ed93c8a51e07d5. Inspected metadata, job/steps and logs: 678 passed/12 private-model skips, 487 source and wheel each, 38 frontend passes. Source publication does not authorize protected evaluation; final evidence-only commit must be checked at its actual head.",
       "required": false,
-      "status": "unavailable"
+      "status": "passed"
     },
     {
       "check": "production-protected-controls",
@@ -203,9 +217,9 @@
     },
     {
       "check": "source-publication",
-      "reference": "User-authorized follow-up in plan.md#source-publication-follow-up; index/commits/remote SHA/Linux CI verification pending. Recovery: inspect actual branch, HEAD, index and remote before continuing; no force push or merge. /private/tmp/pret-drept-m2-publish-3e8pmrf0 captures pre-publication contents.",
+      "reference": "docs/tasks/2026-11-06-m2-local-dvc-releases/plan.md#publication-verification. Exact 19-file dependency baseline and 29-file release index checks passed; commits 4ad339edc5bd7b6cebbfbe766d3ca0dd7b5350e4 and 0c23de6ee8aa78043ef44ec6a5ed93c8a51e07d5 pushed without force. git ls-remote matched source SHA. Linux push CI https://github.com/fxmidaaa/pret-drept/actions/runs/42190500570 succeeded for exact source SHA: 678 passes/12 private-model skips, 487 each distribution, 38 frontend passes and static/architecture/workflow/notebook/DVC checks. Both unrelated files unchanged; 20 implementation hashes unchanged. Documentation evidence follow-up uses actual branch HEAD/CI for recovery.",
       "required": true,
-      "status": "unavailable"
+      "status": "passed"
     }
   ],
   "verification_requirements": [

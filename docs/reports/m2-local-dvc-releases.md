@@ -88,3 +88,26 @@ retention/quality requirements; and design scalable inventory transport. M0's
 historical CSV has no observation timestamps; present source dates and the scraper's
 known-listing behavior do not repair that history. No times, matching thresholds,
 identities or benchmark results are inferred by this implementation.
+
+## Source publication
+
+The user's subsequent **"push please"** request was fulfilled on
+[`feat/m2-local-dvc-releases`](https://github.com/fxmidaaa/pret-drept/tree/feat/m2-local-dvc-releases).
+The dependency is [4ad339e](https://github.com/fxmidaaa/pret-drept/commit/4ad339edc5bd7b6cebbfbe766d3ca0dd7b5350e4);
+release source is [0c23de6](https://github.com/fxmidaaa/pret-drept/commit/0c23de6ee8aa78043ef44ec6a5ed93c8a51e07d5).
+The remote feature ref matched that exact source SHA after push. No force push,
+change to `main`, new PR, merge or data publication occurred. Both unrelated
+report-consistency edits remain local and byte-identical.
+
+[Linux CI 42190500570](https://github.com/fxmidaaa/pret-drept/actions/runs/42190500570)
+passed for that exact source SHA: **678 passed / 12 private-model skips**,
+**487 tests per distribution**, **38 frontend passes**, and the remaining static,
+architecture, workflow, notebook and separate DVC installation/integration checks.
+The private model is absent in CI; no fake model or training hides its skips. Linux
+CI is now available for this source; earlier unavailable/no-publication statements
+describe the implementation checkpoint. Protected/real-data/M2 gates remain open.
+
+The bounded source task is **COMPLETED** after user review and source publication.
+This documentation follow-up records that evidence; resolve the feature branch's
+actual HEAD for its latest commit/CI. Exact publication verification and recovery
+are in the [task](../tasks/2026-11-06-m2-local-dvc-releases/plan.md#publication-verification).
