@@ -21,6 +21,9 @@ def test_actual_repository_respects_dependency_boundaries():
         ("src/rent_platform/runner.py", "import rent_prediction.adapters"),
         ("src/rent_platform/runner.py", "import features as safe_name"),
         ("src/rent_contracts/bad.py", "from rent_platform import admission"),
+        ("src/rent_contracts/bad.py", "import rent_data.candidates"),
+        ("src/rent_data/bad.py", "from rent_agent import tasks"),
+        ("src/rent_data/bad.py", "from rent_platform import datasets"),
         ("train.py", "import rent_platform"),
         (
             "src/rent_prediction/model.py",
@@ -46,6 +49,16 @@ def test_stdlib_platform_and_public_contracts_remain_available(tmp_path):
     source = tmp_path / "src/rent_prediction/model.py"
     source.parent.mkdir(parents=True)
     source.write_text("import platform\nfrom rent_contracts import validate_document\n")
+    assert check_architecture(tmp_path) == []
+
+
+def test_data_preparation_can_use_public_contracts_independently_of_harness(tmp_path):
+    source = tmp_path / "src/rent_data/candidates.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "from rent_contracts.evaluation import observation_inventory_digest\n"
+        "from rent_contracts import ContractError\n"
+    )
     assert check_architecture(tmp_path) == []
 
 

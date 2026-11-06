@@ -1,0 +1,177 @@
+{
+  "acceptance_criteria": [
+    "Strict versioned metadata inputs, complete source/observation lineage and exact-byte/source identity checks",
+    "Deterministic candidate rebuilding and aggregate report, with all unknown/invalid observations conserved",
+    "Revalidation detects omissions, substitutions, conflicting identities/policies, corrupted sources and false quality counts",
+    "Reuse first-increment non-window checks with unchanged split semantics; no target-dependent selection or restricted final-holdout details",
+    "Synthetic contract/population/reproducibility/diagnostic tests and relevant development/source/wheel/architecture checks pass",
+    "Preserve two unrelated reporting files byte-identically; persist verification statuses, limits and exact recovery"
+  ],
+  "affected_modules": [
+    "rent_contracts schemas/validation/evaluation helper",
+    "rent_data.candidates",
+    "tests/foundations data/architecture fixtures",
+    "MANIFEST.in",
+    "architecture/development/report docs and task context"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Brief plan delivered before actions as requested; read current architecture, M0/A14/M2/development and task context",
+    "Confirmed PR #1 merged; remote main is one merge ahead of d920ffc with no file differences",
+    "Captured 156 source hashes/status/diff under /private/tmp/pret-drept-m2-candidates-im6ab3qz; two unrelated report-consistency files preserved",
+    "Created local feat/m2-observation-candidates branch at unchanged d920ffc; no commit/push or private-data read",
+    "Persisted bounded L1 plan, architecture trace, acceptance criteria, risks and verification before implementation",
+    "Implemented three closed public metadata schemas and pure rent_data candidate building/revalidation/projection; every source record is conserved with exact-byte source identity and explicit lineage",
+    "Extracted the existing non-window observation eligibility checks into a shared public helper; existing split semantics remain unchanged",
+    "Added synthetic source/identity/time/policy/population/resealing/ordering/unknown-fact/report/privacy/bounds tests plus four data-domain architecture regressions",
+    "Focused candidate/evaluation/contract/architecture checks passed 329 cases after the last source edit; Ruff and actual architecture passed",
+    "Expanded-output size regression initially failed its diagnostic assertion (244 passes/one failure): canonical_json rejected correctly but swallowed its own safe size ContractError as invalid encoding. Preserved that ContractError consistently with load_document; final focused suite passes",
+    "Documented metadata versus raw-source verification, exact/canonical digests, known/unknown facts, bounded transport, unapproved candidate state and deferred release/isolation gates; aggregate checks now follow",
+    "Added a fresh-interpreter/two-hash-seed reproducibility case and reran all affected checks after that final test edit",
+    "Final candidate suite: 98 passed; checkout: 569 passed; source/wheel: 377 each; first-increment evaluation: 114 passed; frontend: 38 passed. No failures/skips in these suites; one existing deprecation warning",
+    "Final Ruff lint/format (39 files), architecture, workflow semantics, two notebook publication checks and whitespace passed",
+    "Final documentation/preservation probe passed: 148 unchanged starting files plus eight scoped edits, 11 new files / 19 increment files; both unrelated reporting edits untouched; all ten verified implementation hashes match final checks",
+    "All 22 task records, 50 local links/anchors in eight Markdown files and 13 schema resources checked; local branch/head unchanged, index empty; evidence/task synchronization is rechecked before delivery",
+    "Final architecture trace and single next increment recorded; stop after this non-publishing metadata candidate increment"
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "M2 increment 2 implemented and locally verified, READY_FOR_REVIEW: strict metadata source/candidate/report contracts and independent rent_data build/revalidate/project functions, full source-record conservation, exact byte/canonical identity, aggregate quality and explicit unknown facts. 98 new candidate tests, 114 existing evaluation tests, 569 checkout tests, 377 per distribution and 38 frontend tests passed; scoped static/docs/task/preservation checks passed. Two unrelated reporting edits preserved; no commit/push, real-data use, experiment, DVC publication, protected action or M2 exit-gate pass.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-05T22:10:19.878495+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-05T22:10:19.912854+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-05T22:10:19.913174+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-05T22:10:19.913488+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-05T22:22:50.238944+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-06T05:42:15.659940+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "See docs/tasks/2026-11-06-m2-observation-candidates/plan.md"
+  ],
+  "important_decisions": [
+    "Use existing rent_data domain and public contract resources; no new dependencies or trusted integrations",
+    "Metadata source bytes are verified; raw-source/provenance references remain unverified declarations",
+    "Reuse existing observation eligibility reasons; this increment reports issues rather than selecting splits or dropping records",
+    "Exact source-envelope bytes are identity; candidate order is canonical and source-list order independent, but wire reserialization changes source/candidate identity",
+    "Unknown/invalid observations remain in candidate projection and quality counts; structural/provenance contradictions fail the entire candidate without partial results",
+    "Canonical JSON now preserves its existing safe ContractError for size limits rather than misreporting encoding failure; no rejection threshold or wire field changed",
+    "No raw-data sanitizer/CSV adapter or final release is claimed; one metadata projection per raw snapshot and existing 1 MiB bounds are explicit limits",
+    "Fresh child interpreters use the source/wheel test import paths without editable-install .pth loading; two hash seeds produce identical canonical candidate output",
+    "Preserve all supplied records and report overlapping issues with a union count; standalone structural report validation cannot certify counts",
+    "Final scope is 19 files, with eight scoped modifications and eleven new files; 148 pre-existing source files remain byte-identical, including both unrelated reporting edits",
+    "Architecture reconciliation confirms the data/public-contract boundary and unchanged evaluation semantics; single next increment is synthetic-first Git/DVC release envelopes and local restoration"
+  ],
+  "known_blockers": [
+    "Outside this finished source increment: supplied metadata integrity does not establish underlying raw-byte truth, complete approved projection, acquisition rights or privacy; real use needs independently reviewed field handling and authorized source resolution",
+    "Historical chronology and physical identity remain unresolved; preserve unknown facts until defensible evidence/remediation and reviewed matching policies exist",
+    "Current bounded JSON metadata transport is not the final scalable inventory format; Git/DVC release metadata, storage/access/retention and actual restoration remain later gates",
+    "New-revision Linux CI is unavailable without separately authorized publication; protected/runtime/feature-lineage and real reproducible baseline/development evaluation remain unverified. A14 and M2 exit gate stay open"
+  ],
+  "next_recovery_action": "Confirm local feat/m2-observation-candidates at d920ffc89a2673945142c5eb6442a56069cc27d7 using branch/HEAD/status/diff checks. Read this plan/report and review the 19-file increment; preserve both unrelated reporting edits against /private/tmp/pret-drept-m2-candidates-im6ab3qz/starting-files.json. Run check_documentation.py, repository task test and git diff --check; after source/test edits rerun affected checkout/source/wheel/architecture checks. Stop this session here. Single next increment: immutable Git/DVC release envelopes and local restoration verification, initially synthetic, after required transport/access/retention/policy decisions. No commit/push, private-data application or protected action is authorized.",
+  "objective": "Implement only M2 increment 2: synthetic-first observation provenance, deterministic unpublished candidates and aggregate quality validation",
+  "original_authorized_request": "docs/tasks/2026-11-06-m2-observation-candidates/request.md",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Frozen architecture and independent public ML/data/harness boundaries",
+    "No invented real timestamps, identities, matching thresholds or benchmark results",
+    "No protected labels, acquisition, data publication, experiments, policy activation, promotion or deployment; task records grant no permissions"
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Metadata-only public source/candidate/report contracts, pure rent_data validation/projection, synthetic tests, packaging and evidence",
+    "Preserve all pre-existing work, frozen evaluation semantics and legacy interfaces; no real-data use or commit/push"
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261106-M2-CANDIDATES",
+  "verification_evidence": [
+    {
+      "check": "synthetic-candidates",
+      "reference": "docs/tasks/2026-11-06-m2-observation-candidates/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "evaluation-consistency",
+      "reference": "docs/tasks/2026-11-06-m2-observation-candidates/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout",
+      "reference": "docs/tasks/2026-11-06-m2-observation-candidates/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "static-architecture",
+      "reference": "docs/tasks/2026-11-06-m2-observation-candidates/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "distribution",
+      "reference": "docs/tasks/2026-11-06-m2-observation-candidates/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "documentation-preservation",
+      "reference": "docs/tasks/2026-11-06-m2-observation-candidates/plan.md#verification-evidence",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "frontend-workflow-notebooks",
+      "reference": "docs/tasks/2026-11-06-m2-observation-candidates/plan.md#verification-evidence",
+      "required": false,
+      "status": "passed"
+    },
+    {
+      "check": "new-revision-linux-ci",
+      "reference": "docs/tasks/2026-11-06-m2-observation-candidates/plan.md#verification-evidence",
+      "required": false,
+      "status": "unavailable"
+    },
+    {
+      "check": "private-data-dvc-baselines",
+      "reference": "docs/tasks/2026-11-06-m2-observation-candidates/plan.md#verification-evidence",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "protected-runtime-and-lineage",
+      "reference": "docs/tasks/2026-11-06-m2-observation-candidates/plan.md#verification-evidence",
+      "required": false,
+      "status": "skipped"
+    }
+  ],
+  "verification_requirements": [
+    "synthetic-candidates",
+    "evaluation-consistency",
+    "checkout",
+    "static-architecture",
+    "distribution",
+    "documentation-preservation"
+  ]
+}

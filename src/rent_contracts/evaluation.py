@@ -91,9 +91,13 @@ def observation_inventory_digest(observations: list[dict]) -> str:
     return _digest([inventory[key] for key in sorted(inventory)])
 
 
-def _assignment(
-    observation: dict, cutoff: datetime, start: datetime, end: datetime
-) -> tuple[str, set[str]]:
+def observation_eligibility_exclusions(observation: dict) -> frozenset[str]:
+    """Existing v1 non-window reasons, shared with candidate quality reporting.
+
+    This validates declared metadata; it neither verifies evidence nor chooses a
+    temporal partition. Property uncertainty alone does not exclude future-market rows.
+    """
+    validate_observation_reference(observation)
     reasons = set()
     if observation["domain_status"] != "valid":
         reasons.add(f"{observation['domain_status']}_non_target_domain")
@@ -105,7 +109,15 @@ def _assignment(
     known_times = [instant for instant in times if instant is not None]
     if any(a > b for a, b in zip(known_times, known_times[1:])):
         reasons.add("temporal_order_invalid")
-    prediction = times[-1]
+    return frozenset(reasons)
+
+
+def _assignment(
+    observation: dict, cutoff: datetime, start: datetime, end: datetime
+) -> tuple[str, set[str]]:
+    reasons = set(observation_eligibility_exclusions(observation))
+    value = observation["prediction_cutoff_at"]
+    prediction = None if value is None else _instant(value)
     if prediction is not None and prediction >= cutoff and not start <= prediction < end:
         reasons.add("outside_development_windows")
     partition = "excluded"

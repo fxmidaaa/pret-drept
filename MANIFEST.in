@@ -4,6 +4,7 @@ include LICENSE MANIFEST.in README.md pyproject.toml
 recursive-include src/rent_agent *.py
 recursive-include src/rent_checks *.py
 recursive-include src/rent_contracts *.py
+recursive-include src/rent_data *.py
 recursive-include src/rent_domain *.py
 recursive-include src/rent_prediction *.py
 include src/rent_contracts/schemas/v1/*.json
@@ -12,4 +13,5 @@ include tests/foundations/test_architecture.py
 include tests/foundations/test_contracts.py
 include tests/foundations/test_predictions_bundles.py
 include tests/foundations/test_evaluation_contracts.py
+include tests/foundations/test_observation_candidates.py
 include tests/foundations/test_tasks.py

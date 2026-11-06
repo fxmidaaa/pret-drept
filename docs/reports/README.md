@@ -10,6 +10,21 @@ revision. Test counts in the summaries describe the checks recorded for those re
 
 ## Current checkpoint and recovery
 
+**Current M2 increment 2 — 2026-11-06:** local branch
+`feat/m2-observation-candidates`, based on `d920ffc`. PR #1 is now merged; GitHub's
+comparison to `main` shows one merge commit and no file changes. The earlier
+open/unmerged and publication checkpoints below are historical. Current scope,
+verification and recovery are in the
+[candidate plan](../tasks/2026-11-06-m2-observation-candidates/plan.md) and
+[record](../tasks/2026-11-06-m2-observation-candidates/task.json).
+This increment is locally verified and **READY_FOR_REVIEW**, synthetic-first and
+non-publishing; the two pre-existing unrelated
+report-consistency edits remain local and untouched. No commit/push or real-data
+application is authorized for this session. See the
+[candidate contract](../architecture/observation-candidates-v1.md).
+The [increment 2 report](m2-observation-candidates.md) summarizes the implementation
+and verification; earlier evidence and recovery history remain intact.
+
 Reconciled 2026-11-05: branch `fix/repository-audit`, HEAD **`36e67b7`** (A17 publication
 evidence), with the existing A16 candidate and the current A18/audit follow-up uncommitted.
 The unrelated report-consistency plan/task updates are preserved byte-for-byte.

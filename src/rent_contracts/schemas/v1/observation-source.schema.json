@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:observation-source:1.0.0",
+  "$defs": {
+    "acquisition_period": {
+      "type": "object",
+      "properties": {
+        "start": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/nullable_instant" },
+        "end": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/nullable_instant" }
+      },
+      "required": ["start", "end"],
+      "additionalProperties": false
+    },
+    "nullable_digest": {
+      "anyOf": [
+        { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+        { "type": "null" }
+      ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "raw_source_ref": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "acquisition_provenance_ref": { "$ref": "#/$defs/nullable_digest" },
+    "acquisition_period": { "$ref": "#/$defs/acquisition_period" },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "source_record_id": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/identifier" },
+          "observation": { "$ref": "urn:rent:observation-reference:1.0.0" }
+        },
+        "required": ["source_record_id", "observation"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "contract_version", "raw_source_ref", "acquisition_provenance_ref", "acquisition_period", "records"
+  ],
+  "additionalProperties": false
+}

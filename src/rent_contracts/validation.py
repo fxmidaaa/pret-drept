@@ -23,6 +23,9 @@ SCHEMA_NAMES = (
     "observation-reference",
     "evaluation-policy",
     "development-split",
+    "observation-source",
+    "observation-quality-report",
+    "observation-candidate",
 )
 MAX_DOCUMENT_BYTES = 1_048_576
 
@@ -61,7 +64,9 @@ def canonical_json(document: Any) -> str:
         if len(encoded.encode("utf-8")) > MAX_DOCUMENT_BYTES:
             raise ContractError("document size limit exceeded")
         return encoded
-    except (ValueError, UnicodeError, RecursionError):
+    except (ValueError, UnicodeError, RecursionError) as exc:
+        if isinstance(exc, ContractError):
+            raise
         raise ContractError("invalid JSON encoding") from None
 
 

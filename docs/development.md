@@ -40,7 +40,7 @@ the self-contained contract, prediction and bundle, task lifecycle, and architec
 tests that require the application, workflow files, or project task records in checkout CI.
 `scripts/check_distribution.py` builds the wheel from the source archive and runs the shipped
 suite twice from a temporary extraction. The source run imports from the extracted `src/` tree.
-The wheel run imports from the wheel and exercises all ten packaged schemas. Both runs bypass
+The wheel run imports from the wheel and exercises all thirteen packaged schemas. Both runs bypass
 the checkout's editable install and use dependencies from the locked development environment.
 
 Tracked notebooks are published as source with cleared outputs. Keep executed copies that use
@@ -135,3 +135,12 @@ semantic helpers in addition to low-level schema validation. Tests cover declare
 eligibility, time/property overlap and fixed populations; they do not validate real
 features, target-aggregate lineage, dataset release/restoration or isolation.
 Policy review and authorized evidence precede any real-data application.
+
+M2's second increment adds the independent `rent_data` metadata-candidate API and
+three local schemas. Focused synthetic checks:
+`.venv/bin/python -m pytest -q tests/foundations/test_observation_candidates.py tests/foundations/test_evaluation_contracts.py tests/foundations/test_architecture.py`.
+The shipped suite exercises candidate rebuilding, source-byte identity, full record
+lineage/projection, safe aggregate counts and unchanged split semantics from both
+source and wheel imports. See [observation candidates](architecture/observation-candidates-v1.md).
+No raw CSV reader, acquisition, data publication or training is performed. Existing
+1 MiB bounds fail without truncation; real release transport/restoration is deferred.

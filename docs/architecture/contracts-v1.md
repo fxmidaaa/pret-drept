@@ -32,6 +32,13 @@ candidate populations. These development-only contracts require policy review
 before real-data use and do not expose restricted final-holdout details or certify
 feature leakage, a dataset release or the M2 exit gate.
 
+M2's second increment adds [observation provenance and unpublished candidates](observation-candidates-v1.md):
+`observation-source`, `observation-quality-report` and `observation-candidate`.
+The independent `rent_data` implementation verifies supplied metadata bytes and
+rebuilds complete projections, lineage and aggregate counts through public contracts.
+Raw-source/policy references remain declarations; these artifacts are not approved
+dataset releases, and no real-data access or publication is implied.
+
 Schemas are loaded from bundled local resources. External schema lookup is denied; adapter schemas are explicitly supplied by the caller's registry. No configuration can select a Python import path, command, host mount, credentials or runtime security options.
 
 Identifiers such as `record_id` and `task_id` contain 1 to 128 characters. The first
