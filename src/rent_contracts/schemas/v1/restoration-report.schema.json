@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:restoration-report:1.0.0",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "report_digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "status": { "const": "PASSED" },
+    "verification_method": { "const": "fresh-local-dvc-pull-and-sha256-v1" },
+    "fresh_cache": { "const": true },
+    "release_ref": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "metadata_commit": { "$ref": "urn:rent:dataset-release:1.0.0#/$defs/commit" },
+    "dvc_version": { "const": "3.67.1" },
+    "tool_profile_ref": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "artifacts_digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "artifact_count": { "type": "integer", "minimum": 3 },
+    "observation_count": { "type": "integer", "minimum": 1 },
+    "observations_digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "python_version": { "type": "string", "maxLength": 32, "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "platform": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/identifier" },
+        "machine": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/identifier" }
+      },
+      "required": ["python_version", "platform", "machine"], "additionalProperties": false
+    }
+  },
+  "required": [
+    "contract_version", "report_digest", "status", "verification_method", "fresh_cache",
+    "release_ref", "metadata_commit", "dvc_version", "tool_profile_ref", "artifacts_digest",
+    "artifact_count", "observation_count", "observations_digest", "runtime"
+  ],
+  "additionalProperties": false
+}

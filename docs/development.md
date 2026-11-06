@@ -6,13 +6,15 @@ and remaining work. Maintain both the summary and task evidence when an audit in
 
 Use Python 3.13. The M1 evidence uses CPython 3.13.16 on macOS ARM64. The original application's direct pins remain in `requirements.txt`; `requirements-dev.lock` pins their transitive closure plus test/build tools with hashes, resolved universally for Python 3.13 with platform markers for Mac/Linux/Windows. Local installation is verified; each published revision also needs a successful Linux CI run. This is a development/test environment lock, not a certified inference image.
 
-Installation has three distinct scopes. The legacy application runs from the checkout
+The legacy application runs from the checkout
 with `python -m pip install -r requirements.txt` and a separately supplied local model.
 Those runtime pins do not install pytest, Ruff, build tooling or `jsonschema`.
 `python -m pip install .` installs the foundations packages and declared `jsonschema`
 dependency; it does not install the legacy API/frontend/model. For repository work, use
 the locked development setup below, including the editable foundations install and
 explicit actionlint installation. It includes the runtime pins plus test/build tools.
+Local DVC is a fourth, separate tool environment described below; it is never
+installed into the ML/development environment as an incidental dependency.
 
 Frontend checks additionally use Node.js **24.21.0**, pinned in checkout CI. This is a
 development prerequisite; the served page needs no Node runtime, framework or build step.
@@ -25,11 +27,12 @@ python3.13 -m venv .venv
 .venv/bin/python -m pip install --require-hashes -r requirements-dev.lock
 .venv/bin/python -m pip install --no-deps --no-build-isolation -e .
 .venv/bin/python scripts/install_actionlint.py --directory .venv/bin
+# Also complete the separate data-tool setup below before checkout pytest.
 .venv/bin/actionlint -shellcheck= -pyflakes=
 .venv/bin/python scripts/check_notebooks.py
 node --test tests/frontend/*.test.cjs
-.venv/bin/python -m ruff check src scripts scrape.py tests/foundations tests/test_scrape.py tests/conftest.py
-.venv/bin/python -m ruff format --check src scripts scrape.py tests/foundations tests/test_scrape.py tests/conftest.py
+.venv/bin/python -m ruff check src scripts scrape.py tests/foundations tests/integration tests/test_scrape.py tests/conftest.py
+.venv/bin/python -m ruff format --check src scripts scrape.py tests/foundations tests/integration tests/test_scrape.py tests/conftest.py
 .venv/bin/rent-check-architecture --root .
 .venv/bin/python -m pytest -q -ra
 .venv/bin/python scripts/check_distribution.py
@@ -40,7 +43,7 @@ the self-contained contract, prediction and bundle, task lifecycle, and architec
 tests that require the application, workflow files, or project task records in checkout CI.
 `scripts/check_distribution.py` builds the wheel from the source archive and runs the shipped
 suite twice from a temporary extraction. The source run imports from the extracted `src/` tree.
-The wheel run imports from the wheel and exercises all thirteen packaged schemas. Both runs bypass
+The wheel run imports from the wheel and exercises all fifteen packaged schemas. Both runs bypass
 the checkout's editable install and use dependencies from the locked development environment.
 
 Tracked notebooks are published as source with cleared outputs. Keep executed copies that use
@@ -118,7 +121,12 @@ The checker parses each source once and reports a shortest forbidden import chai
 
 Task record reads and saves share a 1 MiB limit on the stored UTF-8 JSON, including indentation and the final newline. A save that exceeds the limit fails before creating output. Store large execution logs separately and reference them from the task record.
 
-Current implementation/evidence: [M1 verification](reports/m1-verification.md). Data limitations: [M0 audit](reports/m0-alignment.md), including the user-provided historical snapshot addendum. The full system is not production-ready. `train` and `predict-batch` wire contracts exist; their new operational implementations, DVC/MLflow, trusted runner, native model adapters, protected verification and deployment remain subsequent milestones.
+Current implementation/evidence: [M1 verification](reports/m1-verification.md). Data
+limitations: [M0 audit](reports/m0-alignment.md), including the user-provided historical
+snapshot addendum. The full system is not production-ready. `train` and `predict-batch`
+wire contracts exist; their new operational implementations, production DVC storage,
+MLflow, trusted runner, native model adapters, protected verification and deployment
+remain subsequent work. Local synthetic DVC restoration is covered below.
 
 Use the audit index's [current checkpoint and recovery](reports/README.md#current-checkpoint-and-recovery)
 for today's Git state and uncommitted work. Earlier task plans and CI counts are historical
@@ -144,3 +152,55 @@ lineage/projection, safe aggregate counts and unchanged split semantics from bot
 source and wheel imports. See [observation candidates](architecture/observation-candidates-v1.md).
 No raw CSV reader, acquisition, data publication or training is performed. Existing
 1 MiB bounds fail without truncation; real release transport/restoration is deferred.
+
+## Separate local data tools
+
+M2 increment 3 implements [development release contracts and local restoration](architecture/dataset-releases-v1.md).
+The optional foundations `data` extra declares **PyYAML 6.0.3**, already present in
+the existing development lock. A standalone foundations consumer can install
+`.[data]`/the wheel's `data` extra for the metadata parser. Pure JSON release/IO
+helpers need no DVC installation. Preserve `requirements.txt` and
+`requirements-dev.lock`; DVC is deliberately absent from both.
+
+`requirements-data-tools.in` pins DVC **3.67.1** and its source-build backend;
+`requirements-data-tools.lock` pins/hashes the separate complete dependency closure
+for Python 3.13. ANTLR 4.9.3 has a source distribution, so first install the exact
+setuptools backend from `requirements-data-build.lock`, then disable pip build
+isolation to avoid implicitly resolving unpinned build dependencies. Both lock
+contents contribute to `data_tool_profile_digest`. These development tool locks
+identify dependency inputs, not a certified image/native runtime.
+
+Explicit setup (public package downloads; subsequent tests need no network):
+
+```bash
+.venv/bin/python -m venv .venv-data-tools
+.venv-data-tools/bin/python -I -m pip --isolated --disable-pip-version-check install --no-cache-dir --index-url https://pypi.org/simple --require-hashes -r requirements-data-build.lock
+.venv-data-tools/bin/python -I -m pip --isolated --disable-pip-version-check install --no-cache-dir --index-url https://pypi.org/simple --no-build-isolation --require-hashes -r requirements-data-tools.lock
+.venv-data-tools/bin/python -m pip check
+.venv-data-tools/bin/dvc --version
+.venv/bin/python -m pytest -q -ra tests/foundations/test_dataset_releases.py tests/foundations/test_release_io.py tests/foundations/test_dvc_local.py tests/integration/test_dvc_restoration.py
+```
+
+Use an absolute `RENT_DATA_DVC` executable path when the tool environment is
+elsewhere. Checkout integration defaults to `.venv-data-tools/bin/dvc`; missing or
+wrong-version DVC fails with setup guidance rather than skipping or installing it.
+Git must also be installed. CI creates the environment under `RUNNER_TEMP`, supplies
+`RENT_DATA_DVC` at **step scope**, and preserves the read-only, credential-free PR
+workflow. It uses the same backend bootstrap and no-build-isolation installation.
+
+`tests/integration/test_dvc_restoration.py` performs actual Git commits **only in
+owned disposable synthetic repositories**, DVC add/push/pull through local filesystem
+stores, A-after-B recovery and missing/corrupted-object checks with fresh consumer
+caches. No `.dvc` project or remote is created in this checkout, no cloud/credentials
+are used and no private/raw input is read. The shipped source/wheel suite includes
+the deterministic release/IO/parser/failure tests; actual DVC integration remains a
+checkout check with explicit prerequisites. A valid local completion report is not
+protected independent verification, publication approval, isolation or leakage proof.
+
+To intentionally refresh tooling in an authorized environment, resolve only
+`requirements-data-tools.in` with `uv --no-config pip compile --python-version 3.13
+--universal --generate-hashes --default-index https://pypi.org/simple --output-file
+requirements-data-tools.lock requirements-data-tools.in` (resolution here used uv
+0.13.1). Review the dependency/build-backend and supported metadata profile together,
+update both applicable locks, and rerun all relevant checks including real integration.
+Do not change ML pins to accommodate DVC.

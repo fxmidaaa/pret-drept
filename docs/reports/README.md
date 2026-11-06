@@ -10,7 +10,30 @@ revision. Test counts in the summaries describe the checks recorded for those re
 
 ## Current checkpoint and recovery
 
-**Current M2 increment 2 — 2026-11-06:** local branch
+**Source publication follow-up — 2026-11-06:** after reviewing increment 3, the user
+requested **"push please"**, authorizing source commit/push on
+`feat/m2-local-dvc-releases`, including its uncommitted increment-2 dependency.
+Earlier no-commit/no-push and review-wait statements below are historical. The
+[publication plan](../tasks/2026-11-06-m2-local-dvc-releases/plan.md#source-publication-follow-up)
+records exact scope/recovery; both unrelated report-consistency edits stay local.
+No merge, data publication, experiment or deployment is included.
+
+**Current M2 increment 3 — 2026-11-06:** local branch
+`feat/m2-local-dvc-releases` at unchanged `d920ffc`, carrying the prior increment-2
+implementation and two unrelated report-consistency edits. The user approved Option A:
+immutable development release contracts and actual synthetic local DVC restoration,
+with a separate locked tool environment. Work is **READY_FOR_REVIEW**; no repository commit,
+push, PR update or real-data application is authorized. Current scope and recovery:
+[release plan](../tasks/2026-11-06-m2-local-dvc-releases/plan.md),
+[record](../tasks/2026-11-06-m2-local-dvc-releases/task.json),
+[design](../architecture/dataset-releases-v1.md) and
+[increment report](m2-local-dvc-releases.md). Local checks: 690 checkout tests,
+487 tests per distribution and 38 frontend tests passed, plus static/architecture/
+workflow/notebook checks. Final task/link/preservation verification follows the
+evidence edit with implementation hashes unchanged. Stop after implementation/verification
+for the user's review with a proposed commit message. M2's exit gate remains open.
+
+**Prior M2 increment 2 — 2026-11-06:** local branch
 `feat/m2-observation-candidates`, based on `d920ffc`. PR #1 is now merged; GitHub's
 comparison to `main` shows one merge commit and no file changes. The earlier
 open/unmerged and publication checkpoints below are historical. Current scope,

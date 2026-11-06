@@ -1,0 +1,221 @@
+{
+  "acceptance_criteria": [
+    "Separate hash-locked DVC 3.67.1 tool profile works on Python 3.13 with unchanged ML pins",
+    "Immutable closed release/report identities bind committed DVC metadata, native object hash and independent SHA-256 artifact roster without cycles",
+    "Complete candidate/source/quality lineage is preserved and revalidated after real fresh-cache local DVC recovery",
+    "Failures, corruption, unsafe paths/symlinks, missing objects, wrong refs and interrupted output never yield a valid successful restore or overwrite prior outputs",
+    "Actual DVC two-revision integration and relevant checkout/source/wheel/static/architecture/workflow/docs checks pass with explicit outcomes and recovery",
+    "Preserve all prior work and stop uncommitted for user review; provide summary and commit message without claiming M2 gate completion"
+  ],
+  "affected_modules": [
+    "rent_contracts schemas/validation",
+    "rent_data.releases/release_io/dvc_local",
+    "separate data tool input/lock/environment",
+    "optional data dependency metadata and package inclusion",
+    "foundation/integration tests and unprivileged CI",
+    "architecture/development/reports/task evidence"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Read actual branch/HEAD/status and applicable architecture/checkpoint/task context",
+    "Captured 167 nonignored source hashes and starting diff/status under /private/tmp/pret-drept-m2-releases-vjccaxd5",
+    "Created local feat/m2-local-dvc-releases at unchanged d920ffc with all existing uncommitted work preserved",
+    "Persisted approved Option A plan, acceptance criteria, risk, verification and recovery before implementation",
+    "Implemented two public release/report schemas, pure integrity/correspondence helpers, exclusive bounded payload IO and the controlled pinned public-CLI local DVC adapter",
+    "Installed separate DVC tooling, explicitly locked/bootstrap-built the ANTLR backend, and verified a fresh pip installation against all 97 active pins from the 99-pin universal lock",
+    "Actual disposable Git/DVC integration restores old revision A after B through separate local stores/config/caches, and fails safely for missing/corrupted objects and wrong identities",
+    "Final checks: 690 checkout tests, 487 tests per distribution, 38 frontend tests, static/format/architecture/actionlint/notebooks passed; 20 implementation file hashes frozen",
+    "Baseline proof accounts for all 167 starting files, preserving prior increment 2 and the two unrelated edits; 12 scoped shared edits plus 17 new files; no staged changes or HEAD change",
+    "Persisted design, passed/failed/skipped/unavailable evidence and exact recovery; stop for user review with commit message, not M2 completion",
+    "User reviewed the implementation and requested \"push please\": source commit/push of increments 2 and 3 is authorized on the feature branch. Captured the 184-file publication baseline in /private/tmp/pret-drept-m2-publish-3e8pmrf0; 20 frozen implementation hashes and original preservation proof still match. Two unrelated reporting edits remain excluded.",
+    "Committed increment 2 as 4ad339edc5bd7b6cebbfbe766d3ca0dd7b5350e4: exact 19 staged paths/content matched its saved pre-increment-3 baseline. Working-tree release source hashes and both unrelated reporting edits remain unchanged. Prepared the separate 29-file increment-3 source commit; publication/CI verification follows."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": null,
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-06T08:02:02.856509+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-06T08:02:02.902125+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-06T08:02:02.902451+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-06T08:02:02.902770+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-06T08:32:22.300135+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-06T08:39:40.601577+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-06T08:47:48.557346+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-06T08:49:19.223707+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "See docs/tasks/2026-11-06-m2-local-dvc-releases/plan.md"
+  ],
+  "important_decisions": [
+    "Actual DVC integration is required; environment separation is not an OS sandbox",
+    "DVC object hash and independent SHA-256 remain distinct; Git metadata commit precedes release manifest",
+    "Only SEALED_CANDIDATE development metadata and pending retention; no publication or data-approval authority",
+    "Strict .dvc YAML subset before operations, including output remote overrides/imports/aliases/duplicates; exact committed metadata, never latest or producer cache fallback",
+    "Canonical candidate/quality artifacts plus exact original source envelopes; rebuild full population, lineage, quality and unknown facts before writing completion marker",
+    "Both data-tool and build-backend locks contribute to the tool profile; ML/runtime lock bytes unchanged; local version/pin checks are not runtime attestation",
+    "Single-writer exclusive outputs and atomic non-replacing completion marker; failures may leave an incomplete new workspace, and readers rehash all payload bytes",
+    "Latest user source-publication request supersedes earlier no-commit/no-push and second-review-wait restrictions; use separate increment commits and explicit index path/content proofs, preserving both unrelated edits."
+  ],
+  "known_blockers": [
+    "No current required local check is blocked. Later real-data use needs reviewed policy/projection, authorized chronology or approved remediation, reviewed identity pairs, scalable inventory transport and approved storage/access/retention/quality.",
+    "New-revision Linux CI, trusted-runtime/protected verification and the M2 reproducible-run/development-evaluation exit gate remain unavailable; prior milestone evidence is not this revision evidence."
+  ],
+  "next_recovery_action": "Source publication authorized by user \"push please\". Read plan.md#source-publication-follow-up; inspect feat/m2-local-dvc-releases branch, actual HEAD/index/status and remote before resuming. Prove staged increment-2 bytes against /private/tmp/pret-drept-m2-releases-vjccaxd5/starting-files.json, then stage only increment-3 paths; preserve both unrelated reporting edits and all 20 verified implementation hashes. Commit each increment, push this feature branch without force, verify exact remote SHA and Linux CI, and persist evidence. No merge, new PR, data publication, ML experiment or protected action.",
+  "objective": "Implement approved Option A: immutable development release manifests and verified synthetic local DVC restoration; stop for review with commit message",
+  "original_authorized_request": "docs/tasks/2026-11-06-m2-local-dvc-releases/request.md",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Frozen architecture; independent ML/public contracts/data/harness boundaries; no evaluation-policy or effective trusted-policy change",
+    "Preserve increment 2 and unrelated reporting edits; no fabricated real dates, identities or benchmark results",
+    "No protected labels, real data publication, credentials, promotion or deployment; metadata/task records grant no authority"
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Release/report contracts, payload integrity and exclusive I/O, pinned local DVC/Git adapter, separate tool lock, synthetic tests and evidence",
+    "Temporary synthetic fixture commits/store writes permitted; no repository commit/push, real/private data, cloud or ML experiment",
+    "Publication follow-up explicitly authorized by user: commit reviewed increment-2 dependency and increment 3, then push feat/m2-local-dvc-releases without force; verify remote SHA and Linux CI. No merge, new PR, data publication or deployment."
+  ],
+  "state": "VERIFYING",
+  "task_id": "RP-20261106-M2-RELEASES",
+  "verification_evidence": [
+    {
+      "check": "tool-profile",
+      "reference": "docs/tasks/2026-11-06-m2-local-dvc-releases/plan.md#verification--final-implementation; fresh hash-required pip backend/tool installation including ANTLR build passed; pip check, DVC 3.67.1 and 97 active version pins verified; separate environments, unchanged ML locks. Logs: /private/tmp/pret-drept-m2-releases-vjccaxd5/tool-profile-results.json and related .log files.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "release-contracts-io",
+      "reference": "110 new deterministic release/IO/adapter cases passed in the final checkout and 487-test source/wheel suites. Focused run with CI checks: 115 passed. Covers schema/self/external refs, canonical bytes, complete source/candidate/report correspondence, population/uncertainty, paths/symlinks/FIFOs, interrupted writes, failure/timeout, and safe diagnostics. Final source hashes in verified-implementation.json.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "actual-dvc-restoration",
+      "reference": "10 real local DVC checkout integration cases passed within the final 690-test run using the fresh separately pip-installed executable. Disposable repositories/local stores only; A-after-B recovery, separate initially empty consumer caches, missing/corrupt directory/corrupt artifact objects, wrong refs/commits/bindings, existing-output and changed-config rejection. /private/tmp/pret-drept-m2-releases-vjccaxd5/checkout.log; no mocked successful recovery.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout",
+      "reference": "After final source edits: .venv/bin/python -m pytest -p no:cacheprovider -q -ra: 690 passed, zero failed/skipped; one pre-existing Starlette/httpx warning. Twelve existing model-artifact regressions executed with synthetic requests; no training. /private/tmp/pret-drept-m2-releases-vjccaxd5/checkout-results.json and checkout.log.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "distribution",
+      "reference": ".venv/bin/python scripts/check_distribution.py: extracted source 487 passed, wheel 487 passed, including all 15 schemas; editable checkout bypassed. Actual DVC integration remains checkout-only. /private/tmp/pret-drept-m2-releases-vjccaxd5/distribution-results.json and distribution.log.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "static-architecture-workflow",
+      "reference": "Development-guide scoped Ruff check/format passed (46 files), unchanged architecture checker passed, actionlint 1.7.12 passed, two tracked notebooks passed and 38 offline frontend tests passed. New runner-dependent tool path has step scope and a negative job-scope regression. /private/tmp/pret-drept-m2-releases-vjccaxd5/static-results.json and related logs.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "documentation-preservation",
+      "reference": "Final task/link/preservation checker at /private/tmp/pret-drept-m2-releases-vjccaxd5/check_documentation.py proves 167 baseline files accounted for: 155 byte-identical and 12 shared files exactly reversible to baseline, 17 new files/29 scoped increment files; all 20 implementation hashes unchanged, 23 valid task records, local links/anchors, 15 schemas, unchanged branch HEAD, clean index and whitespace. Both unrelated files and prior increment-2 implementation/tasks preserved. Rerun after final evidence edits; result saved in documentation-result.json.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "initial-core-run",
+      "reference": "Resolved before final verification: 105 passed / 1 failed due to an overbroad target substring assertion matching the legitimate invalid_non_target_domain reason. Removed that assertion; schema and preserved eligibility checks remain. All affected final core/source/wheel checks passed; no unresolved failure.",
+      "required": false,
+      "status": "failed"
+    },
+    {
+      "check": "initial-integration-run",
+      "reference": "Resolved before final verification: 8 passed / 2 fixture setup failures because copied DVC objects retain read-only permissions. Only owned copied synthetic objects are made writable, with exact A artifact corruption; original producer/store preserved. Final three negative-store checks passed.",
+      "required": false,
+      "status": "failed"
+    },
+    {
+      "check": "initial-documentation-proof",
+      "reference": "Resolved in the supplemental checker: its reconstruction added an extra newline to the original fixture. Corrected the temporary proof script without changing repository contents; exact baseline hashes then matched. Final proof is rerun after the evidence edit.",
+      "required": false,
+      "status": "failed"
+    },
+    {
+      "check": "real-data-operations",
+      "reference": "No private/raw CSV inspection, source acquisition, real release publication, cloud remote or raw-source preservation. Recovery: separately review authorized projection/handling and storage/access/retention/quality, scalable transport and defensible chronology/property evidence before a real-data increment. Do not scrape/enrich/apply policies by implication.",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "ml-protected-runtime",
+      "reference": "No experiments, feature/target-aggregate execution, protected labels, runtime certification, promotion or deployment. Recovery: obtain approved immutable inputs/splits and supported isolated runtime, appropriate external authorization, reproducible exact-source baseline runs and independent protected verification. Local metadata passes do not prove leakage freedom or isolation.",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "browser-smoke",
+      "reference": "UI source is unchanged and 38 frontend checks pass. Recovery: synthetic real-browser smoke check when a later increment changes this boundary.",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "linux-ci",
+      "reference": "This increment is intentionally uncommitted/unpushed. Recovery: wait for user review and explicit source-publication authorization, then inspect Linux CI for the exact approved revision. Prior merged PR CI cannot certify this diff; do not commit/push now.",
+      "required": false,
+      "status": "unavailable"
+    },
+    {
+      "check": "production-protected-controls",
+      "reference": "Production remote/access/retention enforcement, supported host isolation and trusted independent verification are not provisioned/validated by this source work. Recovery: responsible external owners must approve/provision and independently verify effective reviewed controls. No credentials or authority may be inferred from task/source records.",
+      "required": false,
+      "status": "unavailable"
+    },
+    {
+      "check": "m2-exit-gate",
+      "reference": "No reproducible isolated baseline run or defensible dual-view development evaluation yet. Recovery: authorized defensible chronology or approved remediation, reviewed property identities/pairs, fixed eligible cohort/policies/splits, scalable release transport and approved isolated baseline execution. M0/A14 remain open; no fabricated dates, thresholds or benchmark substitutes.",
+      "required": false,
+      "status": "unavailable"
+    },
+    {
+      "check": "source-publication",
+      "reference": "User-authorized follow-up in plan.md#source-publication-follow-up; index/commits/remote SHA/Linux CI verification pending. Recovery: inspect actual branch, HEAD, index and remote before continuing; no force push or merge. /private/tmp/pret-drept-m2-publish-3e8pmrf0 captures pre-publication contents.",
+      "required": true,
+      "status": "unavailable"
+    }
+  ],
+  "verification_requirements": [
+    "tool-profile",
+    "release-contracts-io",
+    "actual-dvc-restoration",
+    "checkout",
+    "distribution",
+    "static-architecture-workflow",
+    "documentation-preservation",
+    "source-publication"
+  ]
+}

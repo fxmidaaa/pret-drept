@@ -40,15 +40,21 @@ jobs:
         run: python -m pip install --require-hashes -r requirements-dev.lock
       - name: Install source without resolving dependencies or build requirements
         run: python -m pip install --no-deps --no-build-isolation -e .
+      - name: Install separate hash-locked local DVC tooling
+        run: |
+          python -m venv "$RUNNER_TEMP/rent-dvc-tools"
+          "$RUNNER_TEMP/rent-dvc-tools/bin/python" -I -m pip --isolated --disable-pip-version-check install --no-cache-dir --index-url https://pypi.org/simple --require-hashes -r requirements-data-build.lock
+          "$RUNNER_TEMP/rent-dvc-tools/bin/python" -I -m pip --isolated --disable-pip-version-check install --no-cache-dir --index-url https://pypi.org/simple --no-build-isolation --require-hashes -r requirements-data-tools.lock
       - name: Static checks on foundations
         run: |
-          python -m ruff check src scripts scrape.py tests/foundations tests/test_scrape.py tests/conftest.py
-          python -m ruff format --check src scripts scrape.py tests/foundations tests/test_scrape.py tests/conftest.py
+          python -m ruff check src scripts scrape.py tests/foundations tests/integration tests/test_scrape.py tests/conftest.py
+          python -m ruff format --check src scripts scrape.py tests/foundations tests/integration tests/test_scrape.py tests/conftest.py
       - name: Dependency boundaries
         run: rent-check-architecture --root .
       - name: Deterministic tests (private artifact checks explicitly skipped when unavailable)
         env:
           ACTIONLINT: ${{ runner.temp }}/rent-actionlint/actionlint
+          RENT_DATA_DVC: ${{ runner.temp }}/rent-dvc-tools/bin/dvc
           MPLCONFIGDIR: ${{ runner.temp }}/rent-matplotlib
           NUMBA_CACHE_DIR: ${{ runner.temp }}/rent-numba
         run: python -m pytest -q -ra

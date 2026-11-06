@@ -119,3 +119,43 @@ def task_document():
         "final_outcome": None,
         "history": [{"state": "PROPOSED", "timestamp": "2026-11-02T10:00:00Z"}],
     }
+
+
+@pytest.fixture
+def release_case(tmp_path, release_input_factory):
+    """Synthetic pure-contract binding; actual Git/DVC evidence is integration-only."""
+    from rent_data.release_io import write_payload
+    from rent_data.releases import (
+        DVC_VERSION,
+        build_dataset_release,
+        content_digest,
+        data_tool_profile_digest,
+    )
+
+    case = release_input_factory()
+    root = tmp_path / "payload"
+    artifacts = write_payload(
+        root,
+        case["candidate"],
+        source_documents=case["sources"],
+        expected_candidate_ref=case["candidate"]["candidate_digest"],
+    )
+    binding = {
+        "metadata": {
+            "commit": "a" * 40,
+            "path": "payload.dvc",
+            "digest": content_digest(b"fixture"),
+        },
+        "dvc": {
+            "version": DVC_VERSION,
+            "hash_algorithm": "md5",
+            "object_id": "b" * 32 + ".dir",
+            "size_bytes": sum(row["size_bytes"] for row in artifacts),
+            "file_count": len(artifacts),
+            "tool_profile_ref": data_tool_profile_digest(tool_lock=b"fixture", build_lock=b"build"),
+        },
+    }
+    manifest = build_dataset_release(
+        case["candidate"], source_documents=case["sources"], binding=binding, artifacts=artifacts
+    )
+    return {**case, "root": root, "manifest": manifest, "binding": binding, "artifacts": artifacts}
