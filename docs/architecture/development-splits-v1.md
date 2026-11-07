@@ -78,6 +78,10 @@ Oversized input/output fails without truncating records. Scalable table transpor
 real labels/features, currency normalization and split DVC publication/retention are
 outside this local metadata operation.
 
+M2 increment 7 extends the same materializer to sealed reference-backed (v2) releases without
+changing the split document, rules or the 1 MiB output bound. Its inventory input and its split
+output have different limits. See [development splits from reference-backed releases](development-splits-reference-releases.md).
+
 ## Verified local artifact flow
 
 `rent_data.split_io.materialize_development_split(restored_directory, destination, ...)`:

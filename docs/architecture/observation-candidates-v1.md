@@ -1,5 +1,9 @@
 # Observation provenance and candidates v1.0.0
 
+This page describes the inline candidate format. See
+[inventory references](observation-inventory-references-v2.md) for the opt-in v2
+format and its verification workflow.
+
 Status: source implementation for review; **metadata candidates only**. Authority:
 frozen specification §§4–5, 8–9 and 16.2, and the
 [first M2 handoff](../tasks/2026-11-05-m2-evaluation-contracts/plan.md).

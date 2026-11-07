@@ -24,7 +24,7 @@ include-package-data = false
 where = ["src"]
 
 [tool.setuptools.package-data]
-rent_contracts = ["schemas/v1/*.json"]
+rent_contracts = ["schemas/v1/*.json", "schemas/v2/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

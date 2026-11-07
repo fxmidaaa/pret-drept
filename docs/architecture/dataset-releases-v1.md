@@ -1,5 +1,9 @@
 # Development dataset releases and local restoration v1
 
+This page describes the inline release format and the shared local DVC protocol.
+See [inventory references](observation-inventory-references-v2.md) for the v2 roster
+and exact Parquet verification.
+
 Source proposal for frozen specification §§8–9, 12.2 and 15–16. It extends the
 [metadata candidate](observation-candidates-v1.md) without changing the
 [development evaluation proposal](evaluation-contracts-v1.md), legacy training or

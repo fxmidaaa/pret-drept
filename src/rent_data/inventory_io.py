@@ -12,6 +12,7 @@ from rent_contracts.evaluation import ObservationInventoryHasher
 from rent_contracts.inventory import (
     MANIFEST_FILE,
     MAX_INVENTORY_RECORDS,
+    MAX_MANIFEST_BYTES,
     MAX_PARQUET_BYTES,
     OBSERVATION_SCHEMA_PROFILE,
     PARQUET_FILE,
@@ -20,10 +21,8 @@ from rent_contracts.inventory import (
 )
 from rent_contracts.validation import canonical_json
 
+from ._artifact_io import create_json_artifact, open_regular_artifact
 from ._inventory_parquet import MAX_BATCH_ROWS, decoded_observations, open_parquet, write_parquet
-from .release_io import _regular_reader, create_json_artifact
-
-_MAX_MANIFEST_BYTES = 8 * 1024
 
 
 @dataclass(frozen=True)
@@ -112,19 +111,21 @@ def _check_roster(root: Path, expected: set[str]) -> None:
         raise ContractError("inventory directory read failed") from None
 
 
-def _manifest(root: Path, *, expected_inventory_ref: str) -> dict:
+def _manifest(root: Path, *, expected_inventory_ref: str, expected_manifest: dict | None) -> dict:
     _check_roster(root, {MANIFEST_FILE, PARQUET_FILE})
     try:
-        with _regular_reader(root / MANIFEST_FILE) as stream:
-            raw = stream.read(_MAX_MANIFEST_BYTES + 1)
+        with open_regular_artifact(root / MANIFEST_FILE) as stream:
+            raw = stream.read(MAX_MANIFEST_BYTES + 1)
     except OSError:
         raise ContractError("inventory manifest read failed") from None
-    if len(raw) > _MAX_MANIFEST_BYTES:
+    if len(raw) > MAX_MANIFEST_BYTES:
         raise ContractError("inventory manifest size limit exceeded")
     manifest = load_document(raw)
     validate_inventory_manifest(manifest, expected_inventory_ref=expected_inventory_ref)
     if raw != canonical_json(manifest).encode("utf-8"):
         raise ContractError("inventory manifest must be canonical JSON")
+    if expected_manifest is not None and raw != canonical_json(expected_manifest).encode("utf-8"):
+        raise ContractError("observation inventory manifest identity mismatch")
     return manifest
 
 
@@ -149,16 +150,24 @@ def _verified_parquet(stream, manifest: dict, limits: InventoryLimits):
 
 
 @contextmanager
-def _open_verified_inventory(root: Path, *, expected_inventory_ref: str, limits: InventoryLimits):
+def _open_verified_inventory(
+    root: Path,
+    *,
+    expected_inventory_ref: str,
+    limits: InventoryLimits,
+    expected_manifest: dict | None = None,
+):
     root = _inventory_path(root)
-    manifest = _manifest(root, expected_inventory_ref=expected_inventory_ref)
+    manifest = _manifest(
+        root, expected_inventory_ref=expected_inventory_ref, expected_manifest=expected_manifest
+    )
     artifact = manifest["artifact"]
     if (
         manifest["observation_count"] > limits.max_records
         or artifact["size_bytes"] > limits.max_file_bytes
     ):
         raise ContractError("observation inventory exceeds local limits")
-    with _regular_reader(root / PARQUET_FILE) as stream:
+    with open_regular_artifact(root / PARQUET_FILE) as stream:
         if _file_identity(stream, limits.max_file_bytes) != (
             artifact["digest"],
             artifact["size_bytes"],
@@ -203,7 +212,7 @@ def write_observation_inventory(
     """
     root = _inventory_path(destination)
     count, observations_digest = _write_payload(root, observations, limits)
-    with _regular_reader(root / PARQUET_FILE) as stream:
+    with open_regular_artifact(root / PARQUET_FILE) as stream:
         file_digest, size = _file_identity(stream, limits.max_file_bytes)
         manifest = {
             "contract_version": "1.0.0",
@@ -223,11 +232,18 @@ def write_observation_inventory(
 
 
 def verify_observation_inventory(
-    root: Path, *, expected_inventory_ref: str, limits: InventoryLimits = InventoryLimits()
+    root: Path,
+    *,
+    expected_inventory_ref: str,
+    limits: InventoryLimits = InventoryLimits(),
+    expected_manifest: dict | None = None,
 ) -> dict:
-    """Return the manifest after verifying bytes, schema and every observation."""
+    """Verify bytes, schema and population. If supplied, pin the exact manifest first."""
     with _open_verified_inventory(
-        root, expected_inventory_ref=expected_inventory_ref, limits=limits
+        root,
+        expected_inventory_ref=expected_inventory_ref,
+        limits=limits,
+        expected_manifest=expected_manifest,
     ) as (manifest, _):
         return manifest
 

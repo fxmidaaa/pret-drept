@@ -1,0 +1,156 @@
+{
+  "acceptance_criteria": [
+    "Closed versioned binding with full source and inventory verification.",
+    "Exact DVC restore, safe failures and no partially accepted result.",
+    "v1 compatibility and a clear v2 split version gate.",
+    "Focused and aggregate checks, packaged verification and preserved workspace."
+  ],
+  "affected_modules": [
+    "rent_contracts schemas and inventory verification contract",
+    "rent_data candidates, releases, local artifact I/O and DVC",
+    "v1 split version gates, tests and package metadata",
+    "M2 architecture notes and task evidence"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Read frozen requirements and prior M2 evidence, inspected real source, tests, installed tooling and starting Git state.",
+    "Implemented two closed v2 envelopes, exact local inventory verification, staged copy and local DVC binding with v1 compatibility.",
+    "Initial local checks passed: 320 adjacent v1/transport regressions, 28 v2 foundation tests and two actual v2 DVC cases. Maintainer review added staged-copy and cleanup checks and corrupt-object integration coverage.",
+    "Final implementation and review checks passed on the uncommitted main working tree.",
+    "V1 fixture bytes match the starting revision. The exact older 1800-row v2 payload restored through a fresh cache, and corrupt, missing and stale objects failed closed."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "Verified synthetic v2 candidate and release inventory references are ready for review. The original v1 workflow and the current v1 split entry points are supported. The working tree is uncommitted and M2's exit gate remains open.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-07T18:31:24.539286+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-07T18:31:24.598223+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-07T18:31:24.598533+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-07T18:31:24.598828+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-07T18:51:07.384785+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-07T18:57:46.013792+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "docs/tasks/2026-11-07-m2-inventory-references/plan.md#acceptance-criteria-and-implementation-plan"
+  ],
+  "important_decisions": [
+    "Embed the verified inventory manifest in additive v2 documents and seal exact inventory bytes inside the v2 DVC payload.",
+    "Preserve v1 and keep v2 source-backed with an explicit 4 MiB aggregate source-byte cap.",
+    "Install the v2 candidate atomically after verifying the copied roster, with temporary staging outside the closed payload.",
+    "Require clean DVC status before v2 local push and verify all bytes and source correspondence at fresh-cache restore and readback."
+  ],
+  "known_blockers": [
+    "M2 exit gate remains open pending authorized real data, defensible chronology, property evidence, reviewed policies and isolated reproducible evaluation.",
+    "Exact-tree Linux CI awaits separately authorized source publication."
+  ],
+  "next_recovery_action": "Read docs/tasks/2026-11-07-m2-inventory-references/plan.md#final-verification. Verify main at 7f69b177222e3fde58cd070e05228d81cc56539f, empty index, both pre-existing edits and the exact 18 implementation hashes via the recorded review proof. Review the bounded diff. The next proposed increment is v2 development split adoption with parity on synthetic inputs.",
+  "objective": "Bind synthetic development candidates and releases to verified exact observation inventory artifacts.",
+  "original_authorized_request": "docs/tasks/2026-11-07-m2-inventory-references/request.md",
+  "pending_approvals": [
+    "Review the bounded local increment."
+  ],
+  "protected_invariants": [
+    "Preserve frozen architecture, legacy formats and population/eligibility semantics.",
+    "Maintain development-only scope, independent ML and public dependency boundaries.",
+    "Preserve both unrelated working-tree edits and empty index."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Opt-in candidate and sealed release v2, local payload and DVC verification, synthetic tests and evidence.",
+    "Review uncommitted on main. Split adoption, training, private data, publication and protected actions are out of scope."
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261107-M2-INVENTORY-REFERENCES",
+  "verification_evidence": [
+    {
+      "check": "focused",
+      "reference": "docs/tasks/2026-11-07-m2-inventory-references/plan.md#final-verification 549 focused checks, including 31 v2 foundation cases.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "local-dvc",
+      "reference": "docs/tasks/2026-11-07-m2-inventory-references/plan.md#final-verification 14 actual local DVC tests. Exact older 1800-row restoration, corrupt or absent objects and stale equal-total metadata checked.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout",
+      "reference": "docs/tasks/2026-11-07-m2-inventory-references/plan.md#final-verification 875 passed, 12 private-model cases deselected, one existing Starlette/httpx warning.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "distributions",
+      "reference": "docs/tasks/2026-11-07-m2-inventory-references/plan.md#final-verification 680 passed from each of the extracted source distribution and wheel.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "static",
+      "reference": "docs/tasks/2026-11-07-m2-inventory-references/plan.md#final-verification Ruff, formatting, architecture, actionlint, notebook, 38 frontend checks and offline uv dependency check passed.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-07-m2-inventory-references/plan.md#final-verification 203 starting paths reconciled, 18 implementation hashes fixed, 26 task records and 102 links checked. Existing edits, HEAD and empty index preserved.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "v1-compatibility",
+      "reference": "docs/tasks/2026-11-07-m2-inventory-references/plan.md#final-verification Candidate, release, roster and restoration report are byte-identical to the same synthetic fixture generated from the starting revision.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "interim-regression",
+      "reference": "docs/tasks/2026-11-07-m2-inventory-references/plan.md#final-verification Interrupted-stream regression found and fixed. Targeted interruption recovery and all final verification groups passed.",
+      "required": false,
+      "status": "failed"
+    },
+    {
+      "check": "synthetic-scope",
+      "reference": "docs/tasks/2026-11-07-m2-inventory-references/plan.md#final-verification 12 private-model regressions and out-of-scope real-data, split adoption, training and protected checks excluded.",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "external-verification",
+      "reference": "docs/tasks/2026-11-07-m2-inventory-references/plan.md#final-verification Exact-revision Linux CI, authorized real-data evidence, runtime isolation and independent verification remain separate gates.",
+      "required": false,
+      "status": "unavailable"
+    }
+  ],
+  "verification_requirements": [
+    "focused",
+    "local-dvc",
+    "checkout",
+    "distributions",
+    "static",
+    "preservation",
+    "v1-compatibility"
+  ]
+}

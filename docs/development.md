@@ -43,7 +43,7 @@ the self-contained contract, prediction and bundle, task lifecycle, and architec
 tests that require the application, workflow files, or project task records in checkout CI.
 `scripts/check_distribution.py` builds the wheel from the source archive and runs the shipped
 suite twice from a temporary extraction. The source run imports from the extracted `src/` tree.
-The wheel run imports from the wheel and exercises all sixteen packaged schemas. Both runs bypass
+The wheel run imports from the wheel and exercises all eighteen packaged schemas. Both runs bypass
 the checkout's editable install and use dependencies from the locked development environment.
 
 Tracked notebooks are published as source with cleared outputs. Keep executed copies that use
@@ -254,5 +254,64 @@ Run focused checks, then the aggregate checks above.
 The source and wheel suites exercise the packaged schema and synthetic codec
 cases. The checkout integration uses the separate pinned DVC environment and a
 disposable synthetic Git repository with a local store. It restores the
-inventory into a fresh cache from the exact metadata revision. Reference-based
-candidate, release and split adoption remains a separate increment.
+inventory into a fresh cache from the exact metadata revision.
+
+## Observation inventory references
+
+M2 increment 6 adds [reference-backed candidates and releases](architecture/observation-inventory-references-v2.md)
+using the existing PyArrow and DVC environments. The v2 payload carries both
+inventory files. Staging, sealing and verified restore check their exact bytes
+and complete population against the source-backed candidate. V1 remains the
+default. The split builders accept both versions, as described in
+[development splits from reference releases](#development-splits-from-reference-releases).
+
+```bash
+.venv/bin/python -m pytest -p no:cacheprovider -q -ra \
+  tests/foundations/test_inventory_references.py tests/foundations/test_observation_inventory.py \
+  tests/foundations/test_observation_candidates.py tests/foundations/test_dataset_releases.py \
+  tests/foundations/test_release_io.py tests/foundations/test_dvc_local.py \
+  tests/foundations/test_development_splits.py tests/foundations/test_split_io.py \
+  tests/foundations/test_evaluation_contracts.py tests/foundations/test_architecture.py
+.venv/bin/python -m pytest -p no:cacheprovider -q -ra tests/integration/test_dvc_restoration.py
+.venv/bin/python -m pytest -p no:cacheprovider -q -ra -m 'not legacy_artifact'
+.venv/bin/python scripts/check_distribution.py
+```
+
+The checkout command above omits private-model checks for a synthetic-only review.
+Run the other static and frontend checks from the guide as usual. The new
+integration uses disposable synthetic Git repositories and local stores. It
+restores an earlier v2 revision through an independent empty cache and exercises
+missing or corrupt objects and stale metadata. If staging or restoration fails,
+use a fresh owned destination and keep any previous verified artifacts intact.
+
+## Development splits from reference releases
+
+M2 increment 7 lets the [split materializer](architecture/development-splits-reference-releases.md)
+consume sealed v2 releases as well as inline v1 releases, with the existing `development-split`
+v1 document and rules. A v2 inventory may exceed the legacy 1 MiB logical JSON limit. Its
+complete split still has to fit one 1 MiB document: a population above 7,133 observations, or a
+split that exceeds the bound, fails before any output directory exists. Run the focused checks,
+then the aggregate checks above.
+
+```bash
+.venv/bin/python -m pytest -p no:cacheprovider -q -ra \
+  tests/foundations/test_reference_splits.py tests/foundations/test_inventory_references.py \
+  tests/foundations/test_observation_inventory.py tests/foundations/test_observation_candidates.py \
+  tests/foundations/test_dataset_releases.py tests/foundations/test_release_io.py \
+  tests/foundations/test_dvc_local.py tests/foundations/test_development_splits.py \
+  tests/foundations/test_split_io.py tests/foundations/test_evaluation_contracts.py \
+  tests/foundations/test_architecture.py
+.venv/bin/python -m pytest -p no:cacheprovider -q -ra tests/integration/test_dvc_restoration.py
+.venv/bin/python -m pytest -p no:cacheprovider -q -ra -m 'not legacy_artifact'
+.venv/bin/rent-check-architecture --root .
+.venv/bin/python scripts/check_distribution.py
+```
+
+The new foundation module builds a 1,500-observation inventory above 1 MiB and a
+3,000-observation release whose split exceeds the bound, so it takes about a minute. The shipped
+source and wheel suites include it. The integration test needs the separate pinned DVC
+environment. It restores an older 1,800-observation v2 revision after a newer one into two
+independent fresh caches, materializes and reads back the split in each, and compares the bytes.
+Use fresh destinations when retrying a failed restoration or split. Fixed membership alone
+does not certify feature or target-lineage leakage freedom, and no real data, baseline training
+or protected evaluation is involved.

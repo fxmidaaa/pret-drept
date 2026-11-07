@@ -92,8 +92,9 @@ Parquet each exceed 1 MiB. An actual local DVC fixture restores both files from
 exact synthetic Git metadata through an independent empty cache. The production
 v1 DVC adapter retains its candidate, quality report and source JSON roster.
 
-Reference-based adoption in candidate and release contracts needs separate
-review before split consumers can use these artifacts. Real data requires
+[Candidate and release v2](observation-inventory-references-v2.md) bind the exact
+inventory files in a versioned DVC payload. Development split consumers accept
+inline v1 and these v2 releases ([details](development-splits-reference-releases.md)). Real data requires
 authorized projection and handling, defensible chronology or approved
 remediation, reviewed property evidence and policy, and storage, access,
 retention and quality decisions. Feature and target-derived lineage, isolated

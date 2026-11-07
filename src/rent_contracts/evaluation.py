@@ -82,9 +82,19 @@ class _ListingEvidence:
             self.captures.add(capture)
 
 
-def _observation_inventory(observations: list[dict]) -> dict[str, dict]:
+def _record_limit(max_records: int | None) -> int | None:
+    if max_records is not None and (type(max_records) is not int or max_records < 1):
+        raise ContractError("invalid observation inventory record limit")
+    return max_records
+
+
+def _observation_inventory(
+    observations: list[dict], max_records: int | None = None
+) -> dict[str, dict]:
     if type(observations) is not list or not observations:
         raise ContractError("observation inventory must be a nonempty list")
+    if max_records is not None and len(observations) > max_records:
+        raise ContractError("observation inventory record limit exceeded")
     inventory = {}
     evidence = _ListingEvidence()
     for observation in observations:
@@ -97,13 +107,33 @@ def _observation_inventory(observations: list[dict]) -> dict[str, dict]:
     return inventory
 
 
-def observation_inventory_digest(observations: list[dict]) -> str:
+def _inventory_digest(inventory: dict[str, dict], max_records: int | None) -> str:
+    """Hash the complete inventory sorted by observation ID.
+
+    Without a record limit the canonical array must fit one JSON document, as in v1.
+    A caller-supplied limit streams the same canonical array through the shared hasher,
+    so the digest is identical wherever both forms apply and only the count is bounded.
+    """
+    if max_records is None:
+        return _digest([inventory[key] for key in sorted(inventory)])
+    hasher = ObservationInventoryHasher(max_records=max_records)
+    for key in sorted(inventory):
+        hasher.add(inventory[key])
+    return hasher.digest()
+
+
+def observation_inventory_digest(
+    observations: list[dict], *, max_inventory_records: int | None = None
+) -> str:
     """Bind every supplied reference, sorted by observation ID rather than row position.
 
+    The default keeps the single-document bound. An explicit record limit is for a
+    population already bound by a verified reference-backed release. It does not
+    change the digest, which equals the default wherever the default applies.
     This cannot establish that a resolver supplied the complete authorized release.
     """
-    inventory = _observation_inventory(observations)
-    return _digest([inventory[key] for key in sorted(inventory)])
+    limit = _record_limit(max_inventory_records)
+    return _inventory_digest(_observation_inventory(observations, limit), limit)
 
 
 class ObservationInventoryHasher:
@@ -256,17 +286,27 @@ def _development_memberships(
 
 
 def derive_development_memberships(
-    observations: list[dict], *, policy: dict, training_cutoff: str, validation_window: dict
+    observations: list[dict],
+    *,
+    policy: dict,
+    training_cutoff: str,
+    validation_window: dict,
+    max_inventory_records: int | None = None,
 ) -> list[dict]:
     """Project existing v1 membership semantics into independent canonical rows.
 
     Every supplied observation is represented, including exclusions. This checks
     declared metadata, not inventory completeness, policy review or evidence truth.
     A release-bound builder and full split validation establish correspondence.
+    By default the complete inventory must fit one JSON document. An explicit record
+    limit replaces only that bound; the partition, reason and cohort rules are shared.
+    Derivation compares training and validation rows, so keep the limit modest.
     """
     validate_evaluation_policy(policy)
-    inventory = _observation_inventory(observations)
-    _digest([inventory[key] for key in sorted(inventory)])  # Bound the complete inventory.
+    limit = _record_limit(max_inventory_records)
+    inventory = _observation_inventory(observations, limit)
+    if limit is None:
+        _inventory_digest(inventory, None)  # Bound the complete inventory by one document.
     cutoff, start, end = _development_boundaries(training_cutoff, validation_window)
     return _development_memberships(inventory, policy, cutoff, start, end)
 
@@ -281,12 +321,18 @@ def _validate_split_envelope(manifest: dict) -> None:
 
 
 def validate_development_split(
-    manifest: dict, *, policy: dict, observations: list[dict], expected_dataset_ref: str
+    manifest: dict,
+    *,
+    policy: dict,
+    observations: list[dict],
+    expected_dataset_ref: str,
+    max_inventory_records: int | None = None,
 ) -> None:
     """Check complete supplied population, declared evidence and v1 assignments.
 
     Dataset/policy authorization, evidence truth, protected access and actual feature
     lineage require independent verification. This does not generate an official split.
+    The optional record limit has the meaning documented for the derivation helper.
     """
     _validate_split_envelope(manifest)
     validate_evaluation_policy(policy)
@@ -294,8 +340,9 @@ def validate_development_split(
         raise ContractError("development dataset identity mismatch")
     if manifest["policy_ref"] != policy["policy_digest"]:
         raise ContractError("development policy identity mismatch")
-    inventory = _observation_inventory(observations)
-    if manifest["observations_digest"] != _digest([inventory[key] for key in sorted(inventory)]):
+    limit = _record_limit(max_inventory_records)
+    inventory = _observation_inventory(observations, limit)
+    if manifest["observations_digest"] != _inventory_digest(inventory, limit):
         raise ContractError("observation inventory digest mismatch")
     cutoff, start, end = _development_boundaries(
         manifest["training_cutoff"], manifest["validation_window"]

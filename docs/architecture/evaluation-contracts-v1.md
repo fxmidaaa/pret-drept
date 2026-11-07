@@ -141,7 +141,11 @@ rule: sorted object keys, UTF-8, no insignificant whitespace, `ensure_ascii=Fals
 excluding **only** the respective top-level self-digest. Manifest arrays retain
 their order. Inventory hashing first sorts observations by ID. Canonicalization is
 locally versioned, not an RFC 8785 claim. Helpers do not mutate caller documents.
-Existing 1 MiB JSON limits apply; scalable table transport/sharding is deferred.
+Existing 1 MiB JSON limits apply; scalable table transport/sharding is deferred. The
+inventory helpers keep that single-document bound by default. A caller verifying a
+reference-backed release can opt in to a positive record limit through
+`max_inventory_records`, which streams the identical digest and leaves the split
+document's 1 MiB bound unchanged (see [reference-backed splits](development-splits-reference-releases.md)).
 Changing referenced policies, metadata, assignments, exclusions, cutoffs or provenance
 changes identity. Recomputing a digest is not authorization or evidence of review.
 

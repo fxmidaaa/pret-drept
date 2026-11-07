@@ -11,7 +11,9 @@ UTF-8 before JSON parsing; UTF-16/32 auto-detection is disabled. `load_document`
 only text or `bytes`, with the same BOM/Unicode rules for each. Unknown object fields,
 duplicate JSON keys, nonfinite numbers, unsupported Python object types, documents over
 1 MiB (counted in UTF-8 bytes) and nesting beyond 64 levels are rejected. These parser
-limits are implementation choices, not resource authorization. Parquet remains the
+limits are implementation choices, not resource authorization. A size violation raises
+`DocumentSizeError`, a `ContractError` subclass with the same message, so callers can tell a
+size limit from a malformed document without changing any handler. Parquet remains the
 intended table transport (§12.2); no pretend CSV/Parquet training implementation is introduced in M1.
 
 `load_document(raw)` performs strict decoding. `validate_document(name, document)`

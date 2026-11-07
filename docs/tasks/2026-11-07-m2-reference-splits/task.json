@@ -1,0 +1,186 @@
+{
+  "acceptance_criteria": [
+    "v2 releases flow through verified restore, split materialization and readback; v1 tests pass unmodified apart from the superseded increment 6 gate test.",
+    "v1 and v2 give identical memberships, reasons and cohorts for identical observations, with version-specific lineage and failing cross-version substitution.",
+    "A v2 inventory above 1 MiB logical JSON works; a complete split above its output bound is rejected before any output exists and the constraint is documented.",
+    "Wrong references, missing or tampered evidence, unsafe paths and incomplete outputs fail safely, including actual local DVC restoration into independent fresh caches.",
+    "Focused, DVC, checkout, architecture, static and source/wheel checks run after the final edit and are recorded as passed, failed, skipped or unavailable."
+  ],
+  "affected_modules": [
+    "rent_contracts evaluation and validation: opt-in inventory record limit and DocumentSizeError",
+    "rent_data release_io, splits and split_io: verified population, version dispatch, output bound",
+    "tests: reference split foundations, shared population fixture, actual DVC integration",
+    "docs, reports, task evidence and MANIFEST.in"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Reconciled main at 7f69b17 with an empty index and verified the increment 6 review proof, then stopped at the review gate until the user authorized building on it. Saved its exact bytes first.",
+    "Implemented the opt-in inventory limit and DocumentSizeError, the verified population reader, version dispatch and the split output bound. Added foundation, shared-fixture and actual-DVC tests.",
+    "Review fixed six issues. Final checks passed: 637 focused, 20 actual-DVC, 969 checkout, 768 per distribution, static and preservation. v1 artifacts are byte-identical and eleven deliberate regressions were caught.",
+    "One unexplained transient DVC subprocess failure occurred once in a first run and did not recur in eight later runs. It is recorded in the plan."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "Development split materialization and readback accept verified reference-backed (v2) releases with v1 parity, distinct input and output limits and safe failures. The working tree is uncommitted, increment 6 is still unreviewed and M2's exit gate remains open.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-07T19:53:00.366425+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-07T19:53:00.425032+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-07T19:53:00.425446+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-07T19:53:00.425805+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-07T20:19:35.127436+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-07T20:19:35.128500+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "docs/tasks/2026-11-07-m2-reference-splits/plan.md#acceptance-criteria-and-implementation-plan"
+  ],
+  "important_decisions": [
+    "Dispatch the existing split entry points on the validated release version. The split document, rules and ordering stay v1. Only release lineage differs by version.",
+    "Reuse one rule implementation. An opt-in max_inventory_records keyword streams the identical canonical-array digest and defaults to the legacy single-document bound.",
+    "Take the population from the same all-or-nothing restore verification, not a second reader.",
+    "Bound the split output, not the inventory: reject above 7,133 rows before derivation and fail an exact 1 MiB size check before the output directory exists. No truncation or schema change.",
+    "DocumentSizeError subclasses ContractError with an unchanged message so size limits are distinguishable without changing any handler.",
+    "Classify L1 because no rule, schema or wire contract changes. Any such change is L2.",
+    "No conflict with the frozen architecture. The 1 MiB JSON split is a capacity constraint, since specification 12.2 treats JSON and Parquet as selected defaults."
+  ],
+  "known_blockers": [
+    "M2 exit gate remains open pending authorized real data, defensible chronology, property evidence, reviewed policies and isolated reproducible evaluation.",
+    "A complete JSON split never holds more than 7,128 observations, and 2,673 always fit. A larger or longer-identifier real release needs a reviewed versioned split transport, an L2 wire change.",
+    "V2 candidates keep the 4 MiB source and 1 MiB lineage caps, so a release near the M0-documented 4,528 rows also needs bounded source and lineage transport.",
+    "Exact-tree Linux CI awaits separately authorized source publication."
+  ],
+  "next_recovery_action": "Read docs/tasks/2026-11-07-m2-reference-splits/plan.md#verification-and-recovery. Reconcile main at 7f69b177222e3fde58cd070e05228d81cc56539f, the empty index, both unrelated edits and the saved increment 6 bytes, then review the bounded diff. After increments 6 and 7 are reviewed, the next proposed increment is a versioned typed split-membership artifact (L2).",
+  "objective": "Let development split materialization and readback consume verified reference-backed (v2) releases with v1/v2 parity, explicit input and output bounds, and safe failures.",
+  "original_authorized_request": "docs/tasks/2026-11-07-m2-reference-splits/request.md",
+  "pending_approvals": [
+    "Review increment 6, which is still unreviewed and now underlies this increment.",
+    "Review this bounded local increment."
+  ],
+  "protected_invariants": [
+    "Preserve frozen architecture, the development-split wire contract and all membership, reason, cohort, boundary, identity and ordering semantics.",
+    "Preserve v1 behavior and bytes. ML stays independent of the harness and public contracts stay free of data and harness imports.",
+    "Preserve increment 6 as an uncommitted, unreviewed tree, both unrelated working-tree edits, HEAD and the empty index."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Existing development-split v1 contract and rules. Version dispatch on the sealed release, a verified population reader, an opt-in inventory record limit and an output bound.",
+    "Synthetic fixtures, local Git and DVC in disposable repositories, uncommitted on main. Baseline training, real data, protected labels, scraping, credentials, checkpoints, publication, trusted policy changes, promotion and deployment are out of scope."
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261107-M2-REFERENCE-SPLITS",
+  "verification_evidence": [
+    {
+      "check": "focused",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification 637 passed, including 88 new cases. Run the first command in the guide section.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "local-dvc",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification 20 actual local DVC tests passed, including six new cases and an older 1,800-observation v2 release restored after a newer one into two independent fresh caches.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification 969 passed, 12 private-model checks deselected, 1 existing warning.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "distributions",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification 768 passed from each of the extracted source distribution and wheel.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "static",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification Ruff, format for 57 files, architecture, actionlint, notebooks, 38 frontend passes and the offline uv dependency check passed.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification HEAD, branch and empty index unchanged; both unrelated edits byte-identical; edited and added files match the recorded lists; task records and links valid.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "v1-compatibility",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification The v1 release, pure split, materialized split file and memberships are byte-identical to the same inputs run through the saved increment 6 source.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "mutation-sanity",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification Eleven deliberate regressions of the safety properties were each caught by the new tests.",
+      "required": false,
+      "status": "passed"
+    },
+    {
+      "check": "hash-seed-determinism",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification A separately staged v2 release and its split were byte-identical in fresh interpreters under three hash seeds. Ad hoc, not retained.",
+      "required": false,
+      "status": "passed"
+    },
+    {
+      "check": "interim-capacity-test",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification A first focused run failed one test that measured an over-limit document with the canonicalizer that rejects it. Fixed and rerun.",
+      "required": false,
+      "status": "failed"
+    },
+    {
+      "check": "interim-dvc-process",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification One first run of the new DVC cases failed once with PROCESS_FAILED before any new code ran. Not reproduced in eight later runs. Cause unknown; stderr is discarded by design.",
+      "required": false,
+      "status": "failed"
+    },
+    {
+      "check": "synthetic-scope",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification 12 private-model regressions and out-of-scope real-data, baseline training and protected checks excluded.",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "external-verification",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification Exact-revision Linux CI, authorized real-data evidence, runtime isolation and independent verification remain separate gates.",
+      "required": false,
+      "status": "unavailable"
+    },
+    {
+      "check": "interim-preservation-check",
+      "reference": "docs/tasks/2026-11-07-m2-reference-splits/plan.md#final-verification The first run of the preservation script stopped at a wrong expected-set assertion, not at a tree change. Corrected and rerun; passed.",
+      "required": false,
+      "status": "failed"
+    }
+  ],
+  "verification_requirements": [
+    "focused",
+    "local-dvc",
+    "checkout",
+    "distributions",
+    "static",
+    "preservation",
+    "v1-compatibility"
+  ]
+}

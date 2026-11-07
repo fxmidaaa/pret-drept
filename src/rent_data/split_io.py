@@ -4,7 +4,7 @@ from pathlib import Path
 
 from rent_contracts import load_document
 
-from .release_io import create_json_artifact, read_artifact, read_verified_restore
+from .release_io import create_json_artifact, read_artifact, read_verified_restore_observations
 from .releases import ReleaseError
 from .splits import build_development_split, validate_release_split
 
@@ -48,18 +48,20 @@ def materialize_development_split(
 ) -> dict:
     """Reverify an existing restored release and create one new local split artifact.
 
-    Validate all metadata before creating the output directory. A failed write may
-    leave that new directory, but no final split file. Never reuse an output path.
+    Both inline v1 and reference-backed v2 releases are accepted; unsupported versions
+    fail verification. Validate all metadata, including the complete split's one-document
+    output bound, before creating the output directory. A failed write may leave that
+    new directory, but no final split file. Never reuse an output path.
     """
     destination = _separate_output(restored_directory, destination)
     if destination.exists():
         raise ReleaseError("OUTPUT_EXISTS")
-    candidate = read_verified_restore(
+    observations = read_verified_restore_observations(
         restored_directory, manifest=release, expected_release_ref=expected_release_ref
     )
     manifest = build_development_split(
         release=release,
-        observations=candidate["observations"],
+        observations=observations,
         policy=policy,
         expected_release_ref=expected_release_ref,
         expected_policy_ref=expected_policy_ref,
@@ -91,14 +93,14 @@ def read_verified_development_split(
     destination = _separate_output(restored_directory, destination)
     if not destination.is_dir():
         raise ReleaseError("INVALID_SPLIT_DIRECTORY")
-    candidate = read_verified_restore(
+    observations = read_verified_restore_observations(
         restored_directory, manifest=release, expected_release_ref=expected_release_ref
     )
     manifest = load_document(read_artifact(destination / SPLIT_FILE))
     validate_release_split(
         manifest,
         release=release,
-        observations=candidate["observations"],
+        observations=observations,
         policy=policy,
         expected_release_ref=expected_release_ref,
         expected_policy_ref=expected_policy_ref,

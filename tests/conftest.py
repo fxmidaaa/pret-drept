@@ -100,6 +100,149 @@ def large_observation_inventory(release_input_factory):
 
 
 @pytest.fixture(scope="session")
+def reference_population_factory(release_input_factory, split_input_factory):
+    """Patterned synthetic populations whose expected memberships are closed-form.
+
+    The oracle applies the written v1 rules by row index. It never calls the derivation
+    helpers under test and uses no clock, private row, DVC claim or real chronology.
+    Six kinds repeat in order: training, unseen validation, validation seen by property,
+    validation seen by listing and property, untimed exclusion, and invalid-domain exclusion.
+    """
+    from rent_contracts.validation import canonical_json
+    from rent_data.releases import content_digest
+
+    base = release_input_factory()
+    recipe = base["recipe"]
+    shared = split_input_factory()
+    evidence = content_digest(b"synthetic temporal evidence")
+
+    def make(count, *, long_ids=False, per_source=600, multi=False):
+        prefixes = (
+            ("synthetic-obs-", "synthetic-listing-", "synthetic-property-")
+            if long_ids
+            else ("obs-", "lst-", "prp-")
+        )
+
+        def ident(prefix, index):
+            # Long identifiers use the 128-character schema maximum.
+            return (prefix.ljust(122, prefix[0]) if long_ids else prefix) + f"{index:06d}"
+
+        def observation_id(index):
+            return ident(prefixes[0], index)
+
+        def observation(index):
+            kind = index % 6
+            instant = {
+                0: "2026-01-10T12:00:00Z",
+                1: "2026-02-12T12:00:00Z",
+                2: "2026-02-13T12:00:00Z",
+                3: "2026-02-14T12:00:00Z",
+                4: None,
+                5: "2026-03-02T12:00:00Z",
+            }[kind]
+            # Kinds 2 and 3 reuse the training row two or three places earlier.
+            earlier = index - {2: 2, 3: 3}.get(kind, 0)
+            row = {
+                "contract_version": "1.0.0",
+                "observation_id": observation_id(index),
+                "listing_id": ident(prefixes[1], earlier if kind == 3 else index),
+                "property_identity": {
+                    "status": "confirmed",
+                    "property_id": ident(prefixes[2], earlier),
+                    "confidence": 0.75 if kind in (1, 2) else None,
+                    "policy_ref": recipe["property_matching_policy_ref"],
+                },
+                "domain_policy_ref": recipe["domain_policy_ref"],
+                "domain_status": "invalid" if kind == 5 else "valid",
+                "published_at": instant,
+                "collected_at": instant,
+                "features_available_at": instant,
+                "prediction_cutoff_at": instant,
+                "temporal_evidence_ref": None if kind == 4 else evidence,
+            }
+            if multi:
+                # Every row accumulates all four reachable eligibility reasons.
+                row["domain_status"] = "invalid"
+                row["published_at"] = row["collected_at"] = "2026-03-02T12:00:00Z"
+                row["prediction_cutoff_at"] = "2026-03-02T12:00:00Z"
+                row["features_available_at"] = "2026-03-03T12:00:00Z"
+                row["temporal_evidence_ref"] = None
+                row["property_identity"]["confidence"] = None
+                row["listing_id"] = ident(prefixes[1], index)
+                row["property_identity"]["property_id"] = ident(prefixes[2], index)
+            return row
+
+        def expected(index):
+            kind = 6 if multi else index % 6
+            partition, reasons, cohorts, unseen = {
+                0: ("training", [], [], ["not_development_validation"]),
+                1: ("development_validation", [], ["future_market", "unseen_property"], []),
+                2: (
+                    "development_validation",
+                    [],
+                    ["future_market"],
+                    ["property_overlap_training"],
+                ),
+                3: (
+                    "development_validation",
+                    [],
+                    ["future_market"],
+                    ["listing_seen_in_training", "property_overlap_training"],
+                ),
+                4: ("excluded", ["temporal_evidence_missing"], [], ["not_development_validation"]),
+                5: (
+                    "excluded",
+                    ["invalid_non_target_domain", "outside_development_windows"],
+                    [],
+                    ["not_development_validation"],
+                ),
+                6: (
+                    "excluded",
+                    [
+                        "invalid_non_target_domain",
+                        "outside_development_windows",
+                        "temporal_evidence_missing",
+                        "temporal_order_invalid",
+                    ],
+                    [],
+                    ["not_development_validation"],
+                ),
+            }[kind]
+            return {
+                "observation_id": observation_id(index),
+                "partition": partition,
+                "eligibility_exclusions": reasons,
+                "cohorts": cohorts,
+                "unseen_property_exclusions": unseen,
+            }
+
+        rows = [observation(index) for index in range(count)]
+        sources = []
+        for start in range(0, count, per_source):
+            source = {
+                "contract_version": "1.0.0",
+                "raw_source_ref": content_digest(f"synthetic population source {start}".encode()),
+                "acquisition_provenance_ref": None,
+                "acquisition_period": {"start": None, "end": None},
+                "records": [
+                    {"source_record_id": f"capture-{offset}", "observation": row}
+                    for offset, row in enumerate(rows[start : start + per_source])
+                ],
+            }
+            sources.append(canonical_json(source).encode("utf-8"))
+        return {
+            "rows": rows,
+            "sources": sources,
+            "recipe": recipe,
+            "policy": shared["policy"],
+            "parameters": shared["parameters"],
+            "expected": [expected(index) for index in range(count)],
+        }
+
+    return make
+
+
+@pytest.fixture(scope="session")
 def split_input_factory(release_input_factory):
     """Invented split metadata/provenance only; no clock, private rows or DVC claim."""
     import copy

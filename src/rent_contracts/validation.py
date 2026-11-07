@@ -29,12 +29,22 @@ SCHEMA_NAMES = (
     "dataset-release",
     "restoration-report",
     "observation-inventory",
+    "observation-candidate-v2",
+    "dataset-release-v2",
 )
 MAX_DOCUMENT_BYTES = 1_048_576
 
 
 class ContractError(ValueError):
     """A safe diagnostic, deliberately excluding submitted values and raw validator text."""
+
+
+class DocumentSizeError(ContractError):
+    """A well-formed document exceeded the shared 1 MiB wire bound.
+
+    This refines, and never replaces, ``ContractError`` so a caller can tell a size limit
+    from a malformed document. The message and every existing handler stay unchanged.
+    """
 
 
 def _strict_tree(value: Any, depth: int = 0) -> None:
@@ -65,7 +75,7 @@ def canonical_json(document: Any) -> str:
     try:
         encoded = json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         if len(encoded.encode("utf-8")) > MAX_DOCUMENT_BYTES:
-            raise ContractError("document size limit exceeded")
+            raise DocumentSizeError("document size limit exceeded")
         return encoded
     except (ValueError, UnicodeError, RecursionError) as exc:
         if isinstance(exc, ContractError):
@@ -91,7 +101,7 @@ def load_document(raw: str | bytes) -> dict[str, Any]:
         raise ContractError("expected JSON text or UTF-8 bytes")
     try:
         if len(raw.encode("utf-8") if isinstance(raw, str) else raw) > MAX_DOCUMENT_BYTES:
-            raise ContractError("document size limit exceeded")
+            raise DocumentSizeError("document size limit exceeded")
         if isinstance(raw, bytes):
             # json.loads(bytes) auto-detects UTF-16/32 and strips a UTF-8 BOM.
             # Decode explicitly so every wire document follows the UTF-8 contract.
@@ -116,8 +126,10 @@ def _resources() -> tuple[dict[str, dict], Registry]:
     schemas = {}
     registry = Registry(retrieve=_no_remote_lookup)
     for name in SCHEMA_NAMES:
+        version = "v2" if name.endswith("-v2") else "v1"
+        filename = f"{name.removesuffix('-v2')}.schema.json"
         schema = load_document(
-            files("rent_contracts").joinpath("schemas", "v1", f"{name}.schema.json").read_bytes()
+            files("rent_contracts").joinpath("schemas", version, filename).read_bytes()
         )
         Draft202012Validator.check_schema(schema)
         schemas[name] = schema

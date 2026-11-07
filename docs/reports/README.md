@@ -10,6 +10,23 @@ revision. Test counts in the summaries describe the checks recorded for those re
 
 ## Current checkpoint and recovery
 
+**M2 increment 7 — 2026-11-07.** Development splits from reference-backed releases are
+**READY_FOR_REVIEW** on `main` at `7f69b17`, built on the still unreviewed increment 6 by the
+user's explicit authorization. Both prior report-consistency edits remain byte-identical. The
+[task plan](../tasks/2026-11-07-m2-reference-splits/plan.md) and
+[record](../tasks/2026-11-07-m2-reference-splits/task.json) identify exact verification and
+recovery. See the [design](../architecture/development-splits-reference-releases.md) and
+[increment report](m2-reference-splits.md). A complete split is one 1 MiB document, so the next
+increment is a versioned scalable split transport. A14 and the M2 exit gate remain open.
+
+**M2 increment 6 — 2026-11-07.** The bounded candidate and release reference
+increment is **READY_FOR_REVIEW** on `main` at `7f69b17`. The two prior
+report-consistency edits remain byte-identical. The [task plan](../tasks/2026-11-07-m2-inventory-references/plan.md)
+and [record](../tasks/2026-11-07-m2-inventory-references/task.json) identify exact
+verification and recovery. See the [v2 design](../architecture/observation-inventory-references-v2.md)
+and [increment report](m2-inventory-references.md). Development split adoption,
+its next increment, is the entry above. A14 and the M2 exit gate remain open.
+
 **M2 increment 5 — 2026-11-07.** The user approved Option A for a bounded
 Parquet observation inventory. Local branch `feat/m2-inventory-transport` is
 based on `003ada8`. The user approved the implementation at the second review

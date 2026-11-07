@@ -8,9 +8,11 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from rent_contracts import ContractError
+from rent_contracts import ContractError, load_document
 from rent_contracts.validation import MAX_DOCUMENT_BYTES
 
+from ._artifact_io import resolved_local_path
+from .candidates import INLINE_VERSION, REFERENCE_VERSION
 from .release_io import (
     _write_exclusive,
     finalize_restoration,
@@ -20,6 +22,8 @@ from .release_io import (
 )
 from .releases import (
     DVC_VERSION,
+    INVENTORY_MANIFEST_PATH,
+    INVENTORY_PARQUET_PATH,
     ReleaseError,
     build_restoration_report,
     content_digest,
@@ -215,9 +219,21 @@ class LocalDvcStore:
             if content_digest(read_artifact(workspace.root / path)) != expected:
                 raise ReleaseError("WORKSPACE_CONFIGURATION_CHANGED")
 
-    def track_payload(self, workspace: LocalWorkspace) -> dict:
+    def track_payload(
+        self, workspace: LocalWorkspace, *, contract_version: str = INLINE_VERSION
+    ) -> dict:
         self._guard(workspace)
-        artifacts = payload_inventory(workspace.root / "payload")
+        artifacts = payload_inventory(workspace.root / "payload", contract_version=contract_version)
+        if contract_version == REFERENCE_VERSION:
+            paths = {artifact["path"] for artifact in artifacts}
+            required = {
+                "candidate.json",
+                "quality-report.json",
+                INVENTORY_MANIFEST_PATH,
+                INVENTORY_PARQUET_PATH,
+            }
+            if not required < paths:
+                raise ReleaseError("INCOMPLETE_PAYLOAD")
         existing = workspace.root / "payload.dvc"
         if existing.exists() or existing.is_symlink():
             parse_dvc_metadata(read_artifact(existing))
@@ -268,6 +284,12 @@ class LocalDvcStore:
         verify_payload(
             manifest, workspace.root / "payload", expected_release_ref=expected_release_ref
         )
+        if manifest["contract_version"] == REFERENCE_VERSION:
+            status = self._execute(
+                self.executable, ["status", "--json", "payload.dvc"], workspace.root
+            )
+            if load_document(status):
+                raise ReleaseError("DVC_PAYLOAD_CHANGED")
         self._execute(
             self.executable, ["push", "-j", "1", "-r", "local-store", "payload.dvc"], workspace.root
         )
@@ -281,7 +303,10 @@ class LocalDvcStore:
         expected_release_ref: str,
     ) -> dict:
         validate_dataset_release(manifest, expected_release_ref=expected_release_ref)
-        destination = Path(destination)
+        if manifest["contract_version"] == REFERENCE_VERSION:
+            destination = resolved_local_path(destination)
+        else:
+            destination = Path(destination)
         if destination.exists() or destination.is_symlink():
             raise ReleaseError("OUTPUT_EXISTS")
         binding, raw = self._committed_binding(metadata_workspace, manifest["metadata"]["commit"])
@@ -295,9 +320,6 @@ class LocalDvcStore:
         _write_exclusive(consumer.root / "payload.dvc", raw)
         self._execute(
             self.executable, ["pull", "-j", "1", "-r", "local-store", "payload.dvc"], consumer.root
-        )
-        verify_payload(
-            manifest, consumer.root / "payload", expected_release_ref=expected_release_ref
         )
         report = build_restoration_report(manifest)
         finalize_restoration(
