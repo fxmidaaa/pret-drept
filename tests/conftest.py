@@ -81,6 +81,25 @@ def release_input_factory():
 
 
 @pytest.fixture(scope="session")
+def large_observation_inventory(release_input_factory):
+    """Synthetic identifiers sized to exceed the v1 aggregate JSON byte bound."""
+    template = release_input_factory()["candidate"]["observations"][0]
+    return [
+        {
+            **template,
+            "observation_id": "synthetic-obs-".ljust(122, "o") + f"{index:06d}",
+            "listing_id": "synthetic-listing-".ljust(122, "l") + f"{index:06d}",
+            "property_identity": {
+                **template["property_identity"],
+                "property_id": "synthetic-property-".ljust(122, "p") + f"{index:06d}",
+                "confidence": 1.0,
+            },
+        }
+        for index in range(1_800)
+    ]
+
+
+@pytest.fixture(scope="session")
 def split_input_factory(release_input_factory):
     """Invented split metadata/provenance only; no clock, private rows or DVC claim."""
     import copy

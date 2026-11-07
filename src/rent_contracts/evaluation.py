@@ -57,30 +57,43 @@ def validate_observation_reference(observation: dict) -> None:
             _instant(observation[field])
 
 
+class _ListingEvidence:
+    """Cross-record constraints shared by both inventory representations."""
+
+    def __init__(self) -> None:
+        self.captures = set()
+        self.confirmed_listings = {}
+
+    def add(self, observation: dict) -> None:
+        listing = observation["listing_id"]
+        capture = None
+        if observation["collected_at"] is not None:
+            capture = (listing, _instant(observation["collected_at"]))
+            if capture in self.captures:
+                raise ContractError("duplicate listing collection instant")
+        identity = observation["property_identity"]
+        if identity["status"] == "confirmed":
+            property_id = identity["property_id"]
+            prior = self.confirmed_listings.get(listing)
+            if prior is not None and prior != property_id:
+                raise ContractError("conflicting confirmed listing property identities")
+            self.confirmed_listings[listing] = property_id
+        if capture is not None:
+            self.captures.add(capture)
+
+
 def _observation_inventory(observations: list[dict]) -> dict[str, dict]:
     if type(observations) is not list or not observations:
         raise ContractError("observation inventory must be a nonempty list")
     inventory = {}
-    captures = set()
-    confirmed_listings = {}
+    evidence = _ListingEvidence()
     for observation in observations:
         validate_observation_reference(observation)
         observation_id = observation["observation_id"]
         if observation_id in inventory:
             raise ContractError("duplicate observation identity")
+        evidence.add(observation)
         inventory[observation_id] = observation
-        if observation["collected_at"] is not None:
-            capture = (observation["listing_id"], _instant(observation["collected_at"]))
-            if capture in captures:
-                raise ContractError("duplicate listing collection instant")
-            captures.add(capture)
-        identity = observation["property_identity"]
-        if identity["status"] == "confirmed":
-            prior = confirmed_listings.setdefault(
-                observation["listing_id"], identity["property_id"]
-            )
-            if prior != identity["property_id"]:
-                raise ContractError("conflicting confirmed listing property identities")
     return inventory
 
 
@@ -91,6 +104,51 @@ def observation_inventory_digest(observations: list[dict]) -> str:
     """
     inventory = _observation_inventory(observations)
     return _digest([inventory[key] for key in sorted(inventory)])
+
+
+class ObservationInventoryHasher:
+    """Hash ordered v1 references as one canonical array without storing the array.
+
+    Listing evidence persists across batches and uses at most one capture and
+    one confirmed listing entry per accepted record, up to max_records.
+    """
+
+    def __init__(self, *, max_records: int) -> None:
+        if type(max_records) is not int or max_records < 1:
+            raise ContractError("invalid observation inventory record limit")
+        self._max_records = max_records
+        self._count = 0
+        self._last_id = ""
+        self._evidence = _ListingEvidence()
+        self._hash = hashlib.sha256(b"[")
+
+    @property
+    def count(self) -> int:
+        return self._count
+
+    def add(self, observation: dict) -> None:
+        if self._count == self._max_records:
+            raise ContractError("observation inventory record limit exceeded")
+        validate_observation_reference(observation)
+        observation_id = observation["observation_id"]
+        if observation_id == self._last_id:
+            raise ContractError("duplicate observation identity")
+        if observation_id < self._last_id:
+            raise ContractError("observation identities must be strictly increasing")
+        encoded = canonical_json(observation).encode("utf-8")
+        self._evidence.add(observation)
+        if self._count:
+            self._hash.update(b",")
+        self._hash.update(encoded)
+        self._last_id = observation_id
+        self._count += 1
+
+    def digest(self) -> str:
+        if not self._count:
+            raise ContractError("observation inventory must be nonempty")
+        digest = self._hash.copy()
+        digest.update(b"]")
+        return "sha256:" + digest.hexdigest()
 
 
 def observation_eligibility_exclusions(observation: dict) -> frozenset[str]:

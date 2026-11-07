@@ -1,6 +1,7 @@
 """Actual DVC 3.67.1, synthetic metadata, owned local stores and disposable Git only."""
 
 import copy
+import hashlib
 import json
 import os
 import shutil
@@ -10,8 +11,14 @@ import pytest
 
 from rent_contracts import ContractError
 from rent_contracts.evaluation import validate_development_population
-from rent_contracts.validation import canonical_json
+from rent_contracts.inventory import MANIFEST_FILE, PARQUET_FILE
+from rent_contracts.validation import MAX_DOCUMENT_BYTES, canonical_json
 from rent_data.dvc_local import LocalDvcStore
+from rent_data.inventory_io import (
+    InventoryLimits,
+    verify_observation_inventory,
+    write_observation_inventory,
+)
 from rent_data.release_io import (
     COMPLETION_FILE,
     payload_inventory,
@@ -353,3 +360,62 @@ def test_old_release_materializes_identical_split_from_independent_actual_restor
         payload_inventory(revisions["workspace"].root / "payload")
         == revisions["releases"]["B"]["manifest"]["artifacts"]
     )
+
+
+def test_actual_local_dvc_preserves_inventory_from_exact_revision_and_fresh_cache(
+    local_dvc, tmp_path, large_observation_inventory
+):
+    """Transport fixture only. The production v1 release roster is still closed."""
+    store = tmp_path / "local-store"
+    store.mkdir()
+    producer = local_dvc.create_workspace(tmp_path / "producer", store=store)
+    source = producer.root / "payload"
+    raw = json.dumps(
+        large_observation_inventory, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    expected = "sha256:" + hashlib.sha256(raw).hexdigest()
+    manifest = write_observation_inventory(
+        source, iter(large_observation_inventory), limits=InventoryLimits(batch_rows=257)
+    )
+    assert len(raw) > MAX_DOCUMENT_BYTES
+    assert manifest["artifact"]["size_bytes"] > MAX_DOCUMENT_BYTES
+    before = {name: (source / name).read_bytes() for name in (MANIFEST_FILE, PARQUET_FILE)}
+    with pytest.raises(ReleaseError, match="UNEXPECTED_PAYLOAD_PATH"):
+        payload_inventory(source)
+    local_dvc._execute(local_dvc.executable, ["add", "payload"], producer.root)
+    revision = commit_metadata(local_dvc, producer, "synthetic-observation-inventory")
+    binding = local_dvc.metadata_binding(producer, revision)
+    assert binding["metadata"]["commit"] == revision
+    assert binding["dvc"]["file_count"] == 2
+    assert binding["dvc"]["size_bytes"] == sum(map(len, before.values()))
+    committed = local_dvc._execute(
+        local_dvc.git, ["--no-pager", "show", f"{revision}:payload.dvc"], producer.root
+    )
+    assert binding["metadata"]["digest"] == content_digest(committed)
+    local_dvc._execute(
+        local_dvc.executable,
+        ["push", "-j", "1", "-r", "local-store", "payload.dvc"],
+        producer.root,
+    )
+
+    consumer = local_dvc.create_workspace(tmp_path / "consumer", store=store)
+    cache = consumer.root / ".dvc/cache"
+    assert not cache.exists() or not any(cache.iterdir())
+    (consumer.root / "payload.dvc").write_bytes(committed)
+    assert not (consumer.root / "payload").exists()
+    local_dvc._execute(
+        local_dvc.executable,
+        ["pull", "-j", "1", "-r", "local-store", "payload.dvc"],
+        consumer.root,
+    )
+    restored = consumer.root / "payload"
+    assert any(cache.rglob("*.dir"))
+    assert (
+        verify_observation_inventory(
+            restored, expected_inventory_ref=expected, limits=InventoryLimits(batch_rows=31)
+        )
+        == manifest
+    )
+    for name, raw_bytes in before.items():
+        assert (source / name).read_bytes() == (restored / name).read_bytes() == raw_bytes
+        assert (source / name).stat().st_ino != (restored / name).stat().st_ino

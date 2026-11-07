@@ -1,0 +1,185 @@
+{
+  "acceptance_criteria": [
+    "Exact v1 digest and lossless rows at small scale, plus streaming beyond the old JSON aggregate cap.",
+    "Bounded, typed, semantically verified artifacts reject corruption and failures before finalized output or row exposure.",
+    "Independent synthetic DVC restoration verifies the bytes and logical identity.",
+    "Record final checks and recovery, stop READY_FOR_REVIEW uncommitted, and keep the M2 gate open."
+  ],
+  "affected_modules": [
+    "rent_contracts evaluation, manifest and schema registry",
+    "rent_data inventory transport and optional PyArrow backend",
+    "development lock, packaging, synthetic tests, architecture and task/report documentation"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "User approved Option A after the design review.",
+    "Reconciled branch/HEAD, frozen architecture, M0/A14, previous task and development guide.",
+    "Captured 193 initial file hashes/status/diff under /private/tmp/pret-drept-m2-inventory-i3anr50v and created feat/m2-inventory-transport at unchanged HEAD.",
+    "Persisted the L1 plan and recovery before source/dependency edits.",
+    "Added the versioned inventory manifest, shared v1 population validation and ordered streaming logical digest.",
+    "Implemented the pinned typed Parquet profile and bounded verified local IO. The manifest is installed after readback and the second decode pass retains the verified descriptor.",
+    "Added the hash-locked PyArrow 26.0.1 wheel dependency, optional package extra, architecture and setup documentation, and shipped synthetic tests.",
+    "Initial 182 focused and 12 DVC tests passed. The DVC fixture restores the 1,800-row inventory from exact Git metadata through a fresh local cache.",
+    "Corrected interim test placement and key/value metadata injection. Final checks follow the last implementation edit.",
+    "Completed final-code verification: 297 focused, 12 actual DVC, 854 checkout, 649 per distribution, 38 frontend and all scoped static/workflow/notebook checks.",
+    "Preservation proof accounts for 193 baseline files and 20 scoped paths. Verified frozen implementation hashes, unchanged HEAD, empty index, both unrelated dirty files and existing pins/schemas.",
+    "Recorded pass/fail/skip/unavailable results and recovery. Freeze implementation and rerun the verification commands after the evidence-only edits.",
+    "Stop at second human review with suggested message feat(data): add verified Parquet observation inventory transport.",
+    "User approved the implementation at second review. Reconciled all 203 reviewed paths byte-for-byte and all nine final check exits before recording approval.",
+    "After second review, user requested push please. Verified all 203 files match the approved snapshot, the origin feature ref was absent, and saved publication baseline at /private/tmp/pret-drept-m2-inventory-publish-509w1mbt."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "COMPLETED local engineering increment after the user's second review approval. The verified standalone Parquet inventory is uncommitted and both unrelated edits are preserved. Source publication, real-data adoption, feature-lineage and the M2 evaluation gate are separate.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-07T16:49:55.937469+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-07T16:49:55.989569+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-07T16:49:55.989920+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-07T16:49:55.990316+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-07T17:09:01.022230+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-07T17:12:52.669657+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-07T17:18:46.054844+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "Share v1 observation rules, add the bounded manifest, then implement explicit typed Parquet encoding and verified local IO.",
+    "Preserve dependency pins and legacy interfaces, exercise synthetic adversarial/large/DVC fixtures, then run the development guide checks.",
+    "Record final evidence, exact recovery, and the next increment in plan.md."
+  ],
+  "important_decisions": [
+    "Keep one v1 logical digest across JSON/Parquet and separate physical file identity.",
+    "Keep existing release/split envelopes and DVC roster intact. Review reference-based adoption later.",
+    "Require stable ordered input and exact local schema under explicit bounds with synthetic fixtures only.",
+    "Use a lossless nullable confidence discriminator, nullable exact timestamp strings and the pinned uncompressed Parquet profile.",
+    "Set hard caps of 100,000 rows, 128 MiB physical bytes, 2,048 batch rows, 4,096 row groups, 8 MiB footer and 8 KiB manifest. Identity indexes are linear under the row cap.",
+    "Verify the complete file and population before exposing rows, then consume from the same descriptor under caller-owned immutable directory assumptions.",
+    "The second review closes the local engineering task. Source publication remains a separate user instruction.",
+    "Publish only the approved 20-path increment on the explicit feature ref. Preserve the two unrelated reporting edits and all reviewed implementation hashes."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Follow plan.md#source-publication-follow-up. Reconcile HEAD, index, remote and /private/tmp/pret-drept-m2-inventory-publish-509w1mbt. Publish the exact reviewed source and verify its Linux CI. Both unrelated edits stay local. The M2 exit gate remains open.",
+  "objective": "Implement approved Option A, a bounded lossless synthetic-first Parquet observation inventory with a verifiable JSON manifest.",
+  "original_authorized_request": "docs/tasks/2026-11-07-m2-observation-inventory/request.md",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Frozen architecture, existing v1 interfaces and bounds, and unchanged eligibility/split methodology.",
+    "Explicit declared times and property identity, with no target data or inferred facts.",
+    "Preserve both unrelated reporting edits and all prior source outside this increment."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Additive observation inventory contract/codec/IO, optional PyArrow 26.0.1 dependency, synthetic tests and documentation.",
+    "Actual local DVC integration in disposable synthetic repositories only. Preserve the existing v1 release payload roster.",
+    "Second human review before any source publication. No real data, trusted operations or model experiments.",
+    "User subsequently authorized publication of the approved increment and associated evidence on feat/m2-inventory-transport, with exact-revision CI verification."
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261107-M2-INVENTORY",
+  "verification_evidence": [
+    {
+      "check": "compatibility-and-streaming",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#verification-on-final-implementation 297 focused checks, including 74 new. Independent v1 oracle, 1800 synthetic observations, 1796401 canonical JSON and 1373881 Parquet bytes. Legacy JSON cap preserved.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "verified-inventory-io",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#verification-on-final-implementation Round trip preserves exact time/null/numeric values. Verified bytes, metadata and every row before exposure. Rejected altered populations, invalid layouts, unsafe paths, cap failures and incomplete writes.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "local-dvc-transport",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#verification-on-final-implementation 12 actual DVC 3.67.1 tests. Disposable fixture restored both exact files above the aggregate JSON size limit from committed metadata and an independent empty cache. Original v1 roster closed.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "locked-dependencies",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#verification-on-final-implementation Verified and installed PyArrow 26.0.1 binary using wheel hashes. Only approved pin and binary-only option added. Both uv and bundled pip offline lock dry runs and local compatibility check passed.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#verification-on-final-implementation 854 passed, zero failed or skipped, one existing Starlette/httpx deprecation warning.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "source-and-wheel",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#verification-on-final-implementation 649 passed each, with checkout editable import bypassed and all sixteen schemas available.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "static-and-frontend",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#verification-on-final-implementation Ruff, formatting of 54 files, architecture, actionlint 1.7.12, both tracked notebooks and all 38 Node tests passed.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "context-and-preservation",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#verification-on-final-implementation 193 starting files accounted for, 183 byte-identical including both pre-existing edits, 10 scoped changes, 10 additions, 13 fixed implementation hashes, 25 valid task records and clean index. HEAD unchanged.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "interim-checks",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#verification-on-final-implementation Cache permissions, missing pip module in the DVC environment, misplaced new DVC test, synthetic footer metadata and zsh status wrapper issues recovered. See the evidence table for exact recovery.",
+      "required": false,
+      "status": "failed"
+    },
+    {
+      "check": "outside-scope",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#verification-on-final-implementation Real/private data, UI smoke, feature/target lineage, experiments, publication and protected operations outside the approved increment.",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "new-revision-ci-and-independent-verification",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#verification-on-final-implementation Exact review-tree Linux CI awaits authorized source publication. Independent real-data/protected checks and M2 exit-gate evidence require later authorized work.",
+      "required": false,
+      "status": "unavailable"
+    },
+    {
+      "check": "second-human-review",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#second-review-approval User replied \"approved.\" to the implementation review. Verified the exact review tree and final check exits before recording the approval.",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "compatibility-and-streaming",
+    "verified-inventory-io",
+    "local-dvc-transport",
+    "locked-dependencies",
+    "checkout",
+    "source-and-wheel",
+    "static-and-frontend",
+    "context-and-preservation"
+  ]
+}

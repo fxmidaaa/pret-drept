@@ -10,6 +10,21 @@ revision. Test counts in the summaries describe the checks recorded for those re
 
 ## Current checkpoint and recovery
 
+**M2 increment 5 — 2026-11-07.** The user approved Option A for a bounded
+Parquet observation inventory. Local branch `feat/m2-inventory-transport` is
+based on `003ada8`. The user approved the implementation at the second review
+and the local task is **COMPLETED**. Local checks passed with 854
+checkout tests, 649 per distribution, 297 focused, 12 actual DVC and 38
+frontend tests. The
+[task plan](../tasks/2026-11-07-m2-observation-inventory/plan.md),
+[task record](../tasks/2026-11-07-m2-observation-inventory/task.json),
+[design](../architecture/observation-inventory-v1.md), and
+[report](m2-observation-inventory.md) contain implementation and recovery.
+The user's subsequent “push please” authorizes
+[source publication](../tasks/2026-11-07-m2-observation-inventory/plan.md#source-publication-follow-up)
+on this feature branch. Both unrelated report-consistency edits remain local.
+A14 and the M2 exit gate remain open.
+
 **Increment-4 source publication follow-up — 2026-11-06:** the user reviewed the
 implementation, clarified feature-leakage limits, then requested **"push please"**.
 Source commit/push is authorized on `feat/m2-development-splits`; earlier no-push/

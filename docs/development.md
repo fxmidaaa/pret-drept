@@ -43,7 +43,7 @@ the self-contained contract, prediction and bundle, task lifecycle, and architec
 tests that require the application, workflow files, or project task records in checkout CI.
 `scripts/check_distribution.py` builds the wheel from the source archive and runs the shipped
 suite twice from a temporary extraction. The source run imports from the extracted `src/` tree.
-The wheel run imports from the wheel and exercises all fifteen packaged schemas. Both runs bypass
+The wheel run imports from the wheel and exercises all sixteen packaged schemas. Both runs bypass
 the checkout's editable install and use dependencies from the locked development environment.
 
 Tracked notebooks are published as source with cleared outputs. Keep executed copies that use
@@ -159,8 +159,8 @@ M2 increment 3 implements [development release contracts and local restoration](
 The optional foundations `data` extra declares **PyYAML 6.0.3**, already present in
 the existing development lock. A standalone foundations consumer can install
 `.[data]`/the wheel's `data` extra for the metadata parser. Pure JSON release/IO
-helpers need no DVC installation. Preserve `requirements.txt` and
-`requirements-dev.lock`; DVC is deliberately absent from both.
+helpers need no DVC installation. Keep DVC out of the legacy runtime and general
+development lock.
 
 `requirements-data-tools.in` pins DVC **3.67.1** and its source-build backend;
 `requirements-data-tools.lock` pins/hashes the separate complete dependency closure
@@ -232,3 +232,27 @@ resources. This does not establish concurrent/power-loss guarantees or trusted
 verification. Fixed membership alone cannot certify feature/target-lineage leakage
 freedom. Policy review, real chronology/identity, scalable transport, isolation and
 the M2 exit gate remain later prerequisites.
+
+## Observation inventory transport
+
+M2 increment 5 adds a [typed observation inventory](architecture/observation-inventory-v1.md)
+with a versioned JSON manifest. The optional `parquet` extra pins PyArrow 26.0.1.
+The general development lock includes the exact pin and wheel hashes and restricts
+PyArrow to binary wheels. Run the locked install above to add it to an existing
+development environment. The original runtime and separate DVC tool environments
+retain their existing pins. Consumers of the foundations package can install its
+`parquet` extra when they need the inventory codec. Its import is lazy, and a
+missing or wrong backend fails when an inventory operation needs it.
+
+Run focused checks, then the aggregate checks above.
+
+```bash
+.venv/bin/python -m pytest -p no:cacheprovider -q -ra tests/foundations/test_observation_inventory.py tests/foundations/test_evaluation_contracts.py tests/foundations/test_release_io.py tests/foundations/test_development_splits.py tests/foundations/test_split_io.py
+.venv/bin/python -m pytest -p no:cacheprovider -q -ra tests/integration/test_dvc_restoration.py
+```
+
+The source and wheel suites exercise the packaged schema and synthetic codec
+cases. The checkout integration uses the separate pinned DVC environment and a
+disposable synthetic Git repository with a local store. It restores the
+inventory into a fresh cache from the exact metadata revision. Reference-based
+candidate, release and split adoption remains a separate increment.

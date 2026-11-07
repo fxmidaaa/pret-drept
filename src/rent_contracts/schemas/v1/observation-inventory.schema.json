@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:observation-inventory:1.0.0",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "observation_contract_version": { "const": "1.0.0" },
+    "schema_profile": { "const": "observation-reference-parquet-v1" },
+    "writer_profile": { "const": "pyarrow-26.0.1-parquet-2.6-uncompressed-v1" },
+    "observation_count": { "type": "integer", "minimum": 1, "maximum": 100000 },
+    "observations_digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "artifact": {
+      "type": "object",
+      "properties": {
+        "path": { "const": "observations.parquet" },
+        "digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+        "size_bytes": { "type": "integer", "minimum": 12, "maximum": 134217728 }
+      },
+      "required": ["path", "digest", "size_bytes"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contract_version", "observation_contract_version", "schema_profile", "writer_profile",
+    "observation_count", "observations_digest", "artifact"
+  ],
+  "additionalProperties": false
+}

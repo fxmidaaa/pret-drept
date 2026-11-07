@@ -28,6 +28,7 @@ SCHEMA_NAMES = (
     "observation-candidate",
     "dataset-release",
     "restoration-report",
+    "observation-inventory",
 )
 MAX_DOCUMENT_BYTES = 1_048_576
 
