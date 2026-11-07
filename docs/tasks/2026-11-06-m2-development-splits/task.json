@@ -1,0 +1,236 @@
+{
+  "acceptance_criteria": [
+    "Existing v1 evaluation/schema/interface behavior preserved with shared derivation and independent handwritten oracles",
+    "Externally fixed release/policy refs bind complete inventory and policies; invalid refs/populations/times/provenance fail safely",
+    "Deterministic canonical membership/artifacts across ordering/interpreters/restores; unknown facts and complete training reference preserved",
+    "Exclusive bounded atomic split I/O fails without finalized output or prior artifact/release modification",
+    "Actual synthetic DVC integration and relevant checkout/source/wheel/static/architecture/workflow/docs checks recorded with recovery",
+    "Stop READY_FOR_REVIEW, uncommitted, with proposed commit message; no M2 gate or leakage-certification claim"
+  ],
+  "affected_modules": [
+    "rent_contracts.evaluation",
+    "rent_data.splits/split_io/release_io",
+    "foundation and actual DVC integration tests",
+    "MANIFEST.in and architecture/development/report/task docs"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Read actual branch/HEAD/status, architecture, M0/A14, current checkpoint/task/code/tests and verification guide",
+    "User approved Option A after comparison with B/C; no new split-plan schema",
+    "Captured 184 starting file hashes/diff/status in /private/tmp/pret-drept-m2-splits-1t27abqi",
+    "Created feat/m2-development-splits at unchanged e56c115; preserving the two unrelated edits",
+    "Persisted L1 plan/acceptance criteria/verification/recovery before source edits",
+    "Implemented shared v1 public membership derivation with existing schema/calendar checks, pure release-bound builder/validator, shared atomic JSON creation and verified local split writer/reader",
+    "Existing evaluation and release I/O checks passed 135 unchanged behavioral cases; new handwritten core and I/O checks pass after correcting one write-interruption fixture to avoid intercepting reads",
+    "Actual disposable DVC integration: 11 passed, including A-after-B split generation/readback from two independently restored copies and exact handwritten four-record assignments",
+    "Documentation/packaging integrated; fifteen wire schemas and all dependencies unchanged; froze 11 implementation/schema-independent source/test/package hashes before aggregate verification",
+    "Final focused suite passed 223 cases: 49 new builder, 39 new I/O, 114 byte-identical existing evaluation and 21 restoration I/O cases",
+    "Final actual DVC suite passed 11 cases including old A after B materialized/read twice from independent restores, exact handwritten memberships, identical artifact bytes and source preservation",
+    "Final checkout passed 779 tests, zero failed/skipped, one existing Starlette/httpx warning; existing 12 private-model regressions ran on synthetic requests without training",
+    "Extracted source and wheel passed 575 tests each with editable checkout bypassed; all fifteen schemas and new deterministic tests available",
+    "Ruff/format (50 files), architecture, actionlint, two tracked notebooks, 38 frontend tests and exact DVC 3.67.1 passed; no dependency/workflow/checker/schema change",
+    "Final preservation proof accounts for 184 initial files: 172 byte-identical and 12 scoped modifications to initially clean files; nine new files / 21 increment files, 11 frozen implementation hashes, 24 valid task records and local links/anchors",
+    "Persisted all passed/failed/skipped/unavailable results, exact recovery, architectural limits and next-increment recommendation. Stop uncommitted for second HITL with proposed commit message; M2/A14 remain open",
+    "User requested \"push please\" after implementation review and leakage clarification. Source publication is now explicitly authorized. Captured 193 reviewed/pre-existing file hashes, diff/status in /private/tmp/pret-drept-m2-splits-publish-ho_rfili; original 184-file preservation proof and all 11 implementation hashes still match. Stage only the 21 reviewed paths; both unrelated edits remain excluded.",
+    "Committed the exact reviewed 21-file increment as 52654bc23fe54b8d529d476f8c87ae53a9c1652a and pushed origin/feat/m2-development-splits without force; git ls-remote independently matched the source SHA. No main change or new PR/merge.",
+    "Linux push CI 42206582156 completed successfully for exact source 52654bc23fe54b8d529d476f8c87ae53a9c1652a: 767 passed/12 absent-private-model skips, 575 per distribution, 38 frontend passes, all static/workflow/notebook/architecture/DVC steps. Run metadata, steps and logs checked.",
+    "Publication proof preserves the entire 193-file reviewed tree except five authorization/evidence documents; all 11 implementation hashes and both unrelated reporting files remain byte-identical. Index empty after source push with only the two unrelated dirty files.",
+    "Recording a documentation-only publication evidence follow-up; rerun task/link/preservation checks, task tests, workflow/notebooks before commit/push. Bounded source task is complete after user review/publication; real-data/protected/feature-lineage and M2/A14 gates remain open."
+  ],
+  "execution_identifiers": {
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/42206582156"
+    ],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "COMPLETED bounded increment 4 and user-authorized source publication only. Reviewed 21-file source committed as 52654bc23fe54b8d529d476f8c87ae53a9c1652a and pushed to feat/m2-development-splits; exact remote SHA and successful Linux CI verified: 767 passes/12 private-model skips, 575 per distribution, 38 frontend passes and remaining static/DVC checks. Original local evidence remains 779 checkout passes with all 11 implementation hashes unchanged. Both unrelated reporting edits preserved locally. Documentation follow-up records source anchors; resolve actual branch HEAD/CI for recovery. No main change, new PR/merge, data publication, ML experiment, effective policy activation, protected verification, promotion/deployment, feature leakage certification or M2/A14 exit-gate success is claimed.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-06T09:27:48.797467+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-06T09:27:48.848536+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-06T09:27:48.848893+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-06T09:27:48.849260+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-06T09:47:40.964658+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-06T09:54:53.838190+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-06T10:56:57.933808+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-06T10:56:57.936855+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-06T11:04:05.962228+00:00"
+    },
+    {
+      "state": "COMPLETED",
+      "timestamp": "2026-11-06T11:04:05.963406+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "See docs/tasks/2026-11-06-m2-development-splits/plan.md"
+  ],
+  "important_decisions": [
+    "Reuse the existing v1 schemas and membership semantics; no new selector or effective policy",
+    "Pure semantics/data assembly separate from verified local I/O; input digests do not confer authorization",
+    "Explicit creation provenance is required for deterministic full artifact identity; no implicit wall clock",
+    "Sharing implementation requires independent expected fixtures and unchanged existing regressions",
+    "Existing rule functions and unaffected release I/O are AST-identical; all fifteen schema files, locks and original evaluation tests remain byte-identical. New generation order does not narrow legacy validator order acceptance",
+    "Temporal boundary fields reuse the current bundled schemas internally in rent_contracts; data imports only the public derivation helper, with no new wire contract or duplicated timestamp grammar",
+    "The same atomic JSON create-without-replacement primitive now serves restoration markers and split artifacts. Temporary prefix is .artifact-; final semantic/payload validation remains in the restoration wrapper",
+    "New output stays outside the restored workspace. Expected release/policy/split references and complete inventory are rechecked on read; pure metadata correspondence and local reports confer no authorization or leakage certification",
+    "Creation timestamp/source snapshot are explicit inputs. Same complete inputs reproduce identical bytes; provenance/release/policy changes intentionally change split identity even with identical membership",
+    "Future gates remain real chronology/identity/projection/policy review, scalable transport, approved storage/access/retention and isolated baseline/feature-lineage execution; no such gate is passed by this source increment",
+    "Latest user source-push instruction approves publication of the reviewed implementation with its recorded feature-leakage limitations. Preserve both unrelated files; no policy, data or model acceptance is inferred.",
+    "Historical/future prerequisite outside this completed source task: No current required local check is blocked. Later real-data work requires independently reviewed policies/projection, defensible chronology or approved remediation, reviewed identities, scalable transport and storage/access/retention/quality decisions",
+    "Historical/future prerequisite outside this completed source task: New-revision Linux CI and independent protected/runtime/feature-lineage evidence remain unavailable; M2/A14 gates are not closed by metadata construction",
+    "The user explicitly approved source publication after the leakage-limit explanation. Source push and exact-source Linux CI passed; completion applies only to this engineering/source-publication task. M2/A14, actual feature leakage verification and real-data/protected acceptance remain incomplete."
+  ],
+  "known_blockers": [],
+  "next_recovery_action": "Source increment/publication completed after user review. Inspect actual local/remote feat/m2-development-splits HEAD, status/index/diff and exact-head CI; expect only the two original report-consistency edits. Read plan.md#publication-verification. Source anchor 52654bc23fe54b8d529d476f8c87ae53a9c1652a and source CI 42206582156 are verified; the documentation follow-up records those anchors, so do not reset to them. Publication snapshot/proofs: /private/tmp/pret-drept-m2-splits-publish-ho_rfili; original 11 implementation hashes under /private/tmp/pret-drept-m2-splits-1t27abqi. Preserve all work and never force push/merge. Propose scalable metadata-inventory transport under intent/proposals/HITL/implementation/HITL before new coding; all real-data, chronology/identity/policy, feature-lineage and M2 gates remain open.",
+  "objective": "Implement approved Option A development split materialization and perform the subsequently user-authorized source publication; preserve all real-data/ML/protected gates",
+  "original_authorized_request": "docs/tasks/2026-11-06-m2-development-splits/request.md",
+  "pending_approvals": [],
+  "protected_invariants": [
+    "Frozen architecture; independent data/public contracts/ML/harness boundaries; no policy activation",
+    "Complete fixed populations, explicit unknown chronology/identity, no target-based selection or fabricated real facts",
+    "Both unrelated reporting files stay byte-identical; no commit/push before second HITL and later publication instruction"
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "Shared public v1 membership derivation, pure release-bound split building/validation, verified local split artifact I/O, shared atomic create primitive, synthetic tests and documentation",
+    "Preserve all prior changes; no wire schema/dependency/methodology change, real/private data, source publication, protected operation or model experiment",
+    "User-authorized publication follow-up supersedes the original no-source-publication restriction: commit/push reviewed increment 4 on feat/m2-development-splits without force, verify remote SHA and exact-source Linux CI, persist evidence. No new PR/merge, data publication or experiment."
+  ],
+  "state": "COMPLETED",
+  "task_id": "RP-20261106-M2-SPLITS",
+  "verification_evidence": [
+    {
+      "check": "contract-compatibility",
+      "reference": "docs/tasks/2026-11-06-m2-development-splits/plan.md#verification--final-implementation. All 114 original evaluation cases pass byte-identically; all 15 wire schemas and original assignment/uncertainty functions remain unchanged (AST proof). Existing valid array order and fixed-population interfaces preserved; 21 restoration I/O cases pass after shared atomic creation extraction.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "split-builder",
+      "reference": "49 new builder cases passed in the final 223-test focused suite, full checkout and both distributions. Handwritten complete assignments, exact accumulating reasons, boundaries/offsets, full release inventory/policy/ref checks, uncertain training, empty populations, source/provenance-sensitive identity, fixed candidate populations and fresh-interpreter/hash-seed determinism. /private/tmp/pret-drept-m2-splits-1t27abqi/focused.log.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "split-io",
+      "reference": "39 new I/O cases passed in final focused/checkout/source/wheel runs. Reverified source bytes/report, separate exclusive outputs, canonical readback with three expected identities, no output on invalid metadata, malformed/missing/oversized/symlink/FIFO states, source changes after generation, resealed tampering, existing output preservation, mkstemp/partial-write/fsync/link/mkdir failure and cleanup checks. Frozen shared-primitive source passed legacy restoration tests.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "actual-dvc-integration",
+      "reference": "11 actual disposable local DVC tests passed, including the new old-A-after-B restore/materialize/readback case from two independent fresh-cache consumers. Handwritten four-record assignments, fixed comparison population, equal canonical split bytes and unchanged A/producer B payloads checked. Fixture commits only in owned disposable repositories, no mocked successful recovery. Included again in final 779-test checkout run.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout",
+      "reference": ".venv/bin/python -m pytest -p no:cacheprovider -q -ra: 779 passed, zero failed/skipped after final source edits; one existing Starlette/httpx warning. Twelve existing private-model regressions used synthetic requests, no training. /private/tmp/pret-drept-m2-splits-1t27abqi/checkout-results.json and checkout.log.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "distribution",
+      "reference": ".venv/bin/python scripts/check_distribution.py: 575 passed from extracted source and 575 against the wheel; editable checkout bypassed. New deterministic split tests and all 15 schemas exercised; actual DVC integration stays checkout-only. /private/tmp/pret-drept-m2-splits-1t27abqi/distribution-results.json and distribution.log.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "static-architecture-workflow",
+      "reference": "Development-guide scoped Ruff check/format passed (50 files), unchanged architecture checker passed, actionlint 1.7.12 passed, two tracked notebooks passed, 38 offline frontend tests passed, existing separate DVC executable reports 3.67.1. No lock, package dependency, workflow or checker mutation. /private/tmp/pret-drept-m2-splits-1t27abqi/static-results.json and logs.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "documentation-preservation",
+      "reference": "Final check_documentation.py under /private/tmp/pret-drept-m2-splits-1t27abqi verifies 184 initial files accounted for: 172 byte-identical and 12 authorized modifications to initially clean files, nine new files/21 increment files; 11 implementation hashes unchanged, original rule functions/unaffected release I/O AST-identical, 24 task records valid, local links/anchors in nine Markdown files, all 15 schemas unchanged, clean whitespace/index, original e56c115 HEAD and new local feat/m2-development-splits branch. Both unrelated report-consistency hashes unchanged. Rerun after final evidence edits; documentation-result.json records exact result.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "initial-io-fixture",
+      "reference": "Resolved before final verification: initial focused I/O run 59 passed/1 failed because the partial-write fixture also intercepted read-mode os.fdopen, failing before the intended operation. Restricted interception to write mode; the real partial write now fails safely and leaves no final artifact. Final I/O/restoration run passed 60 cases and all aggregate checks passed. No unresolved required failure.",
+      "required": false,
+      "status": "failed"
+    },
+    {
+      "check": "real-data-publication",
+      "reference": "No real/private input inspection/projection, acquisition/enrichment, data/split publication or production remote. Recovery: independent projection/handling and domain/eligibility/cutoff/unseen/matching review; authorized defensible chronology or approved remediation, reviewed property pairs, scalable inventory transport and storage/access/retention/quality decisions. Use a separately approved increment; do not infer rights from digests or this task.",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "ml-protected-runtime",
+      "reference": "No model experiment, feature/target-aggregate execution, benchmark, protected label/runtime verification, promotion or deployment. Recovery: approved immutable inputs/splits and supported isolated runtime, appropriate external authorization, reproducible baseline execution and independent source/lineage/feature leakage verification. Metadata consistency cannot substitute.",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "browser-smoke",
+      "reference": "UI unchanged; 38 frontend tests pass. Recovery: perform synthetic real-browser smoke checks when a later increment changes that boundary.",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "linux-ci",
+      "reference": "Supersedes implementation-phase unavailable status: https://github.com/fxmidaaa/pret-drept/actions/runs/42206582156 completed successfully for push event and exact source 52654bc23fe54b8d529d476f8c87ae53a9c1652a. Metadata, job/steps and logs checked: 767 passed/12 private-model skips, 575 source and wheel each, 38 frontend passes. Final evidence-only commit must be checked at its actual head; no protected/model/data acceptance inferred.",
+      "required": false,
+      "status": "passed"
+    },
+    {
+      "check": "external-policy-isolation",
+      "reference": "Independent real-data policy/identity/chronology review and effective trusted storage/access/isolation controls are not established by this increment. Recovery: responsible external owners approve/provision and independently verify effective controls and source evidence before real-data use. No credentials/authority through task or source declarations.",
+      "required": false,
+      "status": "unavailable"
+    },
+    {
+      "check": "m2-exit-gate",
+      "reference": "No real reproducible isolated baseline or defensible future-market/unseen-property evaluation. Recovery: resolve chronology or approved remediation, reviewed property identity, projection/policies, scalable input/split transport, storage/access/retention and isolated feature/training execution; then obtain the required independent verification. A14 remains open, no invented benchmark/date substitute.",
+      "required": false,
+      "status": "unavailable"
+    },
+    {
+      "check": "source-publication",
+      "reference": "docs/tasks/2026-11-06-m2-development-splits/plan.md#publication-verification. Exact 21 index paths/content and all 11 implementation hashes matched the reviewed source. Commit 52654bc23fe54b8d529d476f8c87ae53a9c1652a pushed without force to feat/m2-development-splits; git ls-remote matched. Linux push CI https://github.com/fxmidaaa/pret-drept/actions/runs/42206582156 passed for exact source: 767 passes/12 private-model skips, 575 per distribution, 38 frontend passes and all workflow/notebook/static/architecture/DVC checks. Both unrelated edits preserved locally; documentation follow-up records evidence only. Resolve actual branch HEAD/CI for recovery.",
+      "required": true,
+      "status": "passed"
+    }
+  ],
+  "verification_requirements": [
+    "contract-compatibility",
+    "split-builder",
+    "split-io",
+    "actual-dvc-integration",
+    "checkout",
+    "distribution",
+    "static-architecture-workflow",
+    "documentation-preservation",
+    "source-publication"
+  ]
+}

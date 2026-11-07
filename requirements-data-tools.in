@@ -1,0 +1,4 @@
+# Approved local data tooling; deliberately separate from the ML/development lock.
+dvc==3.67.1
+# ANTLR's source distribution builds with this explicitly bootstrapped backend.
+setuptools==82.0.1

@@ -45,7 +45,7 @@ def test_all_workflows_pass_pinned_semantic_validation(actionlint):
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-@pytest.mark.parametrize("name", ["MPLCONFIGDIR", "NUMBA_CACHE_DIR"])
+@pytest.mark.parametrize("name", ["MPLCONFIGDIR", "NUMBA_CACHE_DIR", "RENT_DATA_DVC"])
 def test_runner_directory_in_job_environment_is_rejected(actionlint, name):
     workflow = yaml.load(WORKFLOW.read_text(), Loader=yaml.BaseLoader)
     job = workflow["jobs"]["foundations"]

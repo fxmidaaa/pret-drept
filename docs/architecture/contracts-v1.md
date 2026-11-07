@@ -32,6 +32,28 @@ candidate populations. These development-only contracts require policy review
 before real-data use and do not expose restricted final-holdout details or certify
 feature leakage, a dataset release or the M2 exit gate.
 
+M2's second increment adds [observation provenance and unpublished candidates](observation-candidates-v1.md):
+`observation-source`, `observation-quality-report` and `observation-candidate`.
+The independent `rent_data` implementation verifies supplied metadata bytes and
+rebuilds complete projections, lineage and aggregate counts through public contracts.
+Raw-source/policy references remain declarations; these artifacts are not approved
+dataset releases, and no real-data access or publication is implied.
+
+M2's third increment adds [development release sealing and local DVC restoration](dataset-releases-v1.md):
+`dataset-release` and `restoration-report`. A sealed candidate binds an exact committed
+DVC metadata revision, native DVC directory object, separate SHA-256 artifact roster
+and existing candidate provenance. Actual local restoration rehashes bytes and
+rebuilds the complete candidate before a completion report is written. There is no
+publication, retention approval, protected resolver or evaluation-policy change.
+
+M2's fourth increment adds [development split materialization](development-splits-v1.md)
+using the existing `development-split` and `evaluation-policy` wire contracts.
+A public membership derivation helper shares v1 semantics with validation; the
+independent data builder binds complete release metadata, policy and explicit
+temporal/provenance inputs. Verified local I/O reconstructs the restored candidate
+and writes a separate split artifact. No new schema, effective policy or benchmark
+is introduced.
+
 Schemas are loaded from bundled local resources. External schema lookup is denied; adapter schemas are explicitly supplied by the caller's registry. No configuration can select a Python import path, command, host mount, credentials or runtime security options.
 
 Identifiers such as `record_id` and `task_id` contain 1 to 128 characters. The first
@@ -48,7 +70,11 @@ to the complete string. Identity comparisons use the submitted value as-is.
 | `train-request` | `contract_version`, `model_family`, `configuration`, resolved `training_partition` and nullable `validation_partition`, `dataset_ref`, `split_ref`, `random_seed`, nullable approved `checkpoint_ref`, assigned `output_directory` |
 | `predict-batch-request` | `contract_version`, exact `bundle_ref` (resolved path plus digest), `input_path`, `input_schema_version`, `inference_configuration`, assigned `output_path` |
 
-Dataset/split digests identify the release and manifest envelopes. A later DVC release will also retain its own DVC object identity (§8.2). Retrieval must be verified separately. Snapshot references must already be sealed in this initial protocol. A future sealable-reference workflow requires its own validated admission path.
+Dataset/split digests identify the release and manifest envelopes. The development
+release now retains its separate DVC object identity (§8.2); local restoration verifies
+retrieval without implementing trusted admission. Snapshot references must already be
+sealed in this initial protocol. A future sealable-reference workflow requires its
+own validated admission path.
 
 Resource shape is positive integer CPU, MiB and duration, plus nonnegative GPU count. Policy maxima, approved image, authenticated principal, output paths, resource enforcement and retry limits belong to trusted admission; callers cannot grant them through these fields. Initial experiment operation is training; promotion/deployment are never workload operations. The explicit seed is a necessary identity input, not a promise of cross-hardware bitwise determinism.
 

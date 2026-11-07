@@ -1,6 +1,8 @@
 # Module boundaries and migration
 
-Authority: specification §§4.3, 5 and 16.5. The current application is preserved at root. No empty platform, DVC or orchestration skeleton is presented as an integration.
+Authority: specification §§4.3, 5 and 16.5. The current application is preserved at root.
+Local synthetic DVC restoration is implemented; trusted platform and orchestration
+remain later work.
 
 | Namespace/path | Responsibility | Allowed direction |
 |---|---|---|
@@ -10,7 +12,7 @@ Authority: specification §§4.3, 5 and 16.5. The current application is preserv
 | `src/rent_contracts` | Versioned public documents/validation | Standard library, JSON schema validation |
 | `src/rent_agent` | Local task context/lifecycle | Public contracts; no ML business logic or platform internals |
 | future `src/rent_platform` | Trusted admission/execution/verification/promotion source | Public contracts and protected runtime adapters; never experimental ML implementations |
-| future `src/rent_data` | Releases, identities and reviewed split generation | Domain/public contracts; no agent or runner internals |
+| `src/rent_data` | Non-publishing metadata candidates, release integrity/local DVC restoration and deterministic development split materialization; real-data policy review remains external | Domain/public contracts, optional safe YAML parser and public CLI; no agent or runner internals |
 | `src/rent_checks` | Static development checks | AST parsing without importing inspected code |
 
 The future `rent_platform` name avoids shadowing Python's standard-library `platform`. Direct and aliased imports, absolute `from` imports, package-escaping relative imports, and common explicit dynamic import calls are inspected. Nonliteral dynamic targets fail the check. Tests inject negative fixtures and verify no fixture is executed.

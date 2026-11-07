@@ -119,3 +119,94 @@ def task_document():
         "final_outcome": None,
         "history": [{"state": "PROPOSED", "timestamp": "2026-11-02T10:00:00Z"}],
     }
+
+
+@pytest.fixture
+def release_case(tmp_path, release_input_factory):
+    """Synthetic pure-contract binding; actual Git/DVC evidence is integration-only."""
+    from rent_data.release_io import write_payload
+    from rent_data.releases import (
+        DVC_VERSION,
+        build_dataset_release,
+        content_digest,
+        data_tool_profile_digest,
+    )
+
+    case = release_input_factory()
+    root = tmp_path / "payload"
+    artifacts = write_payload(
+        root,
+        case["candidate"],
+        source_documents=case["sources"],
+        expected_candidate_ref=case["candidate"]["candidate_digest"],
+    )
+    binding = {
+        "metadata": {
+            "commit": "a" * 40,
+            "path": "payload.dvc",
+            "digest": content_digest(b"fixture"),
+        },
+        "dvc": {
+            "version": DVC_VERSION,
+            "hash_algorithm": "md5",
+            "object_id": "b" * 32 + ".dir",
+            "size_bytes": sum(row["size_bytes"] for row in artifacts),
+            "file_count": len(artifacts),
+            "tool_profile_ref": data_tool_profile_digest(tool_lock=b"fixture", build_lock=b"build"),
+        },
+    }
+    manifest = build_dataset_release(
+        case["candidate"], source_documents=case["sources"], binding=binding, artifacts=artifacts
+    )
+    return {**case, "root": root, "manifest": manifest, "binding": binding, "artifacts": artifacts}
+
+
+@pytest.fixture
+def split_case_factory(split_input_factory):
+    """Pure synthetic release binding; actual Git/DVC evidence remains integration-only."""
+    from rent_contracts.validation import canonical_json
+    from rent_data.releases import (
+        DVC_VERSION,
+        build_dataset_release,
+        content_digest,
+        source_artifact_path,
+    )
+
+    def make(**kwargs):
+        case = split_input_factory(**kwargs)
+        candidate = case["candidate"]
+        documents = {
+            "candidate.json": canonical_json(candidate).encode("utf-8"),
+            "quality-report.json": canonical_json(candidate["quality_report"]).encode("utf-8"),
+            **{source_artifact_path(content_digest(raw)): raw for raw in case["sources"]},
+        }
+        artifacts = [
+            {"path": path, "digest": content_digest(raw), "size_bytes": len(raw)}
+            for path, raw in sorted(documents.items())
+        ]
+        binding = {
+            "metadata": {
+                "commit": "c" * 40,
+                "path": "payload.dvc",
+                "digest": content_digest(b"synthetic metadata"),
+            },
+            "dvc": {
+                "version": DVC_VERSION,
+                "hash_algorithm": "md5",
+                "object_id": "b" * 32 + ".dir",
+                "size_bytes": sum(item["size_bytes"] for item in artifacts),
+                "file_count": len(artifacts),
+                "tool_profile_ref": content_digest(b"synthetic tool profile"),
+            },
+        }
+        release = build_dataset_release(
+            candidate, source_documents=case["sources"], binding=binding, artifacts=artifacts
+        )
+        return {**case, "release": release}
+
+    return make
+
+
+@pytest.fixture
+def split_case(split_case_factory):
+    return split_case_factory()

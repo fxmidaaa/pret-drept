@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:observation-quality-report:1.0.0",
+  "$defs": {
+    "count": { "type": "integer", "minimum": 0 }
+  },
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "assessment_version": { "const": "1.0.0" },
+    "report_digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "observations_digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "sources_digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "observation_count": { "$ref": "#/$defs/count" },
+    "listing_count": { "$ref": "#/$defs/count" },
+    "observations_with_eligibility_issues": { "$ref": "#/$defs/count" },
+    "property_resolution_counts": {
+      "type": "object",
+      "properties": {
+        "confirmed": { "$ref": "#/$defs/count" },
+        "probable": { "$ref": "#/$defs/count" },
+        "unresolved": { "$ref": "#/$defs/count" }
+      },
+      "required": ["confirmed", "probable", "unresolved"],
+      "additionalProperties": false
+    },
+    "eligibility_issue_counts": {
+      "type": "object",
+      "properties": {
+        "invalid_non_target_domain": { "$ref": "#/$defs/count" },
+        "unresolved_non_target_domain": { "$ref": "#/$defs/count" },
+        "temporal_evidence_missing": { "$ref": "#/$defs/count" },
+        "temporal_order_invalid": { "$ref": "#/$defs/count" }
+      },
+      "required": [
+        "invalid_non_target_domain", "unresolved_non_target_domain",
+        "temporal_evidence_missing", "temporal_order_invalid"
+      ],
+      "additionalProperties": false
+    },
+    "source_counts": {
+      "type": "object",
+      "properties": {
+        "total": { "$ref": "#/$defs/count" },
+        "missing_acquisition_provenance": { "$ref": "#/$defs/count" },
+        "missing_period_start": { "$ref": "#/$defs/count" },
+        "missing_period_end": { "$ref": "#/$defs/count" }
+      },
+      "required": [
+        "total", "missing_acquisition_provenance", "missing_period_start", "missing_period_end"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contract_version", "assessment_version", "report_digest", "observations_digest",
+    "sources_digest", "observation_count", "listing_count", "observations_with_eligibility_issues",
+    "property_resolution_counts", "eligibility_issue_counts", "source_counts"
+  ],
+  "additionalProperties": false
+}

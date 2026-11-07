@@ -10,6 +10,10 @@ requires-python = ">=3.13"
 dependencies = ["jsonschema==4.26.0"]
 license-files = ["LICENSE"]
 
+[project.optional-dependencies]
+data = ["PyYAML==6.0.3"]
+parquet = ["pyarrow==26.0.1"]
+
 [project.scripts]
 rent-check-architecture = "rent_checks.architecture:main"
 

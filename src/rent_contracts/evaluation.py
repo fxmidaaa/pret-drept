@@ -7,7 +7,9 @@ references, fits transforms, evaluates labels or activates an effective policy.
 import hashlib
 from datetime import datetime
 
-from .validation import ContractError, canonical_json, validate_document
+from jsonschema import Draft202012Validator, FormatChecker
+
+from .validation import ContractError, _resources, canonical_json, validate_document
 
 _TIME_FIELDS = ("published_at", "collected_at", "features_available_at", "prediction_cutoff_at")
 _COHORTS = ("future_market", "unseen_property")
@@ -55,30 +57,43 @@ def validate_observation_reference(observation: dict) -> None:
             _instant(observation[field])
 
 
+class _ListingEvidence:
+    """Cross-record constraints shared by both inventory representations."""
+
+    def __init__(self) -> None:
+        self.captures = set()
+        self.confirmed_listings = {}
+
+    def add(self, observation: dict) -> None:
+        listing = observation["listing_id"]
+        capture = None
+        if observation["collected_at"] is not None:
+            capture = (listing, _instant(observation["collected_at"]))
+            if capture in self.captures:
+                raise ContractError("duplicate listing collection instant")
+        identity = observation["property_identity"]
+        if identity["status"] == "confirmed":
+            property_id = identity["property_id"]
+            prior = self.confirmed_listings.get(listing)
+            if prior is not None and prior != property_id:
+                raise ContractError("conflicting confirmed listing property identities")
+            self.confirmed_listings[listing] = property_id
+        if capture is not None:
+            self.captures.add(capture)
+
+
 def _observation_inventory(observations: list[dict]) -> dict[str, dict]:
     if type(observations) is not list or not observations:
         raise ContractError("observation inventory must be a nonempty list")
     inventory = {}
-    captures = set()
-    confirmed_listings = {}
+    evidence = _ListingEvidence()
     for observation in observations:
         validate_observation_reference(observation)
         observation_id = observation["observation_id"]
         if observation_id in inventory:
             raise ContractError("duplicate observation identity")
+        evidence.add(observation)
         inventory[observation_id] = observation
-        if observation["collected_at"] is not None:
-            capture = (observation["listing_id"], _instant(observation["collected_at"]))
-            if capture in captures:
-                raise ContractError("duplicate listing collection instant")
-            captures.add(capture)
-        identity = observation["property_identity"]
-        if identity["status"] == "confirmed":
-            prior = confirmed_listings.setdefault(
-                observation["listing_id"], identity["property_id"]
-            )
-            if prior != identity["property_id"]:
-                raise ContractError("conflicting confirmed listing property identities")
     return inventory
 
 
@@ -91,9 +106,58 @@ def observation_inventory_digest(observations: list[dict]) -> str:
     return _digest([inventory[key] for key in sorted(inventory)])
 
 
-def _assignment(
-    observation: dict, cutoff: datetime, start: datetime, end: datetime
-) -> tuple[str, set[str]]:
+class ObservationInventoryHasher:
+    """Hash ordered v1 references as one canonical array without storing the array.
+
+    Listing evidence persists across batches and uses at most one capture and
+    one confirmed listing entry per accepted record, up to max_records.
+    """
+
+    def __init__(self, *, max_records: int) -> None:
+        if type(max_records) is not int or max_records < 1:
+            raise ContractError("invalid observation inventory record limit")
+        self._max_records = max_records
+        self._count = 0
+        self._last_id = ""
+        self._evidence = _ListingEvidence()
+        self._hash = hashlib.sha256(b"[")
+
+    @property
+    def count(self) -> int:
+        return self._count
+
+    def add(self, observation: dict) -> None:
+        if self._count == self._max_records:
+            raise ContractError("observation inventory record limit exceeded")
+        validate_observation_reference(observation)
+        observation_id = observation["observation_id"]
+        if observation_id == self._last_id:
+            raise ContractError("duplicate observation identity")
+        if observation_id < self._last_id:
+            raise ContractError("observation identities must be strictly increasing")
+        encoded = canonical_json(observation).encode("utf-8")
+        self._evidence.add(observation)
+        if self._count:
+            self._hash.update(b",")
+        self._hash.update(encoded)
+        self._last_id = observation_id
+        self._count += 1
+
+    def digest(self) -> str:
+        if not self._count:
+            raise ContractError("observation inventory must be nonempty")
+        digest = self._hash.copy()
+        digest.update(b"]")
+        return "sha256:" + digest.hexdigest()
+
+
+def observation_eligibility_exclusions(observation: dict) -> frozenset[str]:
+    """Existing v1 non-window reasons, shared with candidate quality reporting.
+
+    This validates declared metadata; it neither verifies evidence nor chooses a
+    temporal partition. Property uncertainty alone does not exclude future-market rows.
+    """
+    validate_observation_reference(observation)
     reasons = set()
     if observation["domain_status"] != "valid":
         reasons.add(f"{observation['domain_status']}_non_target_domain")
@@ -105,7 +169,15 @@ def _assignment(
     known_times = [instant for instant in times if instant is not None]
     if any(a > b for a, b in zip(known_times, known_times[1:])):
         reasons.add("temporal_order_invalid")
-    prediction = times[-1]
+    return frozenset(reasons)
+
+
+def _assignment(
+    observation: dict, cutoff: datetime, start: datetime, end: datetime
+) -> tuple[str, set[str]]:
+    reasons = set(observation_eligibility_exclusions(observation))
+    value = observation["prediction_cutoff_at"]
+    prediction = None if value is None else _instant(value)
     if prediction is not None and prediction >= cutoff and not start <= prediction < end:
         reasons.add("outside_development_windows")
     partition = "excluded"
@@ -128,6 +200,75 @@ def _unseen_exclusions(observation: dict, training: list[dict]) -> set[str]:
     if any(row["property_identity"]["status"] != "confirmed" for row in training):
         reasons.add("training_identity_unresolved")
     return reasons
+
+
+def _development_boundaries(training_cutoff: str, validation_window: dict) -> tuple[datetime, ...]:
+    # Reuse the packaged v1 field schemas; do not create a second timestamp grammar
+    # or a new input wire contract. Resource access stays inside rent_contracts.
+    fields = {"training_cutoff": training_cutoff, "validation_window": validation_window}
+    canonical_json(fields)
+    schemas, registry = _resources()
+    for name, value in fields.items():
+        validator = Draft202012Validator(
+            schemas["development-split"]["properties"][name],
+            registry=registry,
+            format_checker=FormatChecker(),
+        )
+        if next(validator.iter_errors(value), None) is not None:
+            raise ContractError("invalid development temporal boundaries")
+    cutoff = _instant(training_cutoff)
+    start = _instant(validation_window["start_inclusive"])
+    end = _instant(validation_window["end_exclusive"])
+    if not cutoff <= start < end:
+        raise ContractError("invalid development temporal boundaries")
+    return cutoff, start, end
+
+
+def _development_memberships(
+    inventory: dict[str, dict], policy: dict, cutoff: datetime, start: datetime, end: datetime
+) -> list[dict]:
+    rows = []
+    for key in sorted(inventory):
+        observation = inventory[key]
+        if observation["domain_policy_ref"] != policy["domain_policy_ref"]:
+            raise ContractError("observation domain policy identity mismatch")
+        if observation["property_identity"]["policy_ref"] != policy["property_matching_policy_ref"]:
+            raise ContractError("observation matching policy identity mismatch")
+        partition, reasons = _assignment(observation, cutoff, start, end)
+        rows.append(
+            {
+                "observation_id": key,
+                "partition": partition,
+                "eligibility_exclusions": sorted(reasons),
+                "cohorts": [],
+                "unseen_property_exclusions": ["not_development_validation"],
+            }
+        )
+    training = [inventory[row["observation_id"]] for row in rows if row["partition"] == "training"]
+    for row in rows:
+        if row["partition"] == "development_validation":
+            row["cohorts"].append("future_market")
+            reasons = _unseen_exclusions(inventory[row["observation_id"]], training)
+            row["unseen_property_exclusions"] = sorted(reasons)
+            if not reasons:
+                row["cohorts"].append("unseen_property")
+    return rows
+
+
+def derive_development_memberships(
+    observations: list[dict], *, policy: dict, training_cutoff: str, validation_window: dict
+) -> list[dict]:
+    """Project existing v1 membership semantics into independent canonical rows.
+
+    Every supplied observation is represented, including exclusions. This checks
+    declared metadata, not inventory completeness, policy review or evidence truth.
+    A release-bound builder and full split validation establish correspondence.
+    """
+    validate_evaluation_policy(policy)
+    inventory = _observation_inventory(observations)
+    _digest([inventory[key] for key in sorted(inventory)])  # Bound the complete inventory.
+    cutoff, start, end = _development_boundaries(training_cutoff, validation_window)
+    return _development_memberships(inventory, policy, cutoff, start, end)
 
 
 def _validate_split_envelope(manifest: dict) -> None:
@@ -156,38 +297,29 @@ def validate_development_split(
     inventory = _observation_inventory(observations)
     if manifest["observations_digest"] != _digest([inventory[key] for key in sorted(inventory)]):
         raise ContractError("observation inventory digest mismatch")
-    cutoff = _instant(manifest["training_cutoff"])
-    start = _instant(manifest["validation_window"]["start_inclusive"])
-    end = _instant(manifest["validation_window"]["end_exclusive"])
+    cutoff, start, end = _development_boundaries(
+        manifest["training_cutoff"], manifest["validation_window"]
+    )
     _instant(manifest["creation_provenance"]["created_at"])
-    if not cutoff <= start < end:
-        raise ContractError("invalid development temporal boundaries")
     rows = manifest["memberships"]
     actual = [row["observation_id"] for row in rows]
     if len(set(actual)) != len(actual) or set(actual) != set(inventory):
         raise ContractError("development assignment population mismatch")
+    expected = {
+        row["observation_id"]: row
+        for row in _development_memberships(inventory, policy, cutoff, start, end)
+    }
     for row in rows:
-        observation = inventory[row["observation_id"]]
-        if observation["domain_policy_ref"] != policy["domain_policy_ref"]:
-            raise ContractError("observation domain policy identity mismatch")
-        if observation["property_identity"]["policy_ref"] != policy["property_matching_policy_ref"]:
-            raise ContractError("observation matching policy identity mismatch")
-        partition, reasons = _assignment(observation, cutoff, start, end)
-        if row["partition"] != partition or set(row["eligibility_exclusions"]) != reasons:
-            raise ContractError("development eligibility assignment mismatch")
-    training = [inventory[row["observation_id"]] for row in rows if row["partition"] == "training"]
-    for row in rows:
-        cohorts = set()
-        unseen_reasons = {"not_development_validation"}
-        if row["partition"] == "development_validation":
-            cohorts.add("future_market")
-            unseen_reasons = _unseen_exclusions(inventory[row["observation_id"]], training)
-            if not unseen_reasons:
-                cohorts.add("unseen_property")
-        if (
-            set(row["cohorts"]) != cohorts
-            or set(row["unseen_property_exclusions"]) != unseen_reasons
+        derived = expected[row["observation_id"]]
+        if row["partition"] != derived["partition"] or set(row["eligibility_exclusions"]) != set(
+            derived["eligibility_exclusions"]
         ):
+            raise ContractError("development eligibility assignment mismatch")
+    for row in rows:
+        derived = expected[row["observation_id"]]
+        if set(row["cohorts"]) != set(derived["cohorts"]) or set(
+            row["unseen_property_exclusions"]
+        ) != set(derived["unseen_property_exclusions"]):
             raise ContractError("development cohort assignment mismatch")
 
 

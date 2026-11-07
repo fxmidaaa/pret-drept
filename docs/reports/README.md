@@ -10,6 +10,112 @@ revision. Test counts in the summaries describe the checks recorded for those re
 
 ## Current checkpoint and recovery
 
+**M2 increment 5 — 2026-11-07.** The user approved Option A for a bounded
+Parquet observation inventory. Local branch `feat/m2-inventory-transport` is
+based on `003ada8`. The user approved the implementation at the second review
+and the local task is **COMPLETED**. Local checks passed with 854
+checkout tests, 649 per distribution, 297 focused, 12 actual DVC and 38
+frontend tests. The
+[task plan](../tasks/2026-11-07-m2-observation-inventory/plan.md),
+[task record](../tasks/2026-11-07-m2-observation-inventory/task.json),
+[design](../architecture/observation-inventory-v1.md), and
+[report](m2-observation-inventory.md) contain implementation and recovery.
+The user's subsequent push request was fulfilled. Source
+[1ec8adf](https://github.com/fxmidaaa/pret-drept/commit/1ec8adfe2be8629933fc4980e6ff033c0eee26e5)
+was pushed to `feat/m2-inventory-transport`.
+[Exact-source Linux CI](https://github.com/fxmidaaa/pret-drept/actions/runs/42396251688)
+passed with 842 checkout passes and 12 absent-private-model skips, 649
+per distribution, and 38 frontend passes. Both unrelated report-consistency
+edits remain local. See the
+[publication record](../tasks/2026-11-07-m2-observation-inventory/plan.md#publication-verification)
+and resolve actual HEAD and CI for recovery. A14 and the M2 exit gate remain open.
+
+**Increment-4 source publication follow-up — 2026-11-06:** the user reviewed the
+implementation, clarified feature-leakage limits, then requested **"push please"**.
+Source commit/push is authorized on `feat/m2-development-splits`; earlier no-push/
+second-HITL-wait statements below are historical. Follow the
+[publication plan](../tasks/2026-11-06-m2-development-splits/plan.md#source-publication-follow-up),
+preserving both unrelated reporting edits locally. No merge, new PR, data/split
+publication, experiment or protected action is included.
+
+Publication succeeded: source
+[52654bc](https://github.com/fxmidaaa/pret-drept/commit/52654bc23fe54b8d529d476f8c87ae53a9c1652a)
+was pushed on `feat/m2-development-splits` and its exact remote SHA verified.
+[Linux CI](https://github.com/fxmidaaa/pret-drept/actions/runs/42206582156) passed:
+767 checkout passes / 12 private-model skips, 575 per distribution, 38 frontend
+passes and all static/workflow/notebook/architecture/DVC checks. The bounded source
+task is **COMPLETED**; M2/A14 and feature-lineage/real-data/protected gates remain
+open. This documentation follow-up records evidence; resolve actual branch HEAD/CI
+for recovery. Only the two unrelated reporting edits remain local. See
+[publication verification](../tasks/2026-11-06-m2-development-splits/plan.md#publication-verification).
+
+**Implementation checkpoint, M2 increment 4 — 2026-11-06:** the user selected Option A after the first
+HITL: deterministic development split materialization using existing v1 semantics,
+a pure release-bound builder and verified local artifact I/O. Local branch
+`feat/m2-development-splits` starts from `e56c115`; work is **READY_FOR_REVIEW**. Preserve
+the two unrelated report-consistency edits. No repository commit/push or real-data
+application is authorized before the second HITL and a later publication instruction.
+Current scope/recovery: [split plan](../tasks/2026-11-06-m2-development-splits/plan.md),
+[record](../tasks/2026-11-06-m2-development-splits/task.json),
+[design](../architecture/development-splits-v1.md) and
+[increment report](m2-development-splits.md). Local verification: 779 checkout
+passes, 575 per distribution, 223 focused checks, 11 actual DVC integration cases
+and 38 frontend passes; static/architecture/workflow/notebook checks passed. All
+15 schemas, original evaluation fixtures and both unrelated edits are preserved.
+Final task/link/preservation checks follow the evidence update with 11 implementation
+hashes unchanged. Stop uncommitted with results/proposed commit message for the
+second HITL; M2's exit gate remains open.
+
+**Source publication follow-up — 2026-11-06:** after reviewing increment 3, the user
+requested **"push please"**, authorizing source commit/push on
+`feat/m2-local-dvc-releases`, including its uncommitted increment-2 dependency.
+Earlier no-commit/no-push and review-wait statements below are historical. The
+[publication plan](../tasks/2026-11-06-m2-local-dvc-releases/plan.md#source-publication-follow-up)
+records exact scope/recovery; both unrelated report-consistency edits stay local.
+No merge, data publication, experiment or deployment is included.
+
+Publication succeeded: increment-2 dependency
+[4ad339e](https://github.com/fxmidaaa/pret-drept/commit/4ad339edc5bd7b6cebbfbe766d3ca0dd7b5350e4),
+increment-3 source [0c23de6](https://github.com/fxmidaaa/pret-drept/commit/0c23de6ee8aa78043ef44ec6a5ed93c8a51e07d5).
+The remote feature ref matched source SHA `0c23de6`. Its
+[Linux CI](https://github.com/fxmidaaa/pret-drept/actions/runs/42190500570) passed:
+678 checkout passes / 12 private-model skips, 487 per distribution, 38 frontend
+passes and the static/workflow/architecture/notebook/DVC checks. This bounded source
+task is **COMPLETED**; M2/A10/A14 and protected/real-data gates remain open. The
+documentation follow-up records publication evidence; resolve the actual feature
+branch HEAD/CI for recovery. Only the two unrelated report-consistency edits remain
+local. See [publication verification](../tasks/2026-11-06-m2-local-dvc-releases/plan.md#publication-verification).
+
+**Implementation checkpoint, M2 increment 3 — 2026-11-06:** local branch
+`feat/m2-local-dvc-releases` at unchanged `d920ffc`, carrying the prior increment-2
+implementation and two unrelated report-consistency edits. The user approved Option A:
+immutable development release contracts and actual synthetic local DVC restoration,
+with a separate locked tool environment. Work is **READY_FOR_REVIEW**; no repository commit,
+push, PR update or real-data application is authorized. Current scope and recovery:
+[release plan](../tasks/2026-11-06-m2-local-dvc-releases/plan.md),
+[record](../tasks/2026-11-06-m2-local-dvc-releases/task.json),
+[design](../architecture/dataset-releases-v1.md) and
+[increment report](m2-local-dvc-releases.md). Local checks: 690 checkout tests,
+487 tests per distribution and 38 frontend tests passed, plus static/architecture/
+workflow/notebook checks. Final task/link/preservation verification follows the
+evidence edit with implementation hashes unchanged. Stop after implementation/verification
+for the user's review with a proposed commit message. M2's exit gate remains open.
+
+**Prior M2 increment 2 — 2026-11-06:** local branch
+`feat/m2-observation-candidates`, based on `d920ffc`. PR #1 is now merged; GitHub's
+comparison to `main` shows one merge commit and no file changes. The earlier
+open/unmerged and publication checkpoints below are historical. Current scope,
+verification and recovery are in the
+[candidate plan](../tasks/2026-11-06-m2-observation-candidates/plan.md) and
+[record](../tasks/2026-11-06-m2-observation-candidates/task.json).
+This increment is locally verified and **READY_FOR_REVIEW**, synthetic-first and
+non-publishing; the two pre-existing unrelated
+report-consistency edits remain local and untouched. No commit/push or real-data
+application is authorized for this session. See the
+[candidate contract](../architecture/observation-candidates-v1.md).
+The [increment 2 report](m2-observation-candidates.md) summarizes the implementation
+and verification; earlier evidence and recovery history remain intact.
+
 Reconciled 2026-11-05: branch `fix/repository-audit`, HEAD **`36e67b7`** (A17 publication
 evidence), with the existing A16 candidate and the current A18/audit follow-up uncommitted.
 The unrelated report-consistency plan/task updates are preserved byte-for-byte.

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:observation-candidate:1.0.0",
+  "$defs": {
+    "source_summary": {
+      "type": "object",
+      "properties": {
+        "source_ref": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+        "raw_source_ref": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+        "size_bytes": { "type": "integer", "minimum": 1 },
+        "record_count": { "type": "integer", "minimum": 1 },
+        "acquisition_provenance_ref": {
+          "$ref": "urn:rent:observation-source:1.0.0#/$defs/nullable_digest"
+        },
+        "acquisition_period": {
+          "$ref": "urn:rent:observation-source:1.0.0#/$defs/acquisition_period"
+        }
+      },
+      "required": [
+        "source_ref", "raw_source_ref", "size_bytes", "record_count",
+        "acquisition_provenance_ref", "acquisition_period"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "candidate_digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "dataset_family": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/identifier" },
+    "access_domain": { "const": "development" },
+    "release_state": { "const": "UNPUBLISHED_CANDIDATE" },
+    "transformation_ref": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "projection_policy_ref": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "domain_policy_ref": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "property_matching_policy_ref": {
+      "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest"
+    },
+    "observations_digest": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+    "sources": {
+      "type": "array", "minItems": 1,
+      "items": { "$ref": "#/$defs/source_summary" }
+    },
+    "lineage": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "observation_id": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/identifier" },
+          "source_ref": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/digest" },
+          "source_record_id": { "$ref": "urn:rent:observation-reference:1.0.0#/$defs/identifier" }
+        },
+        "required": ["observation_id", "source_ref", "source_record_id"],
+        "additionalProperties": false
+      }
+    },
+    "observations": {
+      "type": "array", "minItems": 1,
+      "items": { "$ref": "urn:rent:observation-reference:1.0.0" }
+    },
+    "quality_report": { "$ref": "urn:rent:observation-quality-report:1.0.0" }
+  },
+  "required": [
+    "contract_version", "candidate_digest", "dataset_family", "access_domain", "release_state",
+    "transformation_ref", "projection_policy_ref", "domain_policy_ref", "property_matching_policy_ref",
+    "observations_digest", "sources", "lineage", "observations", "quality_report"
+  ],
+  "additionalProperties": false
+}
