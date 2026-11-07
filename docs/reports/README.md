@@ -20,10 +20,15 @@ frontend tests. The
 [task record](../tasks/2026-11-07-m2-observation-inventory/task.json),
 [design](../architecture/observation-inventory-v1.md), and
 [report](m2-observation-inventory.md) contain implementation and recovery.
-The user's subsequent “push please” authorizes
-[source publication](../tasks/2026-11-07-m2-observation-inventory/plan.md#source-publication-follow-up)
-on this feature branch. Both unrelated report-consistency edits remain local.
-A14 and the M2 exit gate remain open.
+The user's subsequent push request was fulfilled. Source
+[1ec8adf](https://github.com/fxmidaaa/pret-drept/commit/1ec8adfe2be8629933fc4980e6ff033c0eee26e5)
+was pushed to `feat/m2-inventory-transport`.
+[Exact-source Linux CI](https://github.com/fxmidaaa/pret-drept/actions/runs/42396251688)
+passed with 842 checkout passes and 12 absent-private-model skips, 649
+per distribution, and 38 frontend passes. Both unrelated report-consistency
+edits remain local. See the
+[publication record](../tasks/2026-11-07-m2-observation-inventory/plan.md#publication-verification)
+and resolve actual HEAD and CI for recovery. A14 and the M2 exit gate remain open.
 
 **Increment-4 source publication follow-up — 2026-11-06:** the user reviewed the
 implementation, clarified feature-leakage limits, then requested **"push please"**.

@@ -179,3 +179,36 @@ pre-commit HEAD check. Preserve commits on a failed push, check the remote
 ref and retry the affected operation after diagnosis. For CI failures,
 inspect the exact revision's failed step and record the recovery before
 claiming a pass. Keep both unrelated edits out of the index.
+
+## Publication verification
+
+The approved 20 paths were committed with the proposed title as
+[1ec8adf](https://github.com/fxmidaaa/pret-drept/commit/1ec8adfe2be8629933fc4980e6ff033c0eee26e5).
+The staged and committed bytes matched the publication snapshot, including
+all 13 verified implementation hashes. The explicit feature ref was pushed
+without force and confirmed independently using `git ls-remote --heads origin
+refs/heads/feat/m2-inventory-transport`.
+
+[Linux CI run 42396251688](https://github.com/fxmidaaa/pret-drept/actions/runs/42396251688)
+passed for the exact source SHA and `push` event. Checkout had 842 passes and
+12 absent-private-model skips, with one existing Starlette/httpx warning.
+The source and wheel each passed 649 checks and Node passed 38. The run
+also passed workflow, notebook, formatting, architecture and actual DVC
+checks, and installed the pinned PyArrow 26.0.1 Linux wheel through the
+hash-locked setup. The 854-pass local checkout evidence includes the 12
+legacy regressions with synthetic requests.
+
+This documentation follow-up records the source and CI anchors. Its four
+paths preserve the reviewed implementation and the two unrelated local
+edits. Run the task tests, standalone workflow and notebook checks, link
+and preservation proof, and exact-head Linux CI for the follow-up revision.
+Evidence and exact stage/commit proofs are under
+`/private/tmp/pret-drept-m2-inventory-publish-509w1mbt`.
+
+For recovery, inspect local and remote `feat/m2-inventory-transport` HEAD,
+status and the index. Expect the two original report-consistency edits to
+be the only local edits. Resolve Linux CI for the actual branch tip
+separately from the source run linked above. Preserve prior commits and
+investigate exact-revision failures before retrying. The completed increment
+provides synthetic transport evidence. A14, real-data and feature-lineage
+verification, and the M2 evaluation exit gate remain open.

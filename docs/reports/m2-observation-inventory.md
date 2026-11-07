@@ -59,3 +59,17 @@ This increment verifies local transport integrity and correspondence with
 declared metadata. Feature and target-derived lineage, isolated reproducible
 training, and official development evaluations still need their own evidence.
 The M2 exit gate remains open.
+
+## Source publication
+
+The approved implementation was committed as
+[1ec8adf](https://github.com/fxmidaaa/pret-drept/commit/1ec8adfe2be8629933fc4980e6ff033c0eee26e5)
+and pushed to
+[`feat/m2-inventory-transport`](https://github.com/fxmidaaa/pret-drept/tree/feat/m2-inventory-transport).
+The remote source SHA matched the reviewed commit.
+[Linux CI](https://github.com/fxmidaaa/pret-drept/actions/runs/42396251688)
+passed for that SHA with 842 checkout passes and 12 absent-private-model
+skips, 649 passes per distribution, and 38 frontend passes. The
+publication evidence update preserves all 13 implementation hashes and
+both unrelated local edits. Resolve the actual branch tip and its CI for
+recovery. [Publication verification](../tasks/2026-11-07-m2-observation-inventory/plan.md#publication-verification)

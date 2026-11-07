@@ -26,14 +26,19 @@
     "Recorded pass/fail/skip/unavailable results and recovery. Freeze implementation and rerun the verification commands after the evidence-only edits.",
     "Stop at second human review with suggested message feat(data): add verified Parquet observation inventory transport.",
     "User approved the implementation at second review. Reconciled all 203 reviewed paths byte-for-byte and all nine final check exits before recording approval.",
-    "After second review, user requested push please. Verified all 203 files match the approved snapshot, the origin feature ref was absent, and saved publication baseline at /private/tmp/pret-drept-m2-inventory-publish-509w1mbt."
+    "After second review, user requested push please. Verified all 203 files match the approved snapshot, the origin feature ref was absent, and saved publication baseline at /private/tmp/pret-drept-m2-inventory-publish-509w1mbt.",
+    "Committed the exact approved 20 paths as 1ec8adfe2be8629933fc4980e6ff033c0eee26e5, pushed origin/feat/m2-inventory-transport, and independently matched the remote source SHA.",
+    "Exact-source Linux push CI 42396251688 passed: 842 checkout passes and 12 absent-private-model skips, 649 per distribution, 38 frontend passes, pinned wheel installation and all workflow/static/notebook/architecture/DVC checks.",
+    "Recorded the verified publication evidence in four documentation paths. Check task context, links, whitespace and pinned hashes before committing the documentation follow-up."
   ],
   "execution_identifiers": {
-    "ci": [],
+    "ci": [
+      "https://github.com/fxmidaaa/pret-drept/actions/runs/42396251688"
+    ],
     "mlflow": [],
     "runner": []
   },
-  "final_outcome": "COMPLETED local engineering increment after the user's second review approval. The verified standalone Parquet inventory is uncommitted and both unrelated edits are preserved. Source publication, real-data adoption, feature-lineage and the M2 evaluation gate are separate.",
+  "final_outcome": "COMPLETED increment 5 and the authorized source push. Exact approved source 1ec8adfe2be8629933fc4980e6ff033c0eee26e5 was pushed and its remote SHA and successful Linux CI confirmed. Both unrelated edits remain local. The four-document publication follow-up retains the reviewed implementation hashes. A14, real-data and feature-lineage verification, and the M2 evaluation exit gate remain open.",
   "history": [
     {
       "state": "PROPOSED",
@@ -80,7 +85,7 @@
     "Publish only the approved 20-path increment on the explicit feature ref. Preserve the two unrelated reporting edits and all reviewed implementation hashes."
   ],
   "known_blockers": [],
-  "next_recovery_action": "Follow plan.md#source-publication-follow-up. Reconcile HEAD, index, remote and /private/tmp/pret-drept-m2-inventory-publish-509w1mbt. Publish the exact reviewed source and verify its Linux CI. Both unrelated edits stay local. The M2 exit gate remains open.",
+  "next_recovery_action": "Read plan.md#publication-verification and reconcile actual local/remote feat/m2-inventory-transport HEAD and exact-head Linux CI. Expect only the two unrelated report-consistency edits and an empty index. Compare 13 implementation hashes and stage/commit proofs under /private/tmp/pret-drept-m2-inventory-publish-509w1mbt. Source anchor 1ec8adf and CI 42396251688 identify the reviewed implementation. Preserve the follow-up evidence commit. The next proposed increment is synthetic reference-based candidate/release adoption.",
   "objective": "Implement approved Option A, a bounded lossless synthetic-first Parquet observation inventory with a verifiable JSON manifest.",
   "original_authorized_request": "docs/tasks/2026-11-07-m2-observation-inventory/request.md",
   "pending_approvals": [],
@@ -168,6 +173,18 @@
     {
       "check": "second-human-review",
       "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#second-review-approval User replied \"approved.\" to the implementation review. Verified the exact review tree and final check exits before recording the approval.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "approved-source-publication",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#publication-verification Exact staged and committed 20-path scope, 13 fixed implementation hashes, unrelated edits preserved, and independently confirmed remote source SHA.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "published-source-linux-ci",
+      "reference": "docs/tasks/2026-11-07-m2-observation-inventory/plan.md#publication-verification Successful exact-source push CI 42396251688. 842 checkout passes, 12 unavailable private-model skips, 649 per distribution and 38 frontend tests. All listed workflow steps passed.",
       "required": true,
       "status": "passed"
     }
