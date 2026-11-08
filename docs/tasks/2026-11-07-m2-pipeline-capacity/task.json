@@ -1,0 +1,191 @@
+{
+  "acceptance_criteria": [
+    "Deterministic synthetic populations whose rows pass the production validators and derive the hand-written memberships of each named mix.",
+    "A stage runner that exercises the production path in an owned directory and reports outcome, time, peak memory, sizes and identities, stopping at the first production failure with its fixed message.",
+    "A fitted size model that predicts held-out production sizes (exact for source and split) and reproduces the existing closed-form split capacity for the excluded mix.",
+    "Production confirmation at the predicted boundary for each reported first limit, recorded in the report.",
+    "Identical sizes and sealed identities across three hash seeds.",
+    "A report with measured sizes at the M0-documented volume, capacity per gate and identifier length, first limit and headroom, time and memory budget, derivation scaling and the consequences for the next increment, with limits stated.",
+    "Earlier ad hoc design figures reproduced or corrected; no production, packaging or protected file changes; the five unowned edits byte-identical; nothing committed or pushed.",
+    "Checks run after the last edit under the verification cadence and recorded as passed, failed, skipped or unavailable."
+  ],
+  "affected_modules": [
+    "scripts: measure_pipeline_capacity (new tooling that imports public rent_data and rent_contracts APIs only)",
+    "tests: foundations pipeline capacity probe tests (checkout-only, not shipped)",
+    "docs: report, task record, design pointer and report index"
+  ],
+  "contract_version": "1.0.0",
+  "current_progress": [
+    "Reconciled HEAD 3716c12 on feat/m2-reference-splits with origin and verified its exact-revision Linux CI: run 42411611205 passed with 969 checkout passes, 12 private-model skips and 768 passes per distribution. The committed increment 6 and 7 records are stale about being uncommitted.",
+    "Chose capacity evidence over the L2 split transport because that change lacks approval and a sizing input; see the plan.",
+    "Implemented scripts/measure_pipeline_capacity.py and 145 tests. The tool runs the production candidate, inventory, release, restoration and split path on synthetic populations, predicts each size gate's capacity with a phase-aware size model, and confirms the first limit against production.",
+    "Measured the whole pipeline: lifting only the split limit adds at most 17% of capacity at the default shapes, a longer source record identifier makes the candidate the first limit, and about 95% of a verified pass is repeated schema validation. All fourteen first-limit boundaries were confirmed against production.",
+    "Independent review found seven issues in the first round, one high, and nine more in a second round. A mutation pass found two test gaps. All were fixed. The final mutation pass catches 49 of 49 mutants."
+  ],
+  "execution_identifiers": {
+    "ci": [],
+    "mlflow": [],
+    "runner": []
+  },
+  "final_outcome": "A reproducible capacity probe and report for the synthetic M2 pipeline. No production change. The recorded split-only transport is not enough, and the M2 exit gate remains open.",
+  "history": [
+    {
+      "state": "PROPOSED",
+      "timestamp": "2026-11-07T20:57:33.200420+00:00"
+    },
+    {
+      "state": "CLASSIFIED",
+      "timestamp": "2026-11-07T20:57:33.259109+00:00"
+    },
+    {
+      "state": "PLANNED",
+      "timestamp": "2026-11-07T20:57:33.259461+00:00"
+    },
+    {
+      "state": "ACTIVE",
+      "timestamp": "2026-11-07T20:57:33.259796+00:00"
+    },
+    {
+      "state": "VERIFYING",
+      "timestamp": "2026-11-08T00:40:20.932479+00:00"
+    },
+    {
+      "state": "READY_FOR_REVIEW",
+      "timestamp": "2026-11-08T00:40:20.933483+00:00"
+    }
+  ],
+  "implementation_plan": [
+    "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#acceptance-criteria-and-implementation-plan"
+  ],
+  "important_decisions": [
+    "Select independent, evidence-producing work: the recorded next increment is L2 and needs a formal plan, threat assessment, approval and independent verification that do not exist.",
+    "No production change: the probe imports public APIs and constants, so a stage that fails reports the production's own message. Predicted limits are labelled predictions in every output, and only a confirmation is a production measurement.",
+    "Do not edit AGENTS.md, docs/development.md or the other three working-tree edits that belong to someone else; point to the probe from the report, design and index instead.",
+    "Model the repeating cycle of a mix with measured offsets so the size prediction is exact at every count, and treat limits within one row as tied.",
+    "Report that a split-only transport adds at most 17% of capacity and that the next L2 plan must also cover candidate lineage, the source bound, once-per-population validation and a linear-time derivation."
+  ],
+  "known_blockers": [
+    "M2 exit gate remains open pending authorized real data, defensible chronology, property evidence, reviewed policies and isolated reproducible evaluation.",
+    "The next transport is L2 and needs a formal plan, a threat assessment, explicit approval and independent verification before any implementation."
+  ],
+  "next_recovery_action": "Read docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#verification-and-recovery. Reconcile HEAD 3716c1252b40bb095904221891357de987ce4f81, the branch and the empty index, keep the unowned edits, then review the bounded diff. After review, the next proposed increment is the L2 plan for one coordinated transport.",
+  "objective": "Measure and retain the capacity, time and memory limits of the synthetic M2 data pipeline (candidate, inventory, release, restoration and split) with a reproducible probe, so the next transport increment is scoped on evidence.",
+  "original_authorized_request": "docs/tasks/2026-11-07-m2-pipeline-capacity/request.md",
+  "pending_approvals": [
+    "Review this bounded local increment.",
+    "Decide the scope of the next L2 transport increment, and its target population and identifier shapes, after reviewing the report's capacity evidence."
+  ],
+  "protected_invariants": [
+    "Preserve the frozen architecture, every production limit, rule, schema and byte of output. The probe imports public APIs and constants and never patches or copies production code.",
+    "Preserve the five working-tree edits this task does not own (AGENTS.md, docs/development.md, the quality backlog and the two audit-consistency files), HEAD, the branch and the empty index.",
+    "Report only aggregate synthetic numbers. Label extrapolation, platform dependence and the limits of a local synthetic run."
+  ],
+  "risk_level": "L1",
+  "scope_boundaries": [
+    "A measurement script outside the shipped packages, its checkout-only tests, a report, a design pointer and the report index. No production source, schema, wire contract, policy, dependency or packaging change.",
+    "Synthetic populations in a directory the tool creates and removes. No real data, network, DVC, credentials, protected labels, publication, trusted-policy change, promotion or deployment. Uncommitted, with nothing pushed."
+  ],
+  "state": "READY_FOR_REVIEW",
+  "task_id": "RP-20261107-M2-PIPELINE-CAPACITY",
+  "verification_evidence": [
+    {
+      "check": "focused",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification 145 passed in tests/foundations/test_pipeline_capacity.py.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "task-records",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification 57 task record, lifecycle and architecture tests passed, which validate this record.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "architecture",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification rent-check-architecture passed.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "static",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification Ruff check and format check over the CI paths passed (59 files).",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "checkout",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification 1,108 passed with 12 private-model checks deselected, including the actual local Git and DVC integration.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "no-source-change",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification No tracked production, packaging, dependency, workflow or legacy file changed.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "preservation",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification HEAD, branch and the empty index unchanged; four unowned files byte-identical; docs/development.md was edited by someone else during the session.",
+      "required": true,
+      "status": "passed"
+    },
+    {
+      "check": "mutation-sanity",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification All 49 deliberate regressions of the tool were caught.",
+      "required": false,
+      "status": "passed"
+    },
+    {
+      "check": "production-confirmation",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification Fourteen first-limit boundaries confirmed against the real pipeline, including 128-character record identifiers.",
+      "required": false,
+      "status": "passed"
+    },
+    {
+      "check": "hash-seed-determinism",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification Retained tests compare sizes, sealed identities and capacity reports across hash seeds.",
+      "required": false,
+      "status": "passed"
+    },
+    {
+      "check": "interim-confirm-tie",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification The first confirmation of the 128-character training population disagreed because two limits tie. Fixed by reporting ties and accepting either failure.",
+      "required": false,
+      "status": "failed"
+    },
+    {
+      "check": "interim-model-phase",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification Independent review reproduced a one-record error of the size model at counts that are not whole cycles. Fixed with a phase-aware model.",
+      "required": false,
+      "status": "failed"
+    },
+    {
+      "check": "interim-search-window",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification A new test found that the boundary search missed a boundary at the edge of its window. Fixed.",
+      "required": false,
+      "status": "failed"
+    },
+    {
+      "check": "source-wheel",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification Skipped by plan under the verification cadence: no packaged file, public contract or dependency changed.",
+      "required": false,
+      "status": "skipped"
+    },
+    {
+      "check": "exact-revision-ci",
+      "reference": "docs/tasks/2026-11-07-m2-pipeline-capacity/plan.md#final-verification The work is uncommitted, so no exact-revision CI run exists.",
+      "required": false,
+      "status": "unavailable"
+    }
+  ],
+  "verification_requirements": [
+    "focused",
+    "task-records",
+    "architecture",
+    "static",
+    "checkout",
+    "no-source-change",
+    "preservation"
+  ]
+}

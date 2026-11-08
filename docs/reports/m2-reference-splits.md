@@ -65,3 +65,5 @@ artifact with a streaming verifier and the same rules, so a complete split is no
 JSON document. It changes the split wire contract, so it is L2 under specification §6.2: a formal
 plan, a threat and risk assessment, explicit approval and independent verification. Bounded source
 and lineage transport for v2 candidates follows. Both stay synthetic until real data is authorized.
+[Increment 8](m2-pipeline-capacity.md) later measured the whole pipeline. Its source and candidate
+lineage limits bind close to the split limit, so the plan should cover them together, not in sequence.

@@ -10,6 +10,21 @@ revision. Test counts in the summaries describe the checks recorded for those re
 
 ## Current checkpoint and recovery
 
+**M2 increment 8 — 2026-11-07.** Pipeline capacity evidence is **READY_FOR_REVIEW**,
+uncommitted, on `feat/m2-reference-splits` at `3716c12`. It adds a synthetic measurement tool,
+its tests and a [report](m2-pipeline-capacity.md), and changes no production source, schema or
+contract. The [task plan](../tasks/2026-11-07-m2-pipeline-capacity/plan.md) and
+[record](../tasks/2026-11-07-m2-pipeline-capacity/task.json) identify verification and recovery.
+Lifting only the split limit adds at most 17% of capacity at the probe's default identifier
+shapes, and nothing when source record identifiers are long, so a split-only transport adds little
+and the next L2 plan should cover the limits together.
+Increments 6 and 7 are published as `3716c12` on `feat/m2-reference-splits`, with no pull
+request. Their [exact-revision Linux CI](https://github.com/fxmidaaa/pret-drept/actions/runs/42411611205)
+passed with 969 checkout passes, 12 private-model skips and 768 passes per distribution. The two
+entries below still call them uncommitted and pending review, which is stale. Five working-tree
+edits (`AGENTS.md`, `docs/development.md`, the quality backlog and the two report-consistency
+files) belong to others and are untouched. A14 and the M2 exit gate remain open.
+
 **M2 increment 7 — 2026-11-07.** Development splits from reference-backed releases are
 **READY_FOR_REVIEW** on `main` at `7f69b17`, built on the still unreviewed increment 6 by the
 user's explicit authorization. Both prior report-consistency edits remain byte-identical. The

@@ -81,15 +81,21 @@ population and the identifier length.
 - Inline v1 cannot reach this limit. The largest split row is at most 65% of the smallest valid
   observation with the same identifier length, so the split of an inventory that fit 1 MiB
   stays under 680 KB.
-- For orientation only, the M0 audit records 4,528 raw rows. A one-off synthetic probe with the
-  production builders (not retained in the repository) built that many mixed rows with hashed
-  identifiers of a fixed length. At 16, 32 and 64 characters the v2 candidate built (719, 791
-  and 936 KB) while the complete split was about 875, 947 and 1,092 KB, so the split exceeded
-  its bound first. At 128 characters the 4 MiB source cap failed as well. This is arithmetic on
-  synthetic rows, not a measurement of the private data. A release of that size can sit at
-  these bounds, so a reviewed versioned split transport, then bounded source and lineage
-  transport, are required before real-data use. They change wire contracts and are outside
-  this increment.
+- For orientation, the M0 audit records 4,528 raw rows. The retained
+  [capacity probe](../reports/m2-pipeline-capacity.md) builds such a population with the
+  production builders, so the figures are reproducible. They describe synthetic rows, not the
+  private data.
+  With its `typical` mix at 16, 32 and 64 characters the complete split is 875, 947 and 1,092 KB,
+  as the earlier one-off probe found, so the split exceeds its bound first at 64 characters.
+  Production rejects that last document, so its size is the probe's fitted prediction. At 128
+  characters the 4 MiB source bound fails before the candidate is built. The v2 candidate is 733,
+  806 and 951 KB with 14-character source record identifiers. The earlier 719, 791 and 936 KB used
+  the shorter unpadded `capture-<n>` identifiers of the test fixtures, and the candidate grows by
+  one byte per character of that identifier for every observation. Lifting only the split limit
+  would add at most 17% of capacity at these shapes, because the candidate and source limits bind
+  just above it, so a release of that size needs a reviewed split transport and bounded source and
+  lineage transport together, not in sequence, before real-data use. They change wire contracts and
+  are outside this increment.
 
 `DocumentSizeError` is a `ContractError` subclass with the unchanged
 `document size limit exceeded` message. It lets code tell a size limit from a malformed
