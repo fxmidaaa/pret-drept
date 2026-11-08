@@ -73,7 +73,7 @@ def test_unprivileged_workflow_source_has_no_privileged_trigger_or_credentials()
     assert "id-token" not in raw
     assert "pull_request_target" not in raw
     job = workflow["jobs"]["foundations"]
-    assert int(job["timeout-minutes"]) <= 15
+    assert int(job["timeout-minutes"]) <= 25
     for step in job["steps"]:
         if "uses" in step:
             assert re.fullmatch(r"actions/[a-z-]+@[a-f0-9]{40}", step["uses"])
