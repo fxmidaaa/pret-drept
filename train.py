@@ -1,147 +1,79 @@
-import numpy as np
-import pandas as pd
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from xgboost import XGBRegressor
+import argparse
+from pathlib import Path
+
 import joblib
+import numpy as np
+from sklearn.feature_extraction import DictVectorizer
+from xgboost import XGBRegressor
 
-from datetime import date
-import os
+from features import MODEL_FEATURES, numerical
+from mlops.config import Config, load_config
+from mlops.files import atomic_output, sha256
+from mlops.prepare import read_partition
+from predict import build_features
 
-from features import (clean_data, build_ppm_grid, assign_ppm, trim_ppm_outliers,
-                      trim_knn_outliers, impute_medians, FEATURES, numerical)
+# Fixed defaults only apply when a whole optional column is missing from training.
+EMPTY_COLUMN_DEFAULTS = {
+    "floor": 1.0,
+    "total_floors": 5.0,
+    "kitchen_area": 10.0,
+    "ceiling_height": 2.7,
+}
 
-BASE = os.path.dirname(os.path.abspath(__file__))
 
-def rmse(y_true, y_pred):
-    return np.sqrt(mean_squared_error(y_true, y_pred))
+def train(directory: Path, config: Config) -> None:
+    source = directory / "train.csv"
+    frame = read_partition(source)
+    medians = {}
+    for name in numerical:
+        if name in MODEL_FEATURES:
+            values = frame[name].dropna()
+            medians[name] = (
+                float(values.median()) if len(values) else EMPTY_COLUMN_DEFAULTS[name]
+            )
 
-def main():
-    # load and clean the data (999.md monthly rent)
-    df = pd.read_csv(os.path.join(BASE, "data", "raw", "listings.csv"))
-    print("raw rows:", len(df))
-    df = clean_data(df)
-    print("rows after cleaning:", len(df))
-
-    # split the data into train and validation first:
-    # everything fitted below (outlier bounds, imputation medians, the knn
-    # feature) must look only at train, or the data will leak
-    df_train, df_val = train_test_split(df, test_size=0.2, random_state=42)
-    df_train, df_val = df_train.copy(), df_val.copy()
-
-    df_train, ppm_bounds = trim_ppm_outliers(df_train)
-    df_val, _ = trim_ppm_outliers(df_val, ppm_bounds)
-    df_train, medians = impute_medians(df_train)
-    df_val, _ = impute_medians(df_val, medians)
-    print("train/val after outlier trim:", len(df_train), "/", len(df_val))
-
-    # local market rate as a coarse grid aggregate — no per-listing data ships
-    grid_ppm, sector_ppm, global_ppm = build_ppm_grid(df_train)
-    df_train['knn_ppm'] = assign_ppm(df_train, grid_ppm, sector_ppm, global_ppm)
-    df_val['knn_ppm'] = assign_ppm(df_val, grid_ppm, sector_ppm, global_ppm)
-
-    # drop listings priced way off their own neighborhood (non-market asks),
-    # then recompute the aggregate from the cleaned market only
-    df_train = trim_knn_outliers(df_train).copy()
-    df_val = trim_knn_outliers(df_val).copy()
-    grid_ppm, sector_ppm, global_ppm = build_ppm_grid(df_train)
-    df_train['knn_ppm'] = assign_ppm(df_train, grid_ppm, sector_ppm, global_ppm)
-    df_val['knn_ppm'] = assign_ppm(df_val, grid_ppm, sector_ppm, global_ppm)
-    print("train/val after market-rate trim:", len(df_train), "/", len(df_val))
-
-    features = FEATURES + ['knn_ppm']
-
-    y_train = np.log1p(df_train['price'].values)
-    y_val = np.log1p(df_val['price'].values)
-
-    dicts_train = df_train[features].to_dict(orient='records')
-    dicts_val = df_val[features].to_dict(orient='records')
-
-    # one-hot encoding using dicts
-    dv = DictVectorizer(sparse=False)
-    X_train = dv.fit_transform(dicts_train)
-    X_val = dv.transform(dicts_val)
-
-    linreg = LinearRegression()
-    linreg.fit(X_train, y_train)
-    base_pred = np.expm1(linreg.predict(X_val))
-    print('linear regression baseline: MAE',
-          round(mean_absolute_error(np.expm1(y_val), base_pred)), 'EUR | RMSE',
-          round(rmse(np.expm1(y_val), base_pred)), "EUR")
-
-    # to understand why exactly these hyperparameters, check model_selection.ipynb.
-    model = XGBRegressor(
-        n_estimators = 600,
-        max_depth = 6,
-        learning_rate = 0.05,
-        subsample = 0.83,
-        colsample_bytree = 0.77,
-        min_child_weight = 7,
-        random_state = 42  # reproducible, and matches the notebook's tuned config
-    )
-
-    model.fit(X_train, y_train)
-    pred = np.expm1(model.predict(X_val))
-    true = np.expm1(y_val)
-    mape = np.mean(np.abs((true - pred) / true)) * 100
-
-    # MAE/MAPE are the headline: they describe the typical listing. RMSE is kept
-    # as the tail indicator - errors here are roughly proportional to the price,
-    # so squaring makes the few expensive misses dominate it (RMSE/MAE lands
-    # around 1.4 on this data even when every price band has the same % error).
-    print("MAE:", round(mean_absolute_error(true, pred)), "EUR")
-    print("MAPE:", round(mape, 1), "%")
-    print("RMSE (tail-sensitive):", round(rmse(true, pred)), "EUR")
-    print("R2:", round(r2_score(true, pred), 3))
-
-    # R2 in log space too: the euro-space R2 is dominated by the expensive tail,
-    # the log-space one weighs every listing more equally
-    print("  R2 (log-space):", round(r2_score(y_val, model.predict(X_val)), 3))
-
-    # 8. save the vectorizer + model together so predict.py can use them.
-    #    also save the median distance-to-centre per sector + overall, so the app can
-    #    fill in dist_center from the chosen sector (a user won't type gps coordinates).
-    #    meta records when/on what/how well this model was trained - model.joblib
-    #    gets overwritten on every retrain, so without this there is no way to tell
-    #    which model you are actually serving.
-    #    the bundle also carries everything predict.py needs to fill in features a
-    #    web user can't type: typical coordinates per sector, the coarse grid/sector
-    #    EUR/m2 aggregates (for the knn_ppm feature), and median defaults for the
-    #    numeric fields nobody fills in by hand (photo count, ceiling height, blablabla).
-    sector_dist = df_train.groupby("sector")["dist_to_center"].median().to_dict()
-    sector_latlon = {s: [float(g["lat"].median()),
-                         float(g["lon"].median())]
-                     for s, g in df_train.groupby("sector")}
-    joblib.dump({
-        "dv": dv,
-        "model": model,
-        "features": features,
-        "sector_dist": sector_dist,
-        "median_dist": float(df_train["dist_to_center"].median()),
-        "sector_latlon": sector_latlon,
-        "median_latlon": [float(df_train["lat"].median()), float(df_train["lon"].median())],
-        "numeric_defaults": {c: float(df_train[c].median()) for c in numerical},
-        "grid_ppm": grid_ppm,
-        "sector_ppm": sector_ppm,
-        "global_ppm": global_ppm,
+    bundle = {
+        "features": MODEL_FEATURES,
+        "numeric_defaults": medians,
         "meta": {
-            "trained_at": date.today().isoformat(),
-            "n_listings": len(df),
-            "price_cap_eur": 2000,  # the model prices the mass segment only
-            "mae_eur": round(mean_absolute_error(true, pred)),
-            "mape_pct": round(mape, 1),
-            "rmse_eur": round(rmse(true, pred)),
-            "r2": round(r2_score(true, pred), 3),
+            "format": "pret-drept-simple-v1",
+            "n_listings": len(frame),
+            "training_sha256": sha256(source),
+            "config": config.model_dump(),
         },
-    }, os.path.join(BASE, 'model.joblib'))
-    print('saved model to model.joblib')
+    }
+    vectorizer = DictVectorizer(sparse=False)
+    matrix = vectorizer.fit_transform(
+        [build_features(record, bundle) for record in frame.to_dict(orient="records")]
+    )
+    model = XGBRegressor(
+        **config.model.model_dump(),
+        objective="reg:squarederror",
+        tree_method="hist",
+        random_state=config.seed,
+        n_jobs=1,
+    )
+    model.fit(matrix, np.log1p(frame["price"].to_numpy()))
+    bundle.update(dv=vectorizer, model=model)
+
+    destination = directory / "model.joblib"
+    with atomic_output(destination) as temporary:
+        joblib.dump(bundle, temporary, compress=3)
+    print(f"Trained XGBoost on {len(frame)} rows and saved {destination}.")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Fit XGBoost using a prepared training partition."
+    )
+    parser.add_argument("directory", type=Path)
+    parser.add_argument("--config", type=Path, default=Path("params.json"))
+    args = parser.parse_args()
+    try:
+        train(args.directory, load_config(args.config))
+    except (OSError, ValueError) as exc:
+        parser.exit(2, f"Training failed. {exc}\n")
 
 
 if __name__ == "__main__":
     main()
-
-
-
-

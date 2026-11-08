@@ -1,0 +1,9 @@
+{
+  "seed": 42,
+  "evaluation_fraction": 0.2,
+  "model": {
+    "n_estimators": 120,
+    "max_depth": 4,
+    "learning_rate": 0.08
+  }
+}

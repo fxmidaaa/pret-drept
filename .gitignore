@@ -4,7 +4,7 @@ __pycache__/
 venv/
 .env
 
-# data — never track raw/private datasets; only the one reviewed synthetic sample
+# data — never track raw/private datasets; only the reviewed synthetic samples
 *.csv
 data/*
 !data/sample
@@ -12,7 +12,7 @@ data/sample/*
 !data/sample/listings_sample.csv
 !data/sample/README.md
 
-# model artifacts — trained privately, shipped into the image, never in git
+# model artifacts — generated locally and mounted at runtime
 model.joblib
 *.joblib
 *.pkl
@@ -20,3 +20,13 @@ model.joblib
 .ipynb_checkpoints/
 .pytest_cache/
 .jupyter/
+
+# Simple MLOps demo and private local runs
+!/data/sample/demo.csv
+/artifacts/
+/.mlflow/
+.venv-*/
+.ruff_cache/
+/mlruns/
+/mlartifacts/
+/mlflow.db*

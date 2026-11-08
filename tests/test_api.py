@@ -1,9 +1,25 @@
+import os
+from pathlib import Path
+
+import pytest
 from fastapi.testclient import TestClient
 
 import predict
 from api import app
 
 client = TestClient(app)
+
+
+@pytest.fixture
+def configured_model(monkeypatch):
+    configured = os.environ.get("PRET_DREPT_MODEL")
+    path = Path(configured or "artifacts/demo/model.joblib").resolve()
+    if not path.is_file():
+        if configured:
+            pytest.fail("PRET_DREPT_MODEL must point to an existing trusted bundle.")
+        pytest.skip("Run dvc repro to build the synthetic demo bundle.")
+    monkeypatch.setenv("PRET_DREPT_MODEL", str(path))
+
 
 # a perfectly normal flat - the same example as in predict.py
 GOOD_FLAT = {
@@ -32,7 +48,7 @@ def test_home_serves_the_site():
     assert r.status_code == 200
     assert "overpriced" in r.text
 
-def test_options_has_the_dropdown_values():
+def test_options_has_the_dropdown_values(configured_model):
     r = client.get('/options')
     assert r.status_code == 200
     opts = r.json()
@@ -43,12 +59,12 @@ def test_options_has_the_dropdown_values():
     assert "necunoscut" not in opts["sector"]
     assert "necunoscut" not in opts["author"]
 
-def test_predict_rejects_missing_author():
+def test_predict_rejects_missing_author(configured_model):
     flat = {k: v for k, v in GOOD_FLAT.items() if k != "author"}
     r = client.post("/predict", json=flat)
     assert r.status_code == 422
 
-def test_drivers_never_show_absent_or_unset_features():
+def test_drivers_never_show_absent_or_unset_features(configured_model):
     # the explanation must only mention what the flat actually has: no "necunoscut"
     # category and no amenity the user left unchecked.
     flat = {**GOOD_FLAT, "air_conditioning": 0, "terrace": 0}
@@ -58,7 +74,7 @@ def test_drivers_never_show_absent_or_unset_features():
     assert not any("air conditioning" in f for f in feats)
     assert not any("terrace" in f for f in feats)
 
-def test_predict_a_normal_flat():
+def test_predict_a_normal_flat(configured_model):
     r = client.post("/predict", json=GOOD_FLAT)
     assert r.status_code == 200
     data = r.json()
@@ -67,33 +83,35 @@ def test_predict_a_normal_flat():
     assert data["verdict"] in ("overpriced", "fair price", "good deal")
     assert 1 <= len(data["drivers"]) <= 5
 
-def test_predict_without_asking_price_gives_no_verdict():
+def test_predict_without_asking_price_gives_no_verdict(configured_model):
     flat = {k: v for k, v in GOOD_FLAT.items() if k != "price"}
     r = client.post("/predict", json=flat)
     assert r.status_code == 200
     assert "verdict" not in r.json()
+    with_price = client.post("/predict", json=GOOD_FLAT)
+    assert r.json()["fair_price"] == with_price.json()["fair_price"]
 
 
-def test_predict_rejects_negative_area():
+def test_predict_rejects_negative_area(configured_model):
     r = client.post("/predict", json={**GOOD_FLAT, "area": -5})
     assert r.status_code == 422
 
-def test_predict_rejects_absurd_rooms():
+def test_predict_rejects_absurd_rooms(configured_model):
     r = client.post("/predict", json={**GOOD_FLAT, "rooms": 100})
     assert r.status_code == 422
 
-def test_predict_rejects_unknown_sector():
+def test_predict_rejects_unknown_sector(configured_model):
     # an unknown category would silently one-hot to all zeros -> nonsense
     # prediction. the api must refuse it instead.
     r = client.post("/predict", json={**GOOD_FLAT, "sector": "london"})
     assert r.status_code == 422
 
-def test_sector_is_case_insensitive():
+def test_sector_is_case_insensitive(configured_model):
     r = client.post("/predict", json={**GOOD_FLAT, "sector": "Centru"})
     assert r.status_code == 200
 
 
-def test_feature_dict_matches_the_model():
+def test_feature_dict_matches_the_model(configured_model):
     # guards against building a feature under the wrong key (say "dist_center"
     # instead of "dist_to_center"): the vectorizer silently drops unknown keys
     # and the real feature falls back to a median default, so nothing crashes
@@ -104,9 +122,10 @@ def test_feature_dict_matches_the_model():
     assert set(x) == set(bund["features"])
     assert all(v is not None for v in x.values())
     # and the distance must really come from the coordinates, not from a default
-    assert x["dist_to_center"] == latlon_to_km(x["lat"], x["lon"])
+    if "dist_to_center" in x:
+        assert x["dist_to_center"] == latlon_to_km(x["lat"], x["lon"])
 
-def test_golden_prediction_directly():
+def test_golden_prediction_directly(configured_model):
     # calling predict.run directly (no http): the flags get derived, the price
     # is sane, and the answer explains itself
     result = predict.run(dict(GOOD_FLAT))
@@ -114,10 +133,8 @@ def test_golden_prediction_directly():
     assert result["listed_price"] == 700
     assert "deviation_pct" in result
 
-def test_bundle_ships_no_row_level_data():
-    # privacy gate: the published model must contain only aggregates, never a
-    # per-listing coordinate, price, id, or raw text. if any of these keys ever
-    # comes back, the artifact is leaking training rows and must not ship.
+def test_bundle_ships_no_row_level_data(configured_model):
+    # Guard the bundle shape against accidentally including row-level arrays.
     bund = predict.get_bundle()
     forbidden = {
         "knn_points", "knn_ppm_values", "listings", "raw", "coords",
@@ -126,10 +143,22 @@ def test_bundle_ships_no_row_level_data():
     present = forbidden & set(bund)
     assert not present, f"forbidden row-level keys in bundle: {present}"
 
-    # the market-rate aggregate must be scalars keyed by coarse cell/sector,
-    # not arrays of individual rows
-    for value in bund["grid_ppm"].values():
-        assert isinstance(value, float)
-    for value in bund["sector_ppm"].values():
-        assert isinstance(value, float)
-    assert isinstance(bund["global_ppm"], float)
+    if "knn_ppm" in bund["features"]:
+        # Historical bundles use scalars keyed by a coarse cell or sector.
+        for value in bund["grid_ppm"].values():
+            assert isinstance(value, float)
+        for value in bund["sector_ppm"].values():
+            assert isinstance(value, float)
+        assert isinstance(bund["global_ppm"], float)
+    else:
+        assert {"lat", "lon", "photo_count"}.isdisjoint(bund["features"])
+
+
+def test_unavailable_model_returns_503_without_exposing_path(monkeypatch, tmp_path):
+    missing = tmp_path / "missing.joblib"
+    monkeypatch.setenv("PRET_DREPT_MODEL", str(missing))
+
+    assert client.get("/health").json() == {"status": "ok"}
+    for response in (client.get("/options"), client.post("/predict", json=GOOD_FLAT)):
+        assert response.status_code == 503
+        assert str(missing) not in response.text

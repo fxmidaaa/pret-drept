@@ -1,21 +1,11 @@
 # The sample data
 
-`listings_sample.csv` is three made-up rows. Nothing in it is real: no real listing, no real
-coordinate, no contact, no ad text. It's here for one reason, so you can see the exact columns the
-pipeline expects without me having to ship anyone's actual rental ad to do it.
+`listings_sample.csv` is the original three-row schema example. `demo.csv` contains 126 generated
+rows for the DVC pipeline. It covers EUR, MDL and USD, with synthetic features, fixed-seed prices
+and artificial reposts. Both files contain fictional observations.
 
-## Why the real data isn't here
-
-The training data is scraped from a public listings site, and even a rental ad carries personal stuff:
-map coordinates, the free-text description, photo references. So the raw snapshot stays on my machine.
-It's gitignored, never committed, never copied into the Docker image, never baked into the published
-model. The only things that ever leave my machine are coarse aggregates: median EUR/m² over ~1 km
-grid cells and over whole sectors, and each of those is an average of at least 15 listings, so no
-single flat can be read back out.
-
-There's a test that enforces this, by the way. `test_bundle_ships_no_row_level_data` in
-[`tests/test_api.py`](../../tests/test_api.py) fails if any per-listing field ever sneaks into
-`model.joblib`, so this isn't just a promise in a README.
+Keep real snapshots local. Hashed listing identifiers are pseudonyms. The
+[MLOps guide](../../docs/mlops.md#data-contract-and-evaluation) defines the input and output contracts.
 
 ## The columns
 
@@ -46,11 +36,7 @@ time, so they never hit disk at all.
 | `price_value`, `price_unit` | rent amount and its currency (EUR, MDL, or USD) |
 | `first_seen`, `last_seen` | when the scraper first and last saw this listing |
 
-## Doing this with your own data
+## Using your own data
 
-1. Scrape your own listings with `python scrape.py`. It writes to `data/raw/listings.csv`, which stays
-   private.
-2. Run `python train.py`. It cleans the raw file, builds the features, and writes a `model.joblib`
-   that holds aggregates only.
-3. Run `python -m pytest`. If any row-level field ever slipped into the model, the privacy test above
-   catches it.
+Follow the [authorized private data steps](../../docs/mlops.md#authorized-private-data) for a
+local export. Use the demo CSV for CI, Docker smoke checks and shared examples.

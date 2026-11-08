@@ -1,0 +1,127 @@
+Sector,Număr de camere,Suprafață totală,Etaj,Număr de etaje,Fond locativ,Starea apartamentului,Autorul anunțului,Încălzire autonomă,Mobilat,Ascensor,Loc de parcare,Suprafață bucătărie,Inălțimea tavanelor,Balcon/ lojie,price_value,price_unit
+Centru,Apartament cu 1 camere,35,4,5,Secundar,Euroreparație,Agenție,,,,Deschis,,,0,9555.0,UNIT_MDL
+Centru,Apartament cu 1 camere,35,4,5,Secundar,Euroreparație,Agenție,,,,Deschis,,,0,9937.2,UNIT_MDL
+Botanica,Apartament cu 1 camere,43,2,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,8,2.8,1,540,UNIT_EUR
+Râșcani,Apartament cu 1 camere,34,5,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,8,2.8,2,449,UNIT_EUR
+Buiucani,Apartament cu 1 camere,32,2,5,Construcţii noi,Euroreparație,Agenție,Da,,,,8,2.8,0,404,UNIT_EUR
+Ciocana,Apartament cu 1 camere,31,7,9,Secundar,Reparație cosmetică,Persoană fizică,,Da,Da,Deschis,8,,1,352,UNIT_EUR
+Centru,Apartament cu 2 camere,55,1,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,,2.8,2,762,UNIT_EUR
+Botanica,Apartament cu 2 camere,46,3,5,Construcţii noi,Euroreparație,Agenție,Da,,,,9,2.8,0,542,UNIT_EUR
+Râșcani,Apartament cu 2 camere,69,1,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,9,2.8,1,763,UNIT_EUR
+Buiucani,Apartament cu 2 camere,49,10,12,Secundar,,Persoană fizică,,Da,Da,Deschis,9,,2,569,UNIT_EUR
+Ciocana,Apartament cu 2 camere,47,5,5,Construcţii noi,Euroreparație,Agenție,Da,,,,9,2.8,0,462,UNIT_EUR
+Centru,Apartament cu 3 camere,70,8,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,,2.8,1,795,UNIT_EUR
+Botanica,Apartament cu 3 camere,75,2,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,10,2.8,2,14235.0,UNIT_MDL
+Râșcani,Apartament cu 3 camere,73,3,5,Secundar,Euroreparație,Agenție,,,,Deschis,10,,0,673,UNIT_EUR
+Buiucani,Apartament cu 3 camere,62,1,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,10,2.8,1,728,UNIT_EUR
+Ciocana,Apartament cu 3 camere,75,11,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,10,2.8,2,704,UNIT_EUR
+Centru,Apartament cu 4 camere,84,1,5,Construcţii noi,Euroreparație,Agenție,Da,,,,,2.8,0,871,UNIT_EUR
+Botanica,Apartament cu 4 camere,95,5,9,Secundar,Reparație cosmetică,Persoană fizică,,Da,Da,Deschis,11,,1,882,UNIT_EUR
+Râșcani,Apartament cu 4 camere,77,7,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,11,2.8,2,892.39,UNIT_USD
+Buiucani,Apartament cu 4 camere,96,1,5,Construcţii noi,Euroreparație,Agenție,Da,,,,11,2.8,0,951,UNIT_EUR
+Ciocana,Apartament cu 4 camere,84,8,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,11,2.8,1,785,UNIT_EUR
+Centru,Apartament cu 1 camere,49,11,12,Secundar,,Persoană fizică,,Da,Da,Deschis,,,2,653,UNIT_EUR
+Centru,Apartament cu 1 camere,49,11,12,Secundar,,Persoană fizică,,Da,Da,Deschis,,,2,679.12,UNIT_EUR
+Botanica,Apartament cu 1 camere,36,2,5,Construcţii noi,Euroreparație,Agenție,Da,,,,8,2.8,0,402,UNIT_EUR
+Râșcani,Apartament cu 1 camere,37,5,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,8,2.8,1,10530.0,UNIT_MDL
+Buiucani,Apartament cu 1 camere,50,8,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,8,2.8,2,639,UNIT_EUR
+Ciocana,Apartament cu 1 camere,40,3,5,Secundar,Euroreparație,Agenție,,,,Deschis,8,,0,371,UNIT_EUR
+Centru,Apartament cu 2 camere,50,7,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,,2.8,1,700,UNIT_EUR
+Botanica,Apartament cu 2 camere,69,8,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,9,2.8,2,714,UNIT_EUR
+Râșcani,Apartament cu 2 camere,50,2,5,Construcţii noi,Euroreparație,Agenție,Da,,,,9,2.8,0,575,UNIT_EUR
+Buiucani,Apartament cu 2 camere,56,2,9,Secundar,Reparație cosmetică,Persoană fizică,,Da,Da,Deschis,9,,1,597,UNIT_EUR
+Ciocana,Apartament cu 2 camere,51,3,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,9,2.8,2,564,UNIT_EUR
+Centru,Apartament cu 3 camere,72,2,5,Construcţii noi,Euroreparație,Agenție,Da,,,,,2.8,0,781,UNIT_EUR
+Botanica,Apartament cu 3 camere,67,8,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,10,2.8,1,722,UNIT_EUR
+Râșcani,Apartament cu 3 camere,66,10,12,Secundar,,Persoană fizică,,Da,Da,Deschis,10,,2,670,UNIT_EUR
+Buiucani,Apartament cu 3 camere,75,2,5,Construcţii noi,Euroreparație,Agenție,Da,,,,10,2.8,0,14196.0,UNIT_MDL
+Ciocana,Apartament cu 3 camere,70,9,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,10,2.8,1,777.17,UNIT_USD
+Centru,Apartament cu 4 camere,80,1,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,,2.8,2,943,UNIT_EUR
+Botanica,Apartament cu 4 camere,89,2,5,Secundar,Euroreparație,Agenție,,,,Deschis,11,,0,776,UNIT_EUR
+Râșcani,Apartament cu 4 camere,81,4,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,11,2.8,1,869,UNIT_EUR
+Buiucani,Apartament cu 4 camere,96,10,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,11,2.8,2,926,UNIT_EUR
+Ciocana,Apartament cu 4 camere,95,2,5,Construcţii noi,Euroreparație,Agenție,Da,,,,11,2.8,0,826,UNIT_EUR
+Centru,Apartament cu 1 camere,34,7,9,Secundar,Reparație cosmetică,Persoană fizică,,Da,Da,Deschis,,,1,531,UNIT_EUR
+Centru,Apartament cu 1 camere,34,7,9,Secundar,Reparație cosmetică,Persoană fizică,,Da,Da,Deschis,,,1,552.24,UNIT_EUR
+Botanica,Apartament cu 1 camere,28,4,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,8,2.8,2,417,UNIT_EUR
+Râșcani,Apartament cu 1 camere,38,4,5,Construcţii noi,Euroreparație,Agenție,Da,,,,8,2.8,0,463,UNIT_EUR
+Buiucani,Apartament cu 1 camere,40,6,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,8,2.8,1,582,UNIT_EUR
+Ciocana,Apartament cu 1 camere,42,2,12,Secundar,,Persoană fizică,,Da,Da,Deschis,8,,2,8112.0,UNIT_MDL
+Centru,Apartament cu 2 camere,50,3,5,Construcţii noi,Euroreparație,Agenție,Da,,,,,2.8,0,630,UNIT_EUR
+Botanica,Apartament cu 2 camere,46,1,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,9,2.8,1,532,UNIT_EUR
+Râșcani,Apartament cu 2 camere,51,8,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,9,2.8,2,645,UNIT_EUR
+Buiucani,Apartament cu 2 camere,45,4,5,Secundar,Euroreparație,Agenție,,,,Deschis,9,,0,466,UNIT_EUR
+Ciocana,Apartament cu 2 camere,49,4,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,9,2.8,1,586,UNIT_EUR
+Centru,Apartament cu 3 camere,72,9,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,,2.8,2,871,UNIT_EUR
+Botanica,Apartament cu 3 camere,64,1,5,Construcţii noi,Euroreparație,Agenție,Da,,,,10,2.8,0,647.83,UNIT_USD
+Râșcani,Apartament cu 3 camere,86,7,9,Secundar,Reparație cosmetică,Persoană fizică,,Da,Da,Deschis,10,,1,836,UNIT_EUR
+Buiucani,Apartament cu 3 camere,69,7,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,10,2.8,2,731,UNIT_EUR
+Ciocana,Apartament cu 3 camere,70,1,5,Construcţii noi,Euroreparație,Agenție,Da,,,,10,2.8,0,693,UNIT_EUR
+Centru,Apartament cu 4 camere,90,3,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,,2.8,1,19909.5,UNIT_MDL
+Botanica,Apartament cu 4 camere,80,9,12,Secundar,,Persoană fizică,,Da,Da,Deschis,11,,2,730,UNIT_EUR
+Râșcani,Apartament cu 4 camere,87,1,5,Construcţii noi,Euroreparație,Agenție,Da,,,,11,2.8,0,809,UNIT_EUR
+Buiucani,Apartament cu 4 camere,95,5,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,11,2.8,1,924,UNIT_EUR
+Ciocana,Apartament cu 4 camere,93,8,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,11,2.8,2,898,UNIT_EUR
+Centru,Apartament cu 1 camere,50,1,5,Secundar,Euroreparație,Agenție,,,,Deschis,,,0,559,UNIT_EUR
+Centru,Apartament cu 1 camere,50,1,5,Secundar,Euroreparație,Agenție,,,,Deschis,,,0,581.36,UNIT_EUR
+Botanica,Apartament cu 1 camere,38,3,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,8,2.8,1,473,UNIT_EUR
+Râșcani,Apartament cu 1 camere,49,4,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,8,2.8,2,628,UNIT_EUR
+Buiucani,Apartament cu 1 camere,48,3,5,Construcţii noi,Euroreparație,Agenție,Da,,,,8,2.8,0,604,UNIT_EUR
+Ciocana,Apartament cu 1 camere,36,5,9,Secundar,Reparație cosmetică,Persoană fizică,,Da,Da,Deschis,8,,1,418,UNIT_EUR
+Centru,Apartament cu 2 camere,52,10,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,,2.8,2,702,UNIT_EUR
+Botanica,Apartament cu 2 camere,55,4,5,Construcţii noi,Euroreparație,Agenție,Da,,,,9,2.8,0,10803.0,UNIT_MDL
+Râșcani,Apartament cu 2 camere,69,6,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,9,2.8,1,706,UNIT_EUR
+Buiucani,Apartament cu 2 camere,68,11,12,Secundar,,Persoană fizică,,Da,Da,Deschis,9,,2,768.48,UNIT_USD
+Ciocana,Apartament cu 2 camere,54,4,5,Construcţii noi,Euroreparație,Agenție,Da,,,,9,2.8,0,558,UNIT_EUR
+Centru,Apartament cu 3 camere,67,1,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,,2.8,1,797,UNIT_EUR
+Botanica,Apartament cu 3 camere,73,11,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,10,2.8,2,752,UNIT_EUR
+Râșcani,Apartament cu 3 camere,60,4,5,Secundar,Euroreparație,Agenție,,,,Deschis,10,,0,563,UNIT_EUR
+Buiucani,Apartament cu 3 camere,69,5,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,10,2.8,1,780,UNIT_EUR
+Ciocana,Apartament cu 3 camere,69,4,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,10,2.8,2,667,UNIT_EUR
+Centru,Apartament cu 4 camere,87,2,5,Construcţii noi,Euroreparație,Agenție,Da,,,,,2.8,0,885,UNIT_EUR
+Botanica,Apartament cu 4 camere,101,1,9,Secundar,Reparație cosmetică,Persoană fizică,,Da,Da,Deschis,11,,1,898,UNIT_EUR
+Râșcani,Apartament cu 4 camere,98,12,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,11,2.8,2,18369.0,UNIT_MDL
+Buiucani,Apartament cu 4 camere,96,3,5,Construcţii noi,Euroreparație,Agenție,Da,,,,11,2.8,0,910,UNIT_EUR
+Ciocana,Apartament cu 4 camere,79,6,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,11,2.8,1,761,UNIT_EUR
+Centru,Apartament cu 1 camere,29,8,12,Secundar,,Persoană fizică,,Da,Da,Deschis,,,2,506,UNIT_EUR
+Centru,Apartament cu 1 camere,29,8,12,Secundar,,Persoană fizică,,Da,Da,Deschis,,,2,526.24,UNIT_EUR
+Botanica,Apartament cu 1 camere,53,3,5,Construcţii noi,Euroreparație,Agenție,Da,,,,8,2.8,0,545,UNIT_EUR
+Râșcani,Apartament cu 1 camere,33,6,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,8,2.8,1,491,UNIT_EUR
+Buiucani,Apartament cu 1 camere,53,11,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,8,2.8,2,611,UNIT_EUR
+Ciocana,Apartament cu 1 camere,32,4,5,Secundar,Euroreparație,Agenție,,,,Deschis,8,,0,312,UNIT_EUR
+Centru,Apartament cu 2 camere,69,1,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,,2.8,1,933.7,UNIT_USD
+Botanica,Apartament cu 2 camere,56,7,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,9,2.8,2,651,UNIT_EUR
+Râșcani,Apartament cu 2 camere,44,3,5,Construcţii noi,Euroreparație,Agenție,Da,,,,9,2.8,0,545,UNIT_EUR
+Buiucani,Apartament cu 2 camere,46,7,9,Secundar,Reparație cosmetică,Persoană fizică,,Da,Da,Deschis,9,,1,10549.5,UNIT_MDL
+Ciocana,Apartament cu 2 camere,46,3,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,9,2.8,2,546,UNIT_EUR
+Centru,Apartament cu 3 camere,83,5,5,Construcţii noi,Euroreparație,Agenție,Da,,,,,2.8,0,899,UNIT_EUR
+Botanica,Apartament cu 3 camere,62,3,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,10,2.8,1,698,UNIT_EUR
+Râșcani,Apartament cu 3 camere,61,6,12,Secundar,,Persoană fizică,,Da,Da,Deschis,10,,2,644,UNIT_EUR
+Buiucani,Apartament cu 3 camere,75,4,5,Construcţii noi,Euroreparație,Agenție,Da,,,,10,2.8,0,800,UNIT_EUR
+Ciocana,Apartament cu 3 camere,63,2,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,10,2.8,1,677,UNIT_EUR
+Centru,Apartament cu 4 camere,94,7,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,,2.8,2,990,UNIT_EUR
+Botanica,Apartament cu 4 camere,83,3,5,Secundar,Euroreparație,Agenție,,,,Deschis,11,,0,749,UNIT_EUR
+Râșcani,Apartament cu 4 camere,87,6,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,11,2.8,1,913,UNIT_EUR
+Buiucani,Apartament cu 4 camere,84,2,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,11,2.8,2,902,UNIT_EUR
+Ciocana,Apartament cu 4 camere,76,2,5,Construcţii noi,Euroreparație,Agenție,Da,,,,11,2.8,0,13786.5,UNIT_MDL
+Centru,Apartament cu 1 camere,44,6,9,Secundar,Reparație cosmetică,Persoană fizică,,Da,Da,Deschis,,,1,570,UNIT_EUR
+Centru,Apartament cu 1 camere,44,6,9,Secundar,Reparație cosmetică,Persoană fizică,,Da,Da,Deschis,,,1,592.8,UNIT_EUR
+Botanica,Apartament cu 1 camere,46,1,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,8,2.8,2,583,UNIT_EUR
+Râșcani,Apartament cu 1 camere,37,1,5,Construcţii noi,Euroreparație,Agenție,Da,,,,8,2.8,0,478.26,UNIT_USD
+Buiucani,Apartament cu 1 camere,34,6,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,8,2.8,1,523,UNIT_EUR
+Ciocana,Apartament cu 1 camere,52,2,12,Secundar,,Persoană fizică,,Da,Da,Deschis,8,,2,531,UNIT_EUR
+Centru,Apartament cu 2 camere,70,5,5,Construcţii noi,Euroreparație,Agenție,Da,,,,,2.8,0,775,UNIT_EUR
+Botanica,Apartament cu 2 camere,49,3,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,9,2.8,1,604,UNIT_EUR
+Râșcani,Apartament cu 2 camere,52,12,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,9,2.8,2,631,UNIT_EUR
+Buiucani,Apartament cu 2 camere,51,5,5,Secundar,Euroreparație,Agenție,,,,Deschis,9,,0,544,UNIT_EUR
+Ciocana,Apartament cu 2 camere,47,7,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,9,2.8,1,585,UNIT_EUR
+Centru,Apartament cu 3 camere,66,3,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,,2.8,2,15288.0,UNIT_MDL
+Botanica,Apartament cu 3 camere,60,4,5,Construcţii noi,Euroreparație,Agenție,Da,,,,10,2.8,0,646,UNIT_EUR
+Râșcani,Apartament cu 3 camere,68,8,9,Secundar,Reparație cosmetică,Persoană fizică,,Da,Da,Deschis,10,,1,664,UNIT_EUR
+Buiucani,Apartament cu 3 camere,67,1,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,10,2.8,2,710,UNIT_EUR
+Ciocana,Apartament cu 3 camere,76,4,5,Construcţii noi,Euroreparație,Agenție,Da,,,,10,2.8,0,688,UNIT_EUR
+Centru,Apartament cu 4 camere,102,4,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,,2.8,1,1106,UNIT_EUR
+Botanica,Apartament cu 4 camere,78,2,12,Secundar,,Persoană fizică,,Da,Da,Deschis,11,,2,725,UNIT_EUR
+Râșcani,Apartament cu 4 camere,86,3,5,Construcţii noi,Euroreparație,Agenție,Da,,,,11,2.8,0,791,UNIT_EUR
+Buiucani,Apartament cu 4 camere,85,5,9,Construcţii noi,Reparație cosmetică,Persoană fizică,Da,Da,Da,,11,2.8,1,918,UNIT_EUR
+Ciocana,Apartament cu 4 camere,78,7,12,Construcţii noi,,Persoană fizică,Da,Da,Da,,11,2.8,2,825.0,UNIT_USD

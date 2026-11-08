@@ -13,3 +13,11 @@ venv/**
 .env
 train.py
 tests/**
+.dvc/**
+.mlflow/**
+artifacts/**
+.venv-*/**
+*.joblib
+mlruns/**
+mlartifacts/**
+mlflow.db*

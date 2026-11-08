@@ -1,10 +1,9 @@
-# Minimal allowlist: exclude everything, then re-include only what the
-# inference image needs. Raw data, notebooks, tests and train.py never enter
-# the build context.
+# Only the inference source and pinned runtime enter the build context.
 *
-!requirements.txt
+!requirements-serve.txt
 !features.py
 !predict.py
 !api.py
-!model.joblib
-!app
+!app/
+app/*
+!app/index.html

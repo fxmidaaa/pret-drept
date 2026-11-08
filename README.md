@@ -1,5 +1,9 @@
 # Is this Chișinău apartment overpriced?
 
+This branch adds a small end-to-end MLOps workflow to the original app. Start with the
+[setup and demonstration guide](docs/mlops.md). The project notes below describe the historical
+July 2026 dataset and model. The new demo runs on generated data.
+
 My first machine learning project. I scraped about 4,500 real apartment rental listings from a
 Moldovan classifieds site, trained a model on them, and built a small app that estimates a fair
 monthly rent and tells you whether a given listing is overpriced or a good deal.
@@ -9,9 +13,8 @@ price is normal, too high, or too low, unless you happen to be an agent or an an
 built a tool that compares a listing against the whole market and explains *why* it thinks the rent
 is fair or not.
 
-There's a live demo at [https://pret-drept-tm6owb5eka-ew.a.run.app](https://pret-drept-tm6owb5eka-ew.a.run.app).
-It runs on Google Cloud Run, which spins the container down when nobody's using it, so the first
-request after a quiet spell takes a few seconds to wake up.
+The July app ran on Google Cloud Run. The [historical API reference](#historical-live-api-reference)
+records its request shape. Use the local workflow below to run this branch.
 
 ---
 
@@ -35,12 +38,9 @@ its currency, area, rooms, floor, sector, heating type, furnishing, even GPS coo
 guest about it too: I filter server-side to exactly what I need, lean on the API's own duplicate
 collapsing, pause between requests, and save as I go.
 
-One thing on privacy, since this scrapes real ads. `scrape.py` keeps only a reviewed list of fields,
-never contacts or the seller's name, and it stores the listing id as a one-way hash. The raw file it
-writes stays on my machine: gitignored, never committed, never baked into the Docker image, never
-published. What's public is a small synthetic sample plus the column schema in
-[`data/sample/`](data/sample/), and a model that only ever holds coarse aggregates, never a single
-listing's coordinates or price.
+The original scraper kept a field allowlist and hashed listing IDs. The raw export stays local.
+The public sample files are generated. Keep any bundle trained on real listings private unless
+it has been reviewed for the intended use.
 
 That gives 4,528 listings, or 3,557 after cleaning (the two trims below take it to about 3,400).
 Cleaning drops rows missing area, price, or rooms, drops reposted duplicates, and keeps rent between
@@ -127,7 +127,7 @@ Three of them took actual thought:
 
 ## Picking the model
 
-`train.py` uses XGBoost, and not just because XGBoost is the fashionable pick. The whole argument is a
+The historical model used XGBoost, and not just because XGBoost is the fashionable pick. The whole argument is a
 model bake-off in [`notebooks/model_selection.ipynb`](notebooks/model_selection.ipynb): I run a dumb
 baseline, linear regression, ridge, random forest, gradient boosting, and XGBoost over the same data
 and the same split, score them the same way, confirm the order with 5-fold cross-validation, and tune
@@ -147,9 +147,8 @@ straight line explains 60% of the variance, which told me the features were pull
 before I ever touched a tree.
 
 One honest note about where these numbers come from. The table above is 5-fold cross-validation
-from the notebook. The model I actually ship gets retrained by `train.py` on a single fixed 80/20
-split (`random_state=42`), and its own holdout scores go into `model.joblib` and get printed every
-time the API loads it: MAE 134 EUR, MAPE 16.1%, RMSE 188, R² 0.78. The holdout agrees with the CV
+from the notebook. The historical model was trained on a single fixed 80/20
+split (`random_state=42`), and its reported holdout scores were MAE 134 EUR, MAPE 16.1%, RMSE 188, R² 0.78. The holdout agrees with the CV
 (188 vs 192 ± 6), so this split isn't a lucky one. A detail I like from the notebook: untuned,
 XGBoost and random forest come out essentially tied. The search then opens a ~7 EUR gap in XGBoost's
 favour, so it earns its spot.
@@ -191,50 +190,20 @@ Worth being upfront about a few things:
 
 ## Running it
 
-Python 3.13. First:
+Follow the [MLOps guide](docs/mlops.md) to set up the environments and generate the demo bundle.
 
 ```bash
-pip install -r requirements.txt
+PRET_DREPT_MODEL=artifacts/demo/model.joblib uvicorn api:app --host 127.0.0.1 --port 8000
 ```
 
-Start the app (you need a trained `model.joblib` for this):
-
-```bash
-uvicorn api:app --reload
-# then open http://127.0.0.1:8000
-```
-
-Rebuild everything from scratch:
-
-```bash
-python scrape.py    # grabs fresh listings into data/raw/listings.csv
-python train.py     # cleans, trains, writes model.joblib
-```
-
-Or try a single prediction from the terminal: `python predict.py` runs the example apartment at the
-bottom of that file.
-
-Run the tests (they cover the cleaning rules, the features, and the API):
-
-```bash
-python -m pytest
-```
-
-If you'd rather not install Python at all, there's a Dockerfile. It ships the inference code plus a
-privacy-reviewed, pre-trained `model.joblib`. Training happens privately, not during the build, so you
-need a trained model present first:
-
-```bash
-python train.py            # writes a reviewed model.joblib from your private data
-docker build -t chisinau-rent .
-docker run -p 8000:8000 chisinau-rent
-```
+The guide covers the DVC pipeline, local MLflow tracking, authorized private inputs,
+legacy model compatibility, the Docker model mount and CI checks.
 
 ---
 
-## Trying the live API
+## Historical live API reference
 
-It's deployed at [pret-drept-tm6owb5eka-ew.a.run.app](https://pret-drept-tm6owb5eka-ew.a.run.app): the site itself, plus a
+The July app was deployed at [pret-drept-tm6owb5eka-ew.a.run.app](https://pret-drept-tm6owb5eka-ew.a.run.app): the site itself, plus a
 JSON API you can hit directly:
 
 ```bash
@@ -252,11 +221,13 @@ curl -X POST "https://pret-drept-tm6owb5eka-ew.a.run.app/predict" \
 ```
 scrape.py                  999.md GraphQL scraper -> data/raw/listings.csv
 features.py                all the cleaning and feature engineering
-train.py                   trains XGBoost, saves model.joblib
-predict.py                 loads the model, makes one prediction + explanation
+train.py                   fits XGBoost on the prepared training partition
+predict.py                 shared bundle loading and inference
+mlops/                     preparation, evaluation and local tracking
+dvc.yaml / dvc.lock        safe demo pipeline and its versioned identities
 api.py                     FastAPI - /predict, /options, /health, serves the page
 app/index.html             the one-page front end (form in, verdict out)
-Dockerfile                 containerised API (inference code + reviewed model)
+Dockerfile                 inference image, with a read-only model mount at runtime
 notebooks/eda.ipynb        exploratory analysis (aggregate views only)
 notebooks/model_selection.ipynb   the "why XGBoost" model comparison
 data/sample/               synthetic sample + column schema (real data stays private)
@@ -264,19 +235,8 @@ images/                    charts from the EDA
 tests/                     unit tests for the cleaning rules, features and the API
 ```
 
-One thing I'm a little proud of: `features.py` is the only place the cleaning rules live, and
-training, prediction, and the API all import from it, so they can't quietly disagree about what
-"ground floor" means or how a price gets converted. And `model.joblib` holds more than the model. It
-also stores sensible per-sector defaults, so the site can fill in the things a normal person would
-never type (typical coordinates, ceiling height, photo count) from just the sector you picked.
-Everything it stores is an aggregate: per-sector and coarse ~1 km grid medians, never a per-listing
-coordinate or price.
-
----
-
 ## Still on the list
 
-- Github Actions (CI).
 - A wider hyperparameter search. The current one is only 10 random draws, so 192 is more of a
   ceiling than the real best.
 - Some kind of confidence range instead of a single number.

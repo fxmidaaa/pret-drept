@@ -1,9 +1,13 @@
-import numpy as np
-import joblib
+import argparse
+import json
 import os
-import shap
+from functools import lru_cache
+from pathlib import Path
 
-from features import floor_flags, latlon_to_km, ppm_from_grid, categorical, binary
+import joblib
+import numpy as np
+
+from features import binary, categorical, floor_flags, latlon_to_km, ppm_from_grid
 
 BINARY_SET = set(binary)
 # real model inputs that just aren't meaningful to show as a "driver": raw
@@ -12,27 +16,38 @@ DRIVER_HIDDEN = {"lat", "lon", "photo_count", "dist_to_center"}
 # friendlier labels for a few opaque feature names
 DRIVER_LABELS = {"knn_ppm": "nearby rents", "lux": "premium finishes"}
 
-MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model.joblib')
+MODEL_PATH = Path(__file__).resolve().with_name("model.joblib")
 
-# to optimize prediction time and not to use for every single prediction model loading, i use 
-# a container dictionary that holds everything i need to make a prediction. 
-# it is loaded once from model.joblib and reused for every prediction
-_bundle = None
 
-def get_bundle():
-    global _bundle
-    if _bundle is None:
-        _bundle = joblib.load(MODEL_PATH)
+class ModelUnavailableError(RuntimeError):
+    pass
 
-        # shap explainer for my xgboost model, explains one prediction at a time
-        _bundle['explainer'] = shap.TreeExplainer(_bundle['model'])
 
-        meta = _bundle.get('meta', {})
-        if meta:
-            print(f'loaded model trained {meta.get("trained_at")} '
-                  f'on {meta.get("n_listings")} listings '
-                  f'(val MAE {meta.get('mae_eur')} EUR, MAPE {meta.get('mape_pct')}%)')
-    return _bundle
+def load_bundle(path: Path) -> dict:
+    """Load a trusted local bundle. Joblib may execute code during deserialization."""
+    try:
+        return joblib.load(path)
+    except OSError as exc:
+        raise ModelUnavailableError(
+            f"Cannot read {path}. Run the demo pipeline and set PRET_DREPT_MODEL "
+            "to a readable trusted model.joblib."
+        ) from exc
+
+
+@lru_cache(maxsize=1)
+def _serving_bundle(path: Path) -> dict:
+    bundle = load_bundle(path)
+    # Evaluation uses the same fitted bundle without initializing explanations.
+    import shap
+
+    bundle["explainer"] = shap.TreeExplainer(bundle["model"])
+    return bundle
+
+
+def get_bundle() -> dict:
+    path = Path(os.environ.get("PRET_DREPT_MODEL", MODEL_PATH)).expanduser().resolve()
+    return _serving_bundle(path)
+
 
 def known_values(column):
     # the category values the model was actually trained on
@@ -56,52 +71,57 @@ def driver_label(raw_name):
         return DRIVER_LABELS[base]
     return nice_name(raw_name)
 
-def build_features(apartment, bund):
-    # turn a request into exactly the feature dict the model was trained on.
-    # every key here MUST be one of bund['features'] - anything else the
-    # vectorizer silently drops, and the real feature falls back to a default.
+def build_features(apartment: dict, bund: dict) -> dict:
+    values = {name: apartment.get(name) for name in bund["features"]}
+    for name, value in values.items():
+        if isinstance(value, (float, np.floating)) and np.isnan(value):
+            values[name] = None
 
-    # keep only the columns the model knows, turn into the vectorizer format
-    x_dict = {f: apartment.get(f) for f in bund['features']}
+    if values.get("is_ground") is None or values.get("is_top") is None:
+        values["is_ground"], values["is_top"] = floor_flags(
+            values.get("floor"), values.get("total_floors")
+        )
 
-    # derive the ground/top floor flags if the caller didn't send them -
-    # the rule lives in features.floor_flags so it can't drift from training
-
-    if x_dict.get("is_ground") is None or x_dict.get("is_top") is None:
-        is_ground, is_top = floor_flags(apartment.get("floor"), apartment.get("total_floors"))
-        x_dict["is_ground"], x_dict["is_top"] = is_ground, is_top
-
-    if x_dict.get("lat") is None or x_dict.get("lon") is None:
+    # July bundles can still use coordinates and a fitted market grid.
+    if "lat" in values and (values["lat"] is None or values["lon"] is None):
         sector = str(apartment.get("sector", "")).strip().lower()
-        x_dict["lat"], x_dict["lon"] = bund["sector_latlon"].get(sector, bund["median_latlon"])
+        values["lat"], values["lon"] = bund["sector_latlon"].get(sector, bund["median_latlon"])
+    if "dist_to_center" in values and values["dist_to_center"] is None:
+        values["dist_to_center"] = latlon_to_km(values["lat"], values["lon"])
+    if "knn_ppm" in values and values["knn_ppm"] is None:
+        values["knn_ppm"] = ppm_from_grid(
+            bund["grid_ppm"],
+            bund["sector_ppm"],
+            bund["global_ppm"],
+            values["lat"],
+            values["lon"],
+            apartment.get("sector"),
+        )
 
-    if x_dict.get("dist_to_center") is None:
-        x_dict["dist_to_center"] = latlon_to_km(x_dict["lat"], x_dict["lon"])
-    if x_dict.get("knn_ppm") is None:
-        x_dict["knn_ppm"] = ppm_from_grid(
-            bund["grid_ppm"], bund["sector_ppm"], bund["global_ppm"],
-            x_dict["lat"], x_dict["lon"], apartment.get("sector"))
-
-    for feature, value in x_dict.items():
+    for name, value in values.items():
         if value is None:
-            if feature in bund["numeric_defaults"]:
-                x_dict[feature] = bund["numeric_defaults"][feature]
-            elif feature in categorical:
-                x_dict[feature] = "necunoscut"
-            else:
-                x_dict[feature] = 0
+            fallback = "necunoscut" if name in categorical else 0
+            values[name] = bund["numeric_defaults"].get(name, fallback)
+    return values
 
-    return x_dict
+
+def model_matrix(apartments: list[dict], bundle: dict) -> np.ndarray:
+    return bundle["dv"].transform([build_features(apartment, bundle) for apartment in apartments])
+
+
+def predict_eur(matrix: np.ndarray, bundle: dict) -> np.ndarray:
+    predictions = np.expm1(bundle["model"].predict(matrix))
+    if not (np.isfinite(predictions) & (predictions > 0)).all():
+        raise ValueError("The model returned an invalid monthly rent.")
+    return predictions
+
 
 def run(apartment):
     bund = get_bundle()
-    dv = bund['dv']
-    listed_price = apartment.get('price')
-
-    x_dict = build_features(apartment, bund)
-    X = dv.transform([x_dict])
-
-    fair_price = float(np.expm1(bund['model'].predict(X)[0]))
+    dv = bund["dv"]
+    listed_price = apartment.get("price")
+    X = model_matrix([apartment], bund)
+    fair_price = float(predict_eur(X, bund)[0])
 
     result = {'fair_price': round(fair_price), 'listed_price': listed_price}
 
@@ -161,5 +181,12 @@ if __name__ == "__main__":
         "price": 700,
     }
 
-    from pprint import pprint
-    pprint(run(example))
+    parser = argparse.ArgumentParser(description="Predict monthly asking rent for one apartment.")
+    parser.add_argument("--model", type=Path, help="Trusted local model.joblib.")
+    args = parser.parse_args()
+    if args.model is not None:
+        os.environ["PRET_DREPT_MODEL"] = str(args.model)
+    try:
+        print(json.dumps(run(example), indent=2, ensure_ascii=False, allow_nan=False))
+    except (OSError, ValueError, ModelUnavailableError) as exc:
+        parser.exit(2, f"Prediction failed. {exc}\n")

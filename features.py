@@ -40,6 +40,10 @@ binary = ["autonomous_heating", "furnished", "elevator", "parking", "is_ground",
           "utilities_included", "lux"]
 categorical = ["sector", "building_fund", "condition", "author", "building_type"]
 FEATURES = numerical + binary + categorical
+MODEL_FEATURES = [
+    name for name in FEATURES
+    if name not in {"lat", "lon", "dist_to_center", "photo_count", "building_type"}
+]
 
 def floor_flags(floor, total_floors):
     # this rule lives here (and ONLY here) so that
@@ -81,7 +85,7 @@ def first_number(text):
     # pull the first number out of a value. "62" -> 62.0, "Apartament cu 3 camere" -> 3.0
     if text is None or (isinstance(text, float) and np.isnan(text)):
         return None
-    m = re.search(r"\d+[.,]?\d*", str(text))
+    m = re.search(r"[-+]?\d+[.,]?\d*", str(text))
     if m is None:
         return None
     return float(m.group().replace(",", "."))
@@ -100,7 +104,7 @@ def clean_text(text):
     # for category columns: lowercase, trim, fill the empty ones
     if not isinstance(text, str):
         return "necunoscut"
-    return text.strip().lower()
+    return text.strip().lower() or "necunoscut"
 
 def to_flag(value):
     # the amenity columns come back as True (present in romanian) or NaN/False (absent)
@@ -223,7 +227,7 @@ def clean_price(row):
         return value * EUR_PER_USD
     return value
 
-def clean_data(df):
+def clean_data(df, *, deduplicate=True):
     # cleans raw scraped 999 dataframe and returns a ready one for the model
     df = df.copy()
 
@@ -283,9 +287,10 @@ def clean_data(df):
     # if one copy lands in train and another in validation, the model gets graded on flats
     # it has already seen and the metrics look better than they really are.
     # same key attributes + same price = same flat, i assume. 
-    df = df.drop_duplicates(
-        subset=["sector", "rooms", "area", "floor", "total_floors", "price"]
-    )
+    if deduplicate:
+        df = df.drop_duplicates(
+            subset=["sector", "rooms", "area", "floor", "total_floors", "price"]
+        )
 
     # remove obvious outliers (typos, daily-rate leftovers, bad areas)
     # the price cap is 2000 EUR/month on purpose: this model is for the mass

@@ -1,15 +1,22 @@
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field, field_validator
-
-from typing import Optional
 import os
+
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel, Field, field_validator
 
 import predict
 
 app = FastAPI(title='Fair Chisinau Rent', description='Overpriced apartment?')
 
 HOMEPAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app")
+
+@app.exception_handler(predict.ModelUnavailableError)
+async def model_unavailable(_request: Request, _error: predict.ModelUnavailableError) -> JSONResponse:
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Prediction model unavailable. Check the server model configuration."},
+    )
+
 
 @app.get("/options")
 def options():
@@ -38,7 +45,7 @@ class Apartment(BaseModel):
     furnished: int = Field(0, ge=0, le=1)
     elevator: int = Field(0, ge=0, le=1)
     parking: int = Field(0, ge=0, le=1)
-    price: Optional[float] = Field(None, gt=0, le=50000) # asking monthly rent in EUR
+    price: float | None = Field(None, gt=0, le=50000) # asking monthly rent in EUR
 
 
     air_conditioning: int = Field(0, ge=0, le=1)
@@ -49,12 +56,12 @@ class Apartment(BaseModel):
     lux: int = Field(0, ge=0, le=1) # premium building / finishes (penthouse, jacuzzi...)
     balcony_count: int = Field(0, ge=0, le=4)
     bathrooms: int = Field(1, ge=1, le=4)
-    kitchen_area: Optional[float] = Field(None, ge=3, le=60)
-    ceiling_height: Optional[float] = Field(None, ge=2, le=4.5)
+    kitchen_area: float | None = Field(None, ge=3, le=60)
+    ceiling_height: float | None = Field(None, ge=2, le=4.5)
 
     # exact gps coordinates (must be inside chisinau) 
-    lat: Optional[float] = Field(None, ge=46.9, le=47.1)
-    lon: Optional[float] = Field(None, ge=28.74, le=28.95)
+    lat: float | None = Field(None, ge=46.9, le=47.1)
+    lon: float | None = Field(None, ge=28.74, le=28.95)
 
     @field_validator("sector", "author", "building_fund", "condition")
     @classmethod

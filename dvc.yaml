@@ -1,0 +1,51 @@
+stages:
+  prepare:
+    cmd: python -m mlops.prepare data/sample/demo.csv artifacts/demo --synthetic
+    deps:
+      - data/sample/demo.csv
+      - features.py
+      - mlops/config.py
+      - mlops/files.py
+      - mlops/prepare.py
+      - requirements-serve.txt
+    params:
+      - params.json:
+          - seed
+          - evaluation_fraction
+    outs:
+      - artifacts/demo/train.csv
+      - artifacts/demo/evaluation.csv
+      - artifacts/demo/dataset.json
+  train:
+    cmd: python train.py artifacts/demo
+    deps:
+      - artifacts/demo/train.csv
+      - train.py
+      - features.py
+      - predict.py
+      - mlops/config.py
+      - mlops/files.py
+      - mlops/prepare.py
+      - requirements-serve.txt
+    params:
+      - params.json:
+          - seed
+          - evaluation_fraction
+          - model
+    outs:
+      - artifacts/demo/model.joblib
+  evaluate:
+    cmd: python -m mlops.evaluate artifacts/demo
+    deps:
+      - artifacts/demo/dataset.json
+      - artifacts/demo/evaluation.csv
+      - artifacts/demo/model.joblib
+      - features.py
+      - predict.py
+      - mlops/config.py
+      - mlops/evaluate.py
+      - mlops/files.py
+      - mlops/prepare.py
+      - requirements-serve.txt
+    metrics:
+      - artifacts/demo/evaluation.json

@@ -202,7 +202,10 @@ function fillSelect(id, values) {
 }
 
 // load the dropdown options from the model
-fetch("/options").then(r => r.json()).then(opts => {
+fetch("/options").then(r => {
+  if (!r.ok) throw new Error("Options unavailable");
+  return r.json();
+}).then(opts => {
   fillSelect("sector", opts.sector);
   fillSelect("author", opts.author);
   fillSelect("building_fund", opts.building_fund);
@@ -210,6 +213,11 @@ fetch("/options").then(r => r.json()).then(opts => {
   // default sector to centru if present
   const s = document.getElementById("sector");
   if (opts.sector.includes("centru")) s.value = "centru";
+}).catch(() => {
+  document.getElementById("submitBtn").disabled = true;
+  const result = document.getElementById("result");
+  result.style.display = "block";
+  result.textContent = "Prediction options unavailable. Check the server model configuration.";
 });
 
 const num = id => Number(document.getElementById(id).value);
@@ -255,6 +263,7 @@ document.getElementById("form").addEventListener("submit", async (e) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
+    if (!res.ok) throw new Error("Prediction request failed");
     const data = await res.json();
     render(data);
   } catch (err) {
@@ -289,7 +298,7 @@ function render(data) {
         const up = d.effect === "raises price";
         return `<div class="driver">
                   <span class="arrow ${up ? "up" : "down"}">${up ? "▲" : "▼"}</span>
-                  <span>${d.feature}</span>
+                  <span class="driver-feature"></span>
                   <span style="margin-left:auto;color:var(--muted);font-size:0.82rem;">
                     ${up ? "raises rent" : "lowers rent"}</span>
                 </div>`;
@@ -304,6 +313,9 @@ function render(data) {
       ${verdictHtml}
       ${driversHtml}
     </div>`;
+  r.querySelectorAll(".driver-feature").forEach((label, index) => {
+    label.textContent = data.drivers[index].feature;
+  });
   r.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 </script>

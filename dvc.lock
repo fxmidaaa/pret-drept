@@ -1,0 +1,142 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python -m mlops.prepare data/sample/demo.csv artifacts/demo --synthetic
+    deps:
+    - path: data/sample/demo.csv
+      hash: md5
+      md5: b5786e9f59610ac91a88937c43ffd3e6
+      size: 14413
+    - path: features.py
+      hash: md5
+      md5: e1d103212fa359e3ace366374091d748
+      size: 17033
+    - path: mlops/config.py
+      hash: md5
+      md5: fc4c98cc81ea9cd5405e86c822aa53a2
+      size: 618
+    - path: mlops/files.py
+      hash: md5
+      md5: 17d0555c8f66e5bcb4c89fbf81ef5a28
+      size: 904
+    - path: mlops/prepare.py
+      hash: md5
+      md5: 91f7e218574a48831f6e5ca5dd2687dc
+      size: 6157
+    - path: requirements-serve.txt
+      hash: md5
+      md5: b681175bdcee67baf31ebbf9fca2019f
+      size: 709
+    params:
+      params.json:
+        evaluation_fraction: 0.2
+        seed: 42
+    outs:
+    - path: artifacts/demo/dataset.json
+      hash: md5
+      md5: 341817fb22ff8bb3a8828595e96f7f1a
+      size: 619
+    - path: artifacts/demo/evaluation.csv
+      hash: md5
+      md5: a3a50c08a9d07d0e87ce0688af7d3e44
+      size: 3060
+    - path: artifacts/demo/train.csv
+      hash: md5
+      md5: d50dc8df08ca9eb6a47c822342ee6da1
+      size: 11679
+  train:
+    cmd: python train.py artifacts/demo
+    deps:
+    - path: artifacts/demo/train.csv
+      hash: md5
+      md5: d50dc8df08ca9eb6a47c822342ee6da1
+      size: 11679
+    - path: features.py
+      hash: md5
+      md5: e1d103212fa359e3ace366374091d748
+      size: 17033
+    - path: mlops/config.py
+      hash: md5
+      md5: fc4c98cc81ea9cd5405e86c822aa53a2
+      size: 618
+    - path: mlops/files.py
+      hash: md5
+      md5: 17d0555c8f66e5bcb4c89fbf81ef5a28
+      size: 904
+    - path: mlops/prepare.py
+      hash: md5
+      md5: 91f7e218574a48831f6e5ca5dd2687dc
+      size: 6157
+    - path: predict.py
+      hash: md5
+      md5: 98dbffcaa3a5b5be6d6291c95b5045bc
+      size: 6928
+    - path: requirements-serve.txt
+      hash: md5
+      md5: b681175bdcee67baf31ebbf9fca2019f
+      size: 709
+    - path: train.py
+      hash: md5
+      md5: 4c9ff14f5781b9d1f8adf0399737314d
+      size: 2444
+    params:
+      params.json:
+        evaluation_fraction: 0.2
+        model:
+          n_estimators: 120
+          max_depth: 4
+          learning_rate: 0.08
+        seed: 42
+    outs:
+    - path: artifacts/demo/model.joblib
+      hash: md5
+      md5: b5c4cde39c1111dd1ebbc5eca80e7a98
+      size: 40556
+  evaluate:
+    cmd: python -m mlops.evaluate artifacts/demo
+    deps:
+    - path: artifacts/demo/dataset.json
+      hash: md5
+      md5: 341817fb22ff8bb3a8828595e96f7f1a
+      size: 619
+    - path: artifacts/demo/evaluation.csv
+      hash: md5
+      md5: a3a50c08a9d07d0e87ce0688af7d3e44
+      size: 3060
+    - path: artifacts/demo/model.joblib
+      hash: md5
+      md5: b5c4cde39c1111dd1ebbc5eca80e7a98
+      size: 40556
+    - path: features.py
+      hash: md5
+      md5: e1d103212fa359e3ace366374091d748
+      size: 17033
+    - path: mlops/config.py
+      hash: md5
+      md5: fc4c98cc81ea9cd5405e86c822aa53a2
+      size: 618
+    - path: mlops/evaluate.py
+      hash: md5
+      md5: 82df35d356eceda3c947d479a090911d
+      size: 2513
+    - path: mlops/files.py
+      hash: md5
+      md5: 17d0555c8f66e5bcb4c89fbf81ef5a28
+      size: 904
+    - path: mlops/prepare.py
+      hash: md5
+      md5: 91f7e218574a48831f6e5ca5dd2687dc
+      size: 6157
+    - path: predict.py
+      hash: md5
+      md5: 98dbffcaa3a5b5be6d6291c95b5045bc
+      size: 6928
+    - path: requirements-serve.txt
+      hash: md5
+      md5: b681175bdcee67baf31ebbf9fca2019f
+      size: 709
+    outs:
+    - path: artifacts/demo/evaluation.json
+      hash: md5
+      md5: bc4330efcfd7c633ae46c13550e2fa7f
+      size: 624
