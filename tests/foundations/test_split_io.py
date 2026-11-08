@@ -2,6 +2,7 @@
 
 import copy
 import os
+import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -218,7 +219,7 @@ def test_interrupted_atomic_creation_leaves_no_final_split(local_case, monkeypat
 
         monkeypatch.setattr(release_io.os, "fdopen", interrupted)
     elif operation == "mkstemp":
-        monkeypatch.setattr(release_io.tempfile, operation, fail)
+        monkeypatch.setattr(tempfile, operation, fail)
     else:
         monkeypatch.setattr(release_io.os, operation, fail)
     with pytest.raises(ReleaseError, match="FINALIZATION_FAILED") as failure:

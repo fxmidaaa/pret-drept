@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:dataset-release:2.0.0",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "2.0.0" },
+    "release_digest": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/release_digest" },
+    "dataset_family": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/dataset_family" },
+    "access_domain": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/access_domain" },
+    "release_state": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/release_state" },
+    "retention": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/retention" },
+    "candidate_ref": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/candidate_ref" },
+    "observation_schema_version": {
+      "$ref": "urn:rent:dataset-release:1.0.0#/properties/observation_schema_version"
+    },
+    "observations_digest": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/observations_digest" },
+    "observation_count": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/observation_count" },
+    "inventory": { "$ref": "urn:rent:observation-inventory:1.0.0" },
+    "quality_report_ref": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/quality_report_ref" },
+    "provenance": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/provenance" },
+    "acquisition_sources": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/acquisition_sources" },
+    "metadata": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/metadata" },
+    "dvc": { "$ref": "urn:rent:dataset-release:1.0.0#/properties/dvc" },
+    "artifacts": {
+      "type": "array", "minItems": 5,
+      "items": { "$ref": "urn:rent:dataset-release:1.0.0#/$defs/artifact" }
+    }
+  },
+  "required": [
+    "contract_version", "release_digest", "dataset_family", "access_domain", "release_state",
+    "retention", "candidate_ref", "observation_schema_version", "observations_digest",
+    "observation_count", "inventory", "quality_report_ref", "provenance", "acquisition_sources",
+    "metadata", "dvc", "artifacts"
+  ],
+  "additionalProperties": false
+}

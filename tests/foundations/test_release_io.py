@@ -3,6 +3,7 @@
 import copy
 import os
 import shutil
+import tempfile
 
 import pytest
 
@@ -282,7 +283,7 @@ def test_completion_staging_failure_is_safe_and_cleanup_failure_preserves_succes
         raise OSError("synthetic private path")
 
     with monkeypatch.context() as patch:
-        patch.setattr(release_io.tempfile, "mkstemp", fail)
+        patch.setattr(tempfile, "mkstemp", fail)
         with pytest.raises(ReleaseError, match="FINALIZATION_FAILED"):
             finalize_restoration(
                 destination,

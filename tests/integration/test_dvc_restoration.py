@@ -13,6 +13,7 @@ from rent_contracts import ContractError
 from rent_contracts.evaluation import validate_development_population
 from rent_contracts.inventory import MANIFEST_FILE, PARQUET_FILE
 from rent_contracts.validation import MAX_DOCUMENT_BYTES, canonical_json
+from rent_data.candidates import build_observation_candidate, project_candidate_observations
 from rent_data.dvc_local import LocalDvcStore
 from rent_data.inventory_io import (
     InventoryLimits,
@@ -419,3 +420,414 @@ def test_actual_local_dvc_preserves_inventory_from_exact_revision_and_fresh_cach
     for name, raw_bytes in before.items():
         assert (source / name).read_bytes() == (restored / name).read_bytes() == raw_bytes
         assert (source / name).stat().st_ino != (restored / name).stat().st_ino
+
+
+def stage_reference_payload(workspace, inventory, case, rows):
+    write_observation_inventory(inventory, rows)
+    candidate = build_observation_candidate(
+        case["sources"], **case["recipe"], inventory_directory=inventory
+    )
+    root = workspace.root / "payload"
+    artifacts = write_payload(
+        root,
+        candidate,
+        source_documents=case["sources"],
+        expected_candidate_ref=candidate["candidate_digest"],
+        inventory_directory=inventory,
+    )
+    return candidate, artifacts
+
+
+def test_actual_v2_release_restores_large_older_inventory_and_rejects_bad_objects(
+    local_dvc, tmp_path, release_input_factory, large_observation_inventory
+):
+    store = tmp_path / "store"
+    store.mkdir()
+    producer = local_dvc.create_workspace(tmp_path / "producer", store=store)
+    root = producer.root / "payload"
+    older = release_input_factory("A")
+    rows = large_observation_inventory
+    original_source = json.loads(older["sources"][0])
+    older["sources"] = []
+    for start in range(0, len(rows), 600):
+        source = {
+            **original_source,
+            "raw_source_ref": content_digest(f"synthetic archive {start}".encode()),
+            "records": [
+                {"source_record_id": f"capture-{offset}", "observation": row}
+                for offset, row in enumerate(rows[start : start + 600])
+            ],
+        }
+        older["sources"].append(canonical_json(source).encode("utf-8"))
+    assert sum(map(len, older["sources"])) > MAX_DOCUMENT_BYTES
+
+    candidate, artifacts = stage_reference_payload(producer, tmp_path / "inventory-A", older, rows)
+    logical_bytes = json.dumps(
+        rows, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    assert len(logical_bytes) > MAX_DOCUMENT_BYTES
+    assert candidate["observations_digest"] == content_digest(logical_bytes)
+    assert candidate["inventory"]["artifact"]["size_bytes"] > MAX_DOCUMENT_BYTES
+    assert len(canonical_json(candidate).encode("utf-8")) < MAX_DOCUMENT_BYTES
+    local_dvc.track_payload(producer, contract_version="2.0.0")
+    commit = commit_metadata(local_dvc, producer, "synthetic-v2-revision-A")
+    release = build_dataset_release(
+        candidate,
+        source_documents=older["sources"],
+        inventory_directory=root / "inventory",
+        binding=local_dvc.metadata_binding(producer, commit),
+        artifacts=artifacts,
+    )
+    reference = release["release_digest"]
+    local_dvc.push(producer, release, expected_release_ref=reference)
+
+    shutil.rmtree(root)  # Only the disposable producer fixture's synthetic payload.
+    newer = release_input_factory("B")
+    _, newer_artifacts = stage_reference_payload(
+        producer, tmp_path / "inventory-B", newer, newer["candidate"]["observations"]
+    )
+    local_dvc.track_payload(producer, contract_version="2.0.0")
+    latest = commit_metadata(local_dvc, producer, "synthetic-v2-revision-B")
+    assert latest != commit
+
+    destination = tmp_path / "consumer-A"
+    report = local_dvc.restore(
+        release,
+        metadata_workspace=producer,
+        destination=destination,
+        expected_release_ref=reference,
+    )
+    assert report["metadata_commit"] == commit
+    assert report["fresh_cache"] is True
+    assert report["observation_count"] == len(rows)
+    assert any((destination / ".dvc/cache").rglob("*.dir"))
+    restored = destination / "payload"
+    assert payload_inventory(restored, contract_version="2.0.0") == artifacts
+    verified = read_verified_restore(destination, manifest=release, expected_release_ref=reference)
+    assert verified == candidate
+    projected = project_candidate_observations(
+        verified,
+        source_documents=older["sources"],
+        expected_candidate_ref=candidate["candidate_digest"],
+        inventory_directory=restored / "inventory",
+    )
+    assert projected == rows
+    for name in (MANIFEST_FILE, PARQUET_FILE):
+        original = tmp_path / "inventory-A" / name
+        assert (restored / "inventory" / name).read_bytes() == original.read_bytes()
+        assert (restored / "inventory" / name).stat().st_ino != original.stat().st_ino
+    assert payload_inventory(root, contract_version="2.0.0") == newer_artifacts
+
+    # Mutate only the disposable remote's Parquet object. Each consumer starts
+    # with an empty cache even though a completed consumer has the original.
+    oid = release["dvc"]["object_id"]
+    objects = store / "files/md5"
+    entries = json.loads((objects / oid[:2] / oid[2:]).read_bytes())
+    md5 = next(entry["md5"] for entry in entries if entry["relpath"] == f"inventory/{PARQUET_FILE}")
+    remote_parquet = objects / md5[:2] / md5[2:]
+    remote_parquet.chmod(0o600)
+    with remote_parquet.open("r+b") as stream:
+        stream.write(b"FAIL")
+    corrupted = tmp_path / "consumer-corrupt"
+    with pytest.raises(ContractError):
+        local_dvc.restore(
+            release,
+            metadata_workspace=producer,
+            destination=corrupted,
+            expected_release_ref=reference,
+        )
+    assert not (corrupted / COMPLETION_FILE).exists()
+
+    remote_parquet.unlink()
+    incomplete = tmp_path / "consumer-missing"
+    with pytest.raises(ContractError):
+        local_dvc.restore(
+            release,
+            metadata_workspace=producer,
+            destination=incomplete,
+            expected_release_ref=reference,
+        )
+    assert not (incomplete / COMPLETION_FILE).exists()
+    assert (destination / COMPLETION_FILE).is_file()
+
+
+def test_actual_v2_push_rejects_stale_dvc_metadata_with_matching_totals(
+    local_dvc, tmp_path, release_input_factory
+):
+    store = tmp_path / "store"
+    store.mkdir()
+    producer = local_dvc.create_workspace(tmp_path / "producer", store=store)
+    root = producer.root / "payload"
+    before = release_input_factory("A")
+    _, tracked = stage_reference_payload(
+        producer, tmp_path / "inventory-A", before, before["candidate"]["observations"]
+    )
+    local_dvc.track_payload(producer, contract_version="2.0.0")
+    revision = commit_metadata(local_dvc, producer, "synthetic-stale-metadata")
+    binding = local_dvc.metadata_binding(producer, revision)
+    shutil.rmtree(root)
+    after = release_input_factory("B")
+    candidate, artifacts = stage_reference_payload(
+        producer, tmp_path / "inventory-B", after, after["candidate"]["observations"]
+    )
+    assert len(tracked) == len(artifacts)
+    assert sum(row["size_bytes"] for row in tracked) == sum(row["size_bytes"] for row in artifacts)
+    release = build_dataset_release(
+        candidate,
+        source_documents=after["sources"],
+        inventory_directory=root / "inventory",
+        binding=binding,
+        artifacts=artifacts,
+    )
+    with pytest.raises(ReleaseError, match="DVC_PAYLOAD_CHANGED"):
+        local_dvc.push(producer, release, expected_release_ref=release["release_digest"])
+    assert not list(store.iterdir())
+
+
+# --- Development splits from reference-backed (v2) releases through actual DVC restores -----
+
+FOUR_RECORD_ASSIGNMENTS = [
+    {
+        "observation_id": "synthetic-A-0",
+        "partition": "training",
+        "eligibility_exclusions": [],
+        "cohorts": [],
+        "unseen_property_exclusions": ["not_development_validation"],
+    },
+    {
+        "observation_id": "synthetic-A-1",
+        "partition": "development_validation",
+        "eligibility_exclusions": [],
+        "cohorts": ["future_market"],
+        "unseen_property_exclusions": ["listing_seen_in_training", "property_overlap_training"],
+    },
+    {
+        "observation_id": "synthetic-A-2",
+        "partition": "excluded",
+        "eligibility_exclusions": ["temporal_evidence_missing"],
+        "cohorts": [],
+        "unseen_property_exclusions": ["not_development_validation"],
+    },
+    {
+        "observation_id": "synthetic-A-3",
+        "partition": "excluded",
+        "eligibility_exclusions": ["invalid_non_target_domain", "temporal_order_invalid"],
+        "cohorts": [],
+        "unseen_property_exclusions": ["not_development_validation"],
+    },
+]
+FOUR_RECORD_PARAMETERS = {
+    "training_cutoff": "2026-01-11T00:00:00Z",
+    "validation_window": {
+        "start_inclusive": "2026-01-11T00:00:00Z",
+        "end_exclusive": "2026-01-20T00:00:00Z",
+    },
+}
+
+
+@pytest.fixture(scope="module")
+def reference_revisions(local_dvc, tmp_path_factory, release_input_factory):
+    """Two v2 revisions of the same synthetic fixtures as the v1 `revisions` fixture."""
+    root = tmp_path_factory.mktemp("actual-local-dvc-v2")
+    store = root / "store"
+    store.mkdir()
+    workspace = local_dvc.create_workspace(root / "producer", store=store)
+    releases = {}
+    for revision in ("A", "B"):
+        case = release_input_factory(revision)
+        if (workspace.root / "payload").exists():
+            shutil.rmtree(workspace.root / "payload")  # Only this fixture's disposable bytes.
+        candidate, artifacts = stage_reference_payload(
+            workspace, root / f"inventory-{revision}", case, case["candidate"]["observations"]
+        )
+        local_dvc.track_payload(workspace, contract_version="2.0.0")
+        commit = commit_metadata(local_dvc, workspace, f"synthetic-v2-revision-{revision}")
+        manifest = build_dataset_release(
+            candidate,
+            source_documents=case["sources"],
+            inventory_directory=workspace.root / "payload/inventory",
+            binding=local_dvc.metadata_binding(workspace, commit),
+            artifacts=artifacts,
+        )
+        local_dvc.push(workspace, manifest, expected_release_ref=manifest["release_digest"])
+        releases[revision] = {**case, "candidate": candidate, "manifest": manifest}
+    return {"workspace": workspace, "root": root, "releases": releases}
+
+
+def test_actual_v1_and_v2_restores_materialize_identical_assignments_for_identical_observations(
+    local_dvc, revisions, reference_revisions, split_input_factory, tmp_path
+):
+    metadata = split_input_factory()
+    policy = metadata["policy"]
+    parameters = metadata["parameters"] | FOUR_RECORD_PARAMETERS
+    splits = {}
+    for label, source in (("v1", revisions), ("v2", reference_revisions)):
+        release = source["releases"]["A"]["manifest"]
+        restored, output = tmp_path / f"restored-{label}", tmp_path / f"split-{label}"
+        local_dvc.restore(
+            release,
+            metadata_workspace=source["workspace"],
+            destination=restored,
+            expected_release_ref=release["release_digest"],
+        )
+        context = {
+            "release": release,
+            "policy": policy,
+            "expected_release_ref": release["release_digest"],
+            "expected_policy_ref": policy["policy_digest"],
+        }
+        split = materialize_development_split(restored, output, **context, **parameters)
+        assert (
+            read_verified_development_split(
+                output,
+                restored_directory=restored,
+                expected_split_ref=split["split_digest"],
+                **context,
+            )
+            == split
+        )
+        assert split["dataset_ref"] == release["release_digest"]
+        assert (
+            payload_inventory(restored / "payload", contract_version=release["contract_version"])
+            == (release["artifacts"])
+        )
+        splits[label] = split
+    one, two = splits["v1"], splits["v2"]
+    assert one["memberships"] == two["memberships"] == FOUR_RECORD_ASSIGNMENTS
+    assert one["observations_digest"] == two["observations_digest"]
+    assert one["dataset_ref"] != two["dataset_ref"]
+    assert one["split_digest"] != two["split_digest"]
+    assert revisions["releases"]["A"]["manifest"]["contract_version"] == "1.0.0"
+    assert reference_revisions["releases"]["A"]["manifest"]["contract_version"] == "2.0.0"
+
+
+def test_actual_v2_older_large_release_materializes_identical_splits_from_independent_restores(
+    local_dvc, tmp_path, release_input_factory, reference_population_factory
+):
+    population = reference_population_factory(1_800, long_ids=True)
+    store = tmp_path / "store"
+    store.mkdir()
+    producer = local_dvc.create_workspace(tmp_path / "producer", store=store)
+    root = producer.root / "payload"
+    candidate, artifacts = stage_reference_payload(
+        producer, tmp_path / "inventory-A", population, population["rows"]
+    )
+    logical = json.dumps(
+        population["rows"], ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    assert len(logical) > MAX_DOCUMENT_BYTES  # the input is above the legacy inline bound
+    assert candidate["observations_digest"] == content_digest(logical)
+    local_dvc.track_payload(producer, contract_version="2.0.0")
+    commit = commit_metadata(local_dvc, producer, "synthetic-v2-large-revision-A")
+    release = build_dataset_release(
+        candidate,
+        source_documents=population["sources"],
+        inventory_directory=root / "inventory",
+        binding=local_dvc.metadata_binding(producer, commit),
+        artifacts=artifacts,
+    )
+    reference = release["release_digest"]
+    local_dvc.push(producer, release, expected_release_ref=reference)
+
+    shutil.rmtree(root)  # Only the disposable producer fixture's synthetic payload.
+    newer = release_input_factory("B")
+    _, newer_artifacts = stage_reference_payload(
+        producer, tmp_path / "inventory-B", newer, newer["candidate"]["observations"]
+    )
+    local_dvc.track_payload(producer, contract_version="2.0.0")
+    assert commit_metadata(local_dvc, producer, "synthetic-v2-large-revision-B") != commit
+
+    policy = population["policy"]
+    context = {
+        "release": release,
+        "policy": policy,
+        "expected_release_ref": reference,
+        "expected_policy_ref": policy["policy_digest"],
+    }
+    stored, caches = [], []
+    for index in range(2):
+        restored, output = tmp_path / f"restored-{index}", tmp_path / f"split-{index}"
+        report = local_dvc.restore(
+            release,
+            metadata_workspace=producer,
+            destination=restored,
+            expected_release_ref=reference,
+        )
+        assert report["fresh_cache"] is True
+        assert report["metadata_commit"] == commit
+        assert report["observation_count"] == len(population["rows"])
+        caches.append(restored / ".dvc/cache")
+        assert any(caches[-1].rglob("*.dir")) and not caches[-1].is_symlink()
+        split = materialize_development_split(
+            restored, output, **context, **population["parameters"]
+        )
+        assert (
+            read_verified_development_split(
+                output,
+                restored_directory=restored,
+                expected_split_ref=split["split_digest"],
+                **context,
+            )
+            == split
+        )
+        assert split["dataset_ref"] == reference
+        assert split["memberships"] == population["expected"]  # closed-form rules, row by row
+        assert payload_inventory(restored / "payload", contract_version="2.0.0") == artifacts
+        data = (output / SPLIT_FILE).read_bytes()
+        assert data == canonical_json(split).encode("utf-8")
+        assert len(data) < MAX_DOCUMENT_BYTES  # the output bound differs from the input bound
+        stored.append(data)
+    assert stored[0] == stored[1]
+    assert caches[0] != caches[1]  # independent consumer workspaces and caches
+    unseen = [
+        row["observation_id"]
+        for row in population["expected"]
+        if "unseen_property" in row["cohorts"]
+    ]
+    for cohort, ids in (
+        ("future_market", [r["observation_id"] for r in population["expected"] if r["cohorts"]]),
+        ("unseen_property", unseen),
+    ):
+        validate_development_population(
+            split, ids, cohort=cohort, expected_split_ref=split["split_digest"]
+        )
+    assert payload_inventory(root, contract_version="2.0.0") == newer_artifacts
+
+
+@pytest.mark.parametrize("kind", ["parquet-byte", "marker-missing", "release-ref", "policy-ref"])
+def test_actual_v2_restoration_damage_or_wrong_references_never_produce_a_split(
+    local_dvc, reference_revisions, split_input_factory, tmp_path, kind
+):
+    release = reference_revisions["releases"]["A"]["manifest"]
+    metadata = split_input_factory()
+    restored, output = tmp_path / "restored", tmp_path / "split"
+    local_dvc.restore(
+        release,
+        metadata_workspace=reference_revisions["workspace"],
+        destination=restored,
+        expected_release_ref=release["release_digest"],
+    )
+    arguments = (
+        {
+            "release": release,
+            "policy": metadata["policy"],
+            "expected_release_ref": release["release_digest"],
+            "expected_policy_ref": metadata["policy"]["policy_digest"],
+        }
+        | metadata["parameters"]
+        | FOUR_RECORD_PARAMETERS
+    )
+    if kind == "parquet-byte":
+        path = restored / "payload/inventory" / PARQUET_FILE
+        path.chmod(0o600)  # Only this disposable consumer workspace.
+        raw = path.read_bytes()
+        path.write_bytes(raw[:4] + bytes([raw[4] ^ 1]) + raw[5:])
+    elif kind == "marker-missing":
+        (restored / COMPLETION_FILE).unlink()
+    elif kind == "release-ref":
+        arguments["expected_release_ref"] = content_digest(b"wrong release")
+    else:
+        arguments["expected_policy_ref"] = content_digest(b"wrong policy")
+    with pytest.raises(ContractError):
+        materialize_development_split(restored, output, **arguments)
+    assert not output.exists()

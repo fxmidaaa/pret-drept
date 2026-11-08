@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rent:observation-candidate:2.0.0",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "2.0.0" },
+    "candidate_digest": { "$ref": "urn:rent:observation-candidate:1.0.0#/properties/candidate_digest" },
+    "dataset_family": { "$ref": "urn:rent:observation-candidate:1.0.0#/properties/dataset_family" },
+    "access_domain": { "$ref": "urn:rent:observation-candidate:1.0.0#/properties/access_domain" },
+    "release_state": { "$ref": "urn:rent:observation-candidate:1.0.0#/properties/release_state" },
+    "transformation_ref": { "$ref": "urn:rent:observation-candidate:1.0.0#/properties/transformation_ref" },
+    "projection_policy_ref": { "$ref": "urn:rent:observation-candidate:1.0.0#/properties/projection_policy_ref" },
+    "domain_policy_ref": { "$ref": "urn:rent:observation-candidate:1.0.0#/properties/domain_policy_ref" },
+    "property_matching_policy_ref": {
+      "$ref": "urn:rent:observation-candidate:1.0.0#/properties/property_matching_policy_ref"
+    },
+    "observations_digest": { "$ref": "urn:rent:observation-candidate:1.0.0#/properties/observations_digest" },
+    "sources": { "$ref": "urn:rent:observation-candidate:1.0.0#/properties/sources" },
+    "lineage": { "$ref": "urn:rent:observation-candidate:1.0.0#/properties/lineage" },
+    "inventory": { "$ref": "urn:rent:observation-inventory:1.0.0" },
+    "quality_report": { "$ref": "urn:rent:observation-candidate:1.0.0#/properties/quality_report" }
+  },
+  "required": [
+    "contract_version", "candidate_digest", "dataset_family", "access_domain", "release_state",
+    "transformation_ref", "projection_policy_ref", "domain_policy_ref", "property_matching_policy_ref",
+    "observations_digest", "sources", "lineage", "inventory", "quality_report"
+  ],
+  "additionalProperties": false
+}
