@@ -38,7 +38,8 @@ its currency, area, rooms, floor, sector, heating type, furnishing, even GPS coo
 guest about it too: I filter server-side to exactly what I need, lean on the API's own duplicate
 collapsing, pause between requests, and save as I go.
 
-The original scraper kept a field allowlist and hashed listing IDs. The raw export stays local.
+The scraper keeps a field allowlist and hashed listing IDs. See the
+[private snapshot guide](docs/mlops.md#collect-a-private-snapshot) to collect a new export.
 The public sample files are generated. Keep any bundle trained on real listings private unless
 it has been reviewed for the intended use.
 
@@ -219,7 +220,7 @@ curl -X POST "https://pret-drept-tm6owb5eka-ew.a.run.app/predict" \
 ## What's where
 
 ```
-scrape.py                  999.md GraphQL scraper -> data/raw/listings.csv
+scrape.py                  999.md GraphQL scraper -> data/raw/snapshots/<run-id>/listings.csv
 features.py                all the cleaning and feature engineering
 train.py                   fits XGBoost on the prepared training partition
 predict.py                 shared bundle loading and inference

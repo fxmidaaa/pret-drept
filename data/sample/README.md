@@ -9,14 +9,13 @@ Keep real snapshots local. Hashed listing identifiers are pseudonyms. The
 
 ## The columns
 
-Each row is one listing, in the shape `scrape.py` writes it. And `scrape.py` is picky on purpose: it
-only ever writes the reviewed allowlist below. The source id is stored as a short one-way hash
-(`listing_key`), and contacts, phone numbers, and the seller's name are thrown away at collection
-time, so they never hit disk at all.
+Each row represents one listing. The scraper keeps only the reviewed controls below and records
+the source ad ID as a short hash (`listing_key`). Keep real exports private because maps, photo
+references and free text can identify listings.
 
 | Column | Meaning |
 |---|---|
-| `listing_key` | one-way hash of the source id, used only for dedupe and resuming a scrape |
+| `listing_key` | stable hash of the source ad ID for matching observations |
 | `Sector` | city sector (Centru, Botanica, Râșcani, and so on) |
 | `Număr de camere` | rooms |
 | `Suprafață totală` | total area, m² |
@@ -34,7 +33,8 @@ time, so they never hit disk at all.
 | `Textul anunțului` | ad text, used only to pull out a few boolean flags (condition, utilities, lux, bathroom count) |
 | `Tipul ofertei`, `Regiune`, `Localitate` | filter fields (monthly rent, Chișinău) |
 | `price_value`, `price_unit` | rent amount and its currency (EUR, MDL, or USD) |
-| `first_seen`, `last_seen` | when the scraper first and last saw this listing |
+| `observed_at` | UTC time the current scraper fetched the listing details |
+| `first_seen`, `last_seen` | legacy checkpoint dates for first entry and latest search match |
 
 ## Using your own data
 

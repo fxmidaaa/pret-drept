@@ -106,6 +106,31 @@ fits XGBoost in log space. Evaluation and serving reuse the fitted preprocessing
 output back to EUR. The new model omits the target-derived market-rate feature, exact geography
 and photo counts. Asking price drives the response comparison only.
 
+### Collect a private snapshot
+
+Run the scraper from this worktree with the demo environment. Start with a cap of 100 unique ads
+to check that the source still returns usable listings.
+
+```bash
+.venv/bin/python scrape.py --limit 100
+```
+
+Without `--limit`, a new crawl checks up to 6,000 unique ads. The cap includes ads outside the
+target area or rental period and ads whose details are unavailable. A standalone collector can use
+Python 3.13 and the Requests pin from `requirements.txt` in a separate virtual environment.
+
+Every fresh crawl prints a new ignored directory under `data/raw/snapshots/`. Use `listings.csv`
+once the directory contains `snapshot.json` with status `complete`. The manifest gives the UTC
+crawl window, stop reason, counts and CSV SHA-256. Each row's `observed_at` records the UTC time
+its details were captured. This query leaves original publication, repost and edit dates unknown.
+The stable `listing_key` identifies a source ad across captures.
+
+To continue an interrupted crawl, pass the printed directory's name with
+`.venv/bin/python scrape.py --resume "$RUN_ID"`. This uses that run's checkpoint and original cap.
+Resume within the intended observation window or start a fresh crawl. The search results can change
+as pages are fetched. Keep the snapshot and checkpoint local. To use a fresh snapshot in a legacy
+notebook, point its CSV input cell at the new file.
+
 ### Authorized private data
 
 Place an authorized export at the ignored `data/raw/listings.csv` or pass its local path. Run
