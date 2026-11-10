@@ -50,26 +50,18 @@ def get_bundle() -> dict:
 
 
 def known_values(column):
-    # the category values the model was actually trained on
-    # for example, known_values("sector"). the API uses this for the dropdowns and 
-    # for rejecting requests with categories the model has never seen.
-
+    """Fitted categories for the API's dropdowns and input validation."""
     dv = get_bundle()['dv']
     return sorted(
         n.split('=', 1)[1] for n in dv.get_feature_names_out()
         if n.startswith(column + '=')
     )
 
-def nice_name(raw_name):
-    # dictvectorizer makes names like 'sector=centru' or 'area'
-    # i will make them a bit nicer to read in the explanation
-    return raw_name.replace('=', ': ').replace('_', ' ')
-
 def driver_label(raw_name):
     base = raw_name.split('=', 1)[0]
     if '=' not in raw_name and base in DRIVER_LABELS:
         return DRIVER_LABELS[base]
-    return nice_name(raw_name)
+    return raw_name.replace('=', ': ').replace('_', ' ')
 
 def build_features(apartment: dict, bund: dict) -> dict:
     values = {name: apartment.get(name) for name in bund["features"]}
@@ -146,11 +138,7 @@ def run(apartment):
         base = name.split('=', 1)[0]
         if base in DRIVER_HIDDEN:
             continue
-        # for a one-hot category, only explain the value the flat actually has;
-        # for a yes/no, only explain it when it's present. otherwise the
-        # box fills with things the user never entered ("author: necunoscut") or
-        # the confusing zero side of a one-hot ("building fund: new build lowers
-        # rent" when they picked secondary).
+        # Explain only the categories and amenities present in this apartment.
         if ('=' in name or base in BINARY_SET) and present != 1:
             continue
         drivers.append((driver_label(name), float(val)))

@@ -23,25 +23,11 @@ REQUIRED_COLUMNS = {
     features.SECTOR_COL,
     features.AUTHOR_COL,
 }
-OPTIONAL_COLUMNS = {
-    features.FLOOR_COL,
-    features.TOTAL_FLOORS_COL,
-    features.FUND_COL,
-    features.CONDITION_COL,
-    features.HEATING_COL,
-    features.FURNISHED_COL,
-    features.ELEVATOR_COL,
-    features.PARKING_COL,
-    features.BALCONY_COL,
-    features.KITCHEN_COL,
-    features.CEILING_COL,
-    features.TERRACE_COL,
-    features.AC_COL,
-    features.FLOOR_HEATING_COL,
-    features.PANORAMIC_COL,
-    features.TEXT_COL,
+INPUT_COLUMNS = REQUIRED_COLUMNS | {
+    source
+    for name, (source, _) in features.COLUMN_PARSERS.items()
+    if name in features.MODEL_FEATURES
 }
-CURRENCIES = {"UNIT_EUR", "UNIT_MDL", "UNIT_USD"}
 
 
 def prepare(
@@ -62,7 +48,7 @@ def prepare(
         io.BytesIO(content),
         encoding="utf-8-sig",
         dtype=str,
-        usecols=lambda name: name in REQUIRED_COLUMNS | OPTIONAL_COLUMNS,
+        usecols=lambda name: name in INPUT_COLUMNS,
     )
     missing = REQUIRED_COLUMNS.difference(raw.columns)
     if missing:
@@ -70,20 +56,6 @@ def prepare(
             f"Missing required listing columns: {', '.join(sorted(missing))}"
         )
     raw_rows = len(raw)
-    prices = pd.to_numeric(raw["price_value"], errors="coerce")
-    units = raw["price_unit"].str.strip().str.upper()
-    valid = np.isfinite(prices) & units.isin(CURRENCIES)
-    raw = raw.loc[valid].assign(price_value=prices[valid], price_unit=units[valid])
-    if raw.empty:
-        raise ValueError("No listings have a finite price and a supported currency.")
-
-    raw = raw.reindex(
-        columns=sorted(
-            REQUIRED_COLUMNS
-            | OPTIONAL_COLUMNS
-            | {features.MAP_COL, features.PHOTOS_COL, features.BUILDING_TYPE_COL}
-        )
-    )
     cleaned = features.clean_data(raw, deduplicate=False)[PREPARED_COLUMNS].copy()
     floor = cleaned["floor"]
     total = cleaned["total_floors"]
@@ -139,7 +111,7 @@ def prepare(
 def read_partition(path: Path) -> pd.DataFrame:
     frame = pd.read_csv(
         path,
-        dtype={name: str for name in features.categorical if name in PREPARED_COLUMNS},
+        dtype={name: str for name in features.categorical},
     )
     if list(frame.columns) != PREPARED_COLUMNS or len(frame) < 2:
         raise ValueError(f"Invalid partition at {path}. Run preparation again.")
@@ -159,16 +131,9 @@ def main() -> None:
         "--synthetic", action="store_true", help="Label generated demo data."
     )
     args = parser.parse_args()
-    try:
-        prepare(
-            args.source, args.output, load_config(args.config), synthetic=args.synthetic
-        )
-    except pd.errors.ParserError:
-        parser.exit(
-            2, "Preparation failed. Check the CSV quoting, header and column counts.\n"
-        )
-    except (OSError, ValueError) as exc:
-        parser.exit(2, f"Preparation failed. {exc}\n")
+    prepare(
+        args.source, args.output, load_config(args.config), synthetic=args.synthetic
+    )
 
 
 if __name__ == "__main__":

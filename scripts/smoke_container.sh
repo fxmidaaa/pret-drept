@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "$#" -ne 2 ]; then
-    echo "Usage: bash scripts/smoke_container.sh IMAGE TRUSTED_SYNTHETIC_MODEL" >&2
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
+    echo "Usage: bash scripts/smoke_container.sh IMAGE TRUSTED_SYNTHETIC_MODEL [PREPARED_CSV]" >&2
     exit 2
 fi
 
@@ -22,9 +22,11 @@ trap cleanup EXIT
 
 # The temporary directory is private to the caller. Its mounted demo file is readable by UID 10001.
 cp -- "$2" "$scratch/model.joblib"
-chmod 0644 "$scratch/model.joblib"
+cp -- "${3:-$(dirname "$2")/evaluation.csv}" "$scratch/input.csv"
+chmod 0644 "$scratch/model.joblib" "$scratch/input.csv"
 container=$(docker run --detach --publish 127.0.0.1::8000 \
-    --mount "type=bind,source=$scratch/model.joblib,target=/models/model.joblib,readonly" "$1")
+    --mount "type=bind,source=$scratch/model.joblib,target=/models/model.joblib,readonly" \
+    --mount "type=bind,source=$scratch/input.csv,target=/data/input.csv,readonly" "$1")
 url="http://$(docker port "$container" 8000/tcp)"
 test "$(docker exec "$container" id -u)" = 10001
 
@@ -43,10 +45,19 @@ curl --silent --show-error --fail --max-time 30 "$url/predict" \
     -d '{"rooms":2,"area":55,"floor":3,"total_floors":9,"sector":"centru","author":"agenție","price":700}' \
     > "$scratch/prediction.json"
 
+docker exec "$container" python -m mlops.batch \
+    --input /data/input.csv --output /tmp/predictions
+docker cp "$container:/tmp/predictions" "$scratch/predictions"
+
 python - "$scratch" <<'PY'
 import json
 import sys
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+from predict import load_bundle, model_matrix, predict_eur
 
 root = Path(sys.argv[1])
 assert json.loads((root / "health.json").read_text()) == {"status": "ok"}
@@ -56,5 +67,20 @@ response = json.loads((root / "prediction.json").read_text())
 assert response["fair_price"] > 0 and response["listed_price"] == 700
 assert response["verdict"] in {"fair price", "overpriced", "good deal"}
 assert response["drivers"]
-print("Container served a prediction with the demo model as UID 10001.")
+
+assert (root / "predictions/_SUCCESS").is_file()
+inputs = pd.read_csv(root / "input.csv")
+scored = pd.concat(pd.read_csv(part) for part in sorted((root / "predictions").glob("part-*.csv")))
+assert len(scored) == len(inputs)
+bundle = load_bundle(root / "model.joblib")
+columns = [name for name in bundle["features"] if name in inputs.columns]
+pd.testing.assert_frame_equal(
+    scored[columns].sort_values(columns).reset_index(drop=True),
+    inputs[columns].sort_values(columns).reset_index(drop=True),
+    check_dtype=False,
+)
+expected = predict_eur(model_matrix(scored.to_dict("records"), bundle), bundle)
+np.testing.assert_allclose(scored["predicted_rent_eur"], expected, rtol=1e-5)
+assert "price" not in scored.columns
+print("Container passed API and Spark prediction checks as UID 10001.")
 PY

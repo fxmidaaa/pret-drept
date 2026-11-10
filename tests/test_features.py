@@ -1,22 +1,33 @@
-import numpy as np
-import pandas as pd 
-
-import sys
-import os
 import math
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import numpy as np
+import pandas as pd
 
 import features
-
 from features import (
-    floor_flags, parse_latlon, latlon_to_km, first_number, clean_rooms,
-    clean_text, to_flag, clean_parking, clean_balcony, clean_photos,
-    clean_kitchen, clean_ceiling, condition_from_text, utilities_from_text,
-    lux_from_text, bathrooms_from_text, clean_price, clean_data,
-    build_ppm_grid, ppm_from_grid, trim_ppm_outliers, trim_knn_outliers,
-    impute_medians
+    bathrooms_from_text,
+    build_ppm_grid,
+    clean_balcony,
+    clean_ceiling,
+    clean_data,
+    clean_parking,
+    clean_price,
+    clean_rooms,
+    clean_text,
+    condition_from_text,
+    first_number,
+    floor_flags,
+    impute_medians,
+    latlon_to_km,
+    lux_from_text,
+    parse_latlon,
+    ppm_from_grid,
+    to_flag,
+    trim_knn_outliers,
+    trim_ppm_outliers,
+    utilities_from_text,
 )
+
 
 def test_first_number():
     assert first_number("62") == 62.0
@@ -81,6 +92,8 @@ def test_parse_latlon_rejects_bad_input():
     assert parse_latlon("not json at all") == (None, None)
     assert parse_latlon(float("nan")) == (None, None)
     assert parse_latlon('{"lat": 47.02}') == (None, None)
+    assert parse_latlon('[]') == (None, None)
+    assert parse_latlon('{"lat": "unknown", "lon": 28.83}') == (None, None)
 
 def test_latlon_to_km():
     # the centre is 0 km from the centre
@@ -138,6 +151,8 @@ def test_clean_price():
     assert clean_price({"price_value": 100, "price_unit": "UNIT_USD"}) == 92.0
     assert clean_price({"price_value": None, "price_unit": "UNIT_EUR"}) is None
     assert clean_price({"price_value": float("nan"), "price_unit": "UNIT_EUR"}) is None
+    assert clean_price({"price_value": "invalid", "price_unit": "UNIT_EUR"}) is None
+    assert clean_price({"price_value": 500, "price_unit": "UNKNOWN"}) is None
 
 # --- clean_data end to end
 # a tiny fake scrape with known problems in it, and we check that each problem gets handled:
@@ -254,9 +269,9 @@ def test_build_ppm_grid_only_keeps_big_groups():
         lons=[28.83] * 20 + [28.90, 28.90, 28.90],
         ppms=[10.0] * 20 + [99.0, 99.0, 99.0],
     )
-    grid_ppm, sector_ppm, global_ppm = build_ppm_grid(df, min_group=15)
+    grid_ppm, _, _ = build_ppm_grid(df, min_group=15)
     assert len(grid_ppm) == 1                     # only the dense cell survives
-    assert list(grid_ppm.values())[0] == 10.0     # median of the dense cell
+    assert next(iter(grid_ppm.values())) == 10.0     # median of the dense cell
     assert 99.0 not in grid_ppm.values()          # the sparse cell is not published
 
 def test_ppm_from_grid_falls_back_cell_then_sector_then_global():

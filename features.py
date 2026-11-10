@@ -1,6 +1,7 @@
-import numpy as np
 import json
 import re
+
+import numpy as np
 
 MDL_PER_EUR = 19.5
 EUR_PER_USD = 0.92  # rough USD -> EUR, very few listings use USD
@@ -56,13 +57,9 @@ def parse_latlon(harta):
     # 'Harta' is a json string like {"lat": 47.03, "lon": 28.80}. Turn it into the
     # approximate distance in km from the city centre. Bad / missing coords -> None.
     try:
-        h = json.loads(harta) if isinstance(harta, str) else {}
-        lat, lon = h.get("lat"), h.get("lon")
-
-    except Exception:
-        return None, None
-    
-    if lat is None or lon is None:
+        h = json.loads(harta)
+        lat, lon = float(h["lat"]), float(h["lon"])
+    except (TypeError, ValueError, KeyError):
         return None, None
     
     if not (46.9 < lat < 47.10 and 28.74 < lon < 28.95):
@@ -74,12 +71,6 @@ def latlon_to_km(lat, lon):
     dlon = (lon - CENTER_LON) * LON_SCALE
 
     return float(np.sqrt(dlat ** 2 + dlon ** 2) * 111.0) # degrees into kilometers (thanks to geography in lyceum)
-
-def distance_to_center(harta):
-    lat, lon = parse_latlon(harta)
-    if lat is None:
-        return None
-    return latlon_to_km(lat, lon)
 
 def first_number(text):
     # pull the first number out of a value. "62" -> 62.0, "Apartament cu 3 camere" -> 3.0
@@ -211,71 +202,72 @@ def bathrooms_from_text(text):
     return min(float(m.group(1)), 4.0)
 
 def clean_price(row):
-    # building the monthly rent in EUR from the value + its current unit
-    value = row.get("price_value")
-
-    if value is None or (isinstance(value, float) and np.isnan(value)):
+    """Convert a numeric asking rent to EUR; unknown currencies are unusable."""
+    try:
+        value = float(row.get("price_value"))
+    except (TypeError, ValueError):
         return None
-    
-    value = float(value)
-    unit = str(row.get("price_unit", ""))
-
+    if not np.isfinite(value):
+        return None
+    unit = str(row.get("price_unit", "")).strip().upper()
+    if unit == "UNIT_EUR":
+        return value
     if unit == "UNIT_MDL":
         return value / MDL_PER_EUR
-    
     if unit == "UNIT_USD":
         return value * EUR_PER_USD
-    return value
+    return None
+
+
+# Each entry says where a feature comes from and how its raw value is parsed.
+COLUMN_PARSERS = {
+    "rooms": (ROOMS_COL, clean_rooms),
+    "area": (AREA_COL, first_number),
+    "floor": (FLOOR_COL, first_number),
+    "total_floors": (TOTAL_FLOORS_COL, first_number),
+    "kitchen_area": (KITCHEN_COL, clean_kitchen),
+    "ceiling_height": (CEILING_COL, clean_ceiling),
+    "balcony_count": (BALCONY_COL, clean_balcony),
+    "photo_count": (PHOTOS_COL, clean_photos),
+    "bathrooms": (TEXT_COL, bathrooms_from_text),
+    "autonomous_heating": (HEATING_COL, to_flag),
+    "furnished": (FURNISHED_COL, to_flag),
+    "elevator": (ELEVATOR_COL, to_flag),
+    "parking": (PARKING_COL, clean_parking),
+    "air_conditioning": (AC_COL, to_flag),
+    "floor_heating": (FLOOR_HEATING_COL, to_flag),
+    "terrace": (TERRACE_COL, to_flag),
+    "panoramic_windows": (PANORAMIC_COL, to_flag),
+    "utilities_included": (TEXT_COL, utilities_from_text),
+    "lux": (TEXT_COL, lux_from_text),
+    "sector": (SECTOR_COL, clean_text),
+    "building_fund": (FUND_COL, clean_text),
+    "condition": (CONDITION_COL, clean_text),
+    "author": (AUTHOR_COL, clean_text),
+    "building_type": (BUILDING_TYPE_COL, clean_text),
+}
 
 def clean_data(df, *, deduplicate=True):
-    # cleans raw scraped 999 dataframe and returns a ready one for the model
+    """Parse listing fields and keep ordinary monthly rentals. No fitted statistics."""
     df = df.copy()
-
-    # --- NUMERICAL FEATURES --- 
-
+    # Missing optional fields use the same parsers as an empty field in the CSV.
+    raw_columns = {source for source, _ in COLUMN_PARSERS.values()} | {MAP_COL}
+    raw = df.reindex(columns=sorted(raw_columns))
     df["price"] = df.apply(clean_price, axis=1)
+    for name, (source, parse) in COLUMN_PARSERS.items():
+        df[name] = raw[source].map(parse)
 
-    df['rooms'] = df[ROOMS_COL].apply(clean_rooms)
-    df['area'] = df[AREA_COL].apply(first_number)
-    df['floor'] = df[FLOOR_COL].apply(first_number)
-    df['total_floors'] = df[TOTAL_FLOORS_COL].apply(first_number)
-
-    latlon = [parse_latlon(h) for h in df[MAP_COL]]
+    # These geographic features are still used by the historical notebooks and bundles.
+    latlon = [parse_latlon(h) for h in raw[MAP_COL]]
     df["lat"] = np.array([p[0] if p[0] is not None else np.nan for p in latlon], dtype = float)
     df["lon"] = np.array([p[1] if p[1] is not None else np.nan for p in latlon], dtype=float)
     df["dist_to_center"] = np.array(
         [latlon_to_km(p[0], p[1]) if p[0] is not None else np.nan for p in latlon], dtype=float
     )
 
-    df["kitchen_area"] = df[KITCHEN_COL].apply(clean_kitchen)
-    df["ceiling_height"] = df[CEILING_COL].apply(clean_ceiling)
-    df["balcony_count"] = df[BALCONY_COL].apply(clean_balcony)
-    df["photo_count"] = df[PHOTOS_COL].apply(clean_photos)
-    df["bathrooms"] = df[TEXT_COL].apply(bathrooms_from_text)
-
-    # --- BINARY FEATURES --- 
-    df["autonomous_heating"] = df[HEATING_COL].apply(to_flag)
-    df["furnished"] = df[FURNISHED_COL].apply(to_flag)
-    df["elevator"] = df[ELEVATOR_COL].apply(to_flag)
-    df["parking"] = df[PARKING_COL].apply(clean_parking)
-    df["air_conditioning"] = df[AC_COL].apply(to_flag)
-    df["floor_heating"] = df[FLOOR_HEATING_COL].apply(to_flag)
-    df["terrace"] = df[TERRACE_COL].apply(to_flag)
-    df["panoramic_windows"] = df[PANORAMIC_COL].apply(to_flag)
-    df["utilities_included"] = df[TEXT_COL].apply(utilities_from_text)
-    df["lux"] = df[TEXT_COL].apply(lux_from_text)
-
-    # --- CATEGORICAL FEATURES ---
-    df["sector"] = df[SECTOR_COL].apply(clean_text)
-    df["building_fund"] = df[FUND_COL].apply(clean_text) # new vs secundar 
-    df["condition"] = df[CONDITION_COL].apply(clean_text)
-    df["author"] = df[AUTHOR_COL].apply(clean_text) # agency / personal property / dezvoltator
-    df["building_type"] = df[BUILDING_TYPE_COL].apply(clean_text)
-
-    # ~1/3 of listings with empty condiftion field but describe it in the ad.
-    # ad text ("euroreparatie", "евроремонт"...). recover what we can from there.
+    # Recover the condition from Romanian/Russian text when its field is blank.
     blank = df["condition"] == "necunoscut"
-    from_text = df.loc[blank, TEXT_COL].apply(condition_from_text)
+    from_text = raw.loc[blank, TEXT_COL].map(condition_from_text)
     df.loc[blank, "condition"] = from_text.fillna("necunoscut")
 
     df = df[(df["sector"] != "necunoscut") & (df["author"] != "necunoscut")]
@@ -283,24 +275,14 @@ def clean_data(df, *, deduplicate=True):
     # drop rows that lack the most important features
     df = df.dropna(subset=["price", "area", "rooms"])
 
-    # drop duplicated listings. a lot of apartments are reposted with another ad.
-    # if one copy lands in train and another in validation, the model gets graded on flats
-    # it has already seen and the metrics look better than they really are.
-    # same key attributes + same price = same flat, i assume. 
+    # Preparation handles reposts with a grouped split; notebooks deduplicate here.
     if deduplicate:
         df = df.drop_duplicates(
             subset=["sector", "rooms", "area", "floor", "total_floors", "price"]
         )
 
-    # remove obvious outliers (typos, daily-rate leftovers, bad areas)
-    # the price cap is 2000 EUR/month on purpose: this model is for the mass
-    # segment. the ~4% above it are premium flats whose price lives in things no
-    # structured field captures (the residential complex, the finishes, the view),
-    # so the model can only underprice them - and squared metrics then report
-    # little else. pricing them is out of scope, and the README says so.
-    df = df[(df["price"] >= 100) & (df["price"] <= 2000)] # in euros
-    df = df[(df["area"] >= 10) & (df["area"] <= 400)]
-    df = df[(df["rooms"] >= 1) & (df["rooms"] <= 6)]
+    # Fixed bounds define the ordinary-rental segment, not fitted outlier thresholds.
+    df = df[df["price"].between(100, 2000) & df["area"].between(10, 400) & df["rooms"].between(1, 6)]
 
     # two cheap derived flags, computed by the shared rule above
     flags = [floor_flags(f, t) for f, t in zip(df["floor"], df["total_floors"])]

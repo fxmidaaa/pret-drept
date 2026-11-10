@@ -22,7 +22,7 @@ def git_value(*args: str) -> str:
 
 def track(directory: Path, store: Path) -> str:
     os.environ.setdefault("MLFLOW_DISABLE_TELEMETRY", "true")
-    from mlflow import MlflowClient
+    import mlflow
 
     report_path = directory / "evaluation.json"
     dataset_path = directory / "dataset.json"
@@ -42,7 +42,8 @@ def track(directory: Path, store: Path) -> str:
 
     store = store.resolve()
     store.mkdir(parents=True, exist_ok=True)
-    client = MlflowClient(tracking_uri=f"sqlite:///{store / 'mlflow.db'}")
+    mlflow.set_tracking_uri(f"sqlite:///{store / 'mlflow.db'}")
+    client = mlflow.MlflowClient()
     experiment_name = f"pret-drept-{dataset_kind}"
     experiment = client.get_experiment_by_name(experiment_name)
     artifact_dir = store / "artifacts" / dataset_kind
@@ -73,22 +74,19 @@ def track(directory: Path, store: Path) -> str:
     ):
         tags["dvc_lock_sha256_at_logging"] = sha256(ROOT / "dvc.lock")
 
-    run_id = client.create_run(experiment_id, tags=tags).info.run_id
-    try:
+    with mlflow.start_run(experiment_id=experiment_id, tags=tags) as run:
         params = report["parameters"]
-        client.log_param(run_id, "seed", params["seed"])
-        client.log_param(run_id, "evaluation_fraction", params["evaluation_fraction"])
-        for key, value in params["model"].items():
-            client.log_param(run_id, f"xgboost.{key}", value)
-        for key, value in report["metrics"].items():
-            client.log_metric(run_id, key, value)
-        client.log_artifact(run_id, str(report_path))
-        client.log_artifact(run_id, str(dataset_path))
-    except Exception:
-        client.set_terminated(run_id, status="FAILED")
-        raise
-    client.set_terminated(run_id, status="FINISHED")
-    return run_id
+        mlflow.log_params(
+            {
+                "seed": params["seed"],
+                "evaluation_fraction": params["evaluation_fraction"],
+                **{f"xgboost.{key}": value for key, value in params["model"].items()},
+            }
+        )
+        mlflow.log_metrics(report["metrics"])
+        mlflow.log_artifact(str(report_path))
+        mlflow.log_artifact(str(dataset_path))
+    return run.info.run_id
 
 
 def main() -> None:
@@ -98,16 +96,7 @@ def main() -> None:
     parser.add_argument("directory", type=Path)
     parser.add_argument("--store", type=Path, default=Path(".mlflow"))
     args = parser.parse_args()
-    try:
-        print(track(args.directory, args.store))
-    except ModuleNotFoundError as exc:
-        if exc.name != "mlflow":
-            raise
-        parser.exit(
-            2, "Install requirements-tracking.txt in .venv-mlflow and use its Python.\n"
-        )
-    except (KeyError, OSError, ValueError) as exc:
-        parser.exit(2, f"Tracking failed. {exc}\n")
+    print(track(args.directory, args.store))
 
 
 if __name__ == "__main__":

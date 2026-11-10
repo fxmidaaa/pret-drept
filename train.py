@@ -24,13 +24,8 @@ EMPTY_COLUMN_DEFAULTS = {
 def train(directory: Path, config: Config) -> None:
     source = directory / "train.csv"
     frame = read_partition(source)
-    medians = {}
-    for name in numerical:
-        if name in MODEL_FEATURES:
-            values = frame[name].dropna()
-            medians[name] = (
-                float(values.median()) if len(values) else EMPTY_COLUMN_DEFAULTS[name]
-            )
+    numeric_columns = [name for name in numerical if name in MODEL_FEATURES]
+    medians = frame[numeric_columns].median().fillna(EMPTY_COLUMN_DEFAULTS).to_dict()
 
     bundle = {
         "features": MODEL_FEATURES,
@@ -69,10 +64,7 @@ def main() -> None:
     parser.add_argument("directory", type=Path)
     parser.add_argument("--config", type=Path, default=Path("params.json"))
     args = parser.parse_args()
-    try:
-        train(args.directory, load_config(args.config))
-    except (OSError, ValueError) as exc:
-        parser.exit(2, f"Training failed. {exc}\n")
+    train(args.directory, load_config(args.config))
 
 
 if __name__ == "__main__":

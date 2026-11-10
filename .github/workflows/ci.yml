@@ -31,7 +31,7 @@ jobs:
           .venv-mlflow/bin/python -m pip install -r requirements-tracking.txt
       - name: Lint and check formatting
         run: |
-          python -m ruff check mlops train.py predict.py api.py tests/test_workflow.py
+          python -m ruff check mlops *.py tests
           python -m ruff format --check mlops train.py tests/test_workflow.py
       - name: Reproduce and verify the demo pipeline
         run: |
@@ -60,7 +60,7 @@ jobs:
           }
           print(f"Verified synthetic MLflow run {run.info.run_id}")
           PY
-      - name: Build and exercise the inference container
+      - name: Build and exercise API and Spark in the local image
         run: |
           docker build -t pret-drept:ci .
           bash scripts/smoke_container.sh pret-drept:ci artifacts/demo/model.joblib

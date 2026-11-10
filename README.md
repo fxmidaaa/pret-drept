@@ -1,8 +1,10 @@
 # Is this Chișinău apartment overpriced?
 
-This branch adds a small end-to-end MLOps workflow to the original app. Start with the
-[setup and demonstration guide](docs/mlops.md). The project notes below describe the historical
-July 2026 dataset and model. The new demo runs on generated data.
+This branch adds a local MLOps workflow to the original app: prepare, train, evaluate, track and
+predict. Start with the [local workflow guide](docs/mlops.md) for your collected data, DVC, MLflow
+and the single Docker image for API and PySpark predictions. DVC and CI use the generated fixture;
+real experiments stay local. The project notes below describe the historical July 2026 dataset
+and model.
 
 My first machine learning project. I scraped about 4,500 real apartment rental listings from a
 Moldovan classifieds site, trained a model on them, and built a small app that estimates a fair
@@ -224,11 +226,11 @@ scrape.py                  999.md GraphQL scraper -> data/raw/snapshots/<run-id>
 features.py                all the cleaning and feature engineering
 train.py                   fits XGBoost on the prepared training partition
 predict.py                 shared bundle loading and inference
-mlops/                     preparation, evaluation and local tracking
+mlops/                     preparation, evaluation, local tracking and Spark batch prediction
 dvc.yaml / dvc.lock        safe demo pipeline and its versioned identities
 api.py                     FastAPI - /predict, /options, /health, serves the page
 app/index.html             the one-page front end (form in, verdict out)
-Dockerfile                 inference image, with a read-only model mount at runtime
+Dockerfile                 one local image for the API and PySpark, with a mounted model
 notebooks/eda.ipynb        exploratory analysis (aggregate views only)
 notebooks/model_selection.ipynb   the "why XGBoost" model comparison
 data/sample/               synthetic sample + column schema (real data stays private)

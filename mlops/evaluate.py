@@ -6,7 +6,7 @@ from sklearn.metrics import mean_absolute_error, root_mean_squared_error
 
 from mlops.files import sha256, write_json
 from mlops.prepare import read_partition
-from predict import ModelUnavailableError, load_bundle, model_matrix, predict_eur
+from predict import load_bundle, model_matrix, predict_eur
 
 
 def evaluate(directory: Path) -> None:
@@ -60,10 +60,7 @@ def main() -> None:
     )
     parser.add_argument("directory", type=Path)
     args = parser.parse_args()
-    try:
-        evaluate(args.directory)
-    except (KeyError, OSError, ValueError, ModelUnavailableError) as exc:
-        parser.exit(2, f"Evaluation failed. {exc}\n")
+    evaluate(args.directory)
 
 
 if __name__ == "__main__":
