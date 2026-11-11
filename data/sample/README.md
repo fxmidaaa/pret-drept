@@ -1,7 +1,7 @@
 # The sample data
 
 `listings_sample.csv` is the original three-row schema example. `demo.csv` contains 126 generated
-rows for the DVC pipeline. It covers EUR, MDL and USD, with synthetic features, fixed-seed prices
+rows for tests and CI. It covers EUR, MDL and USD, with synthetic features, fixed-seed prices
 and artificial reposts. Both files contain fictional observations.
 
 Keep real snapshots local. Hashed listing identifiers are pseudonyms. The
@@ -38,5 +38,6 @@ references and free text can identify listings.
 
 ## Using your own data
 
-Follow the [authorized private data steps](../../docs/mlops.md#authorized-private-data) for a
-local export. Use the demo CSV for CI, Docker smoke checks and shared examples.
+Follow the [snapshot guide](../../docs/mlops.md#collect-a-private-snapshot) to collect data,
+then [select a snapshot](../../docs/mlops.md#select-or-restore-a-dataset) for the real-data DVC
+pipeline. Use the demo CSV for CI, Docker smoke checks and shared examples.

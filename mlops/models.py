@@ -5,7 +5,6 @@ import os
 import tempfile
 import zipfile
 from hashlib import sha256
-from importlib.metadata import version
 from pathlib import Path
 
 import numpy as np
@@ -13,31 +12,35 @@ import pandas as pd
 
 from predict import build_features, load_bundle, model_matrix, predict_eur
 
-ROOT = Path(__file__).resolve().parents[1]
 MODEL_CODE = [
     "features.py",
     "predict.py",
     "mlops/__init__.py",
     "mlops/models.py",
 ]
+INFERENCE_PACKAGES = {
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "scipy",
+    "joblib",
+    "xgboost",
+    "xgboost-cpu",
+}
 
 
 def model_type(report: dict) -> str:
     # Older benchmark reports used model for the algorithm name.
-    name = report.get("model_type", report.get("model", "xgboost"))
-    if not isinstance(name, str) or not name.strip():
-        raise ValueError("Expected a non-empty model_type in the evaluation report.")
-    return name.lower()
+    return report.get("model_type", report.get("model", "xgboost")).lower()
 
 
 def model_artifact(report: dict) -> dict | None:
     """Read the common contract; retain compatibility with existing local results."""
     if "model_artifact" in report:
         specification = report["model_artifact"]
-        if (
-            specification is not None
-            and specification.get("loader_module") == "mlops.models"
-        ):
+        if specification is None:
+            return None
+        if specification.get("loader_module") == "mlops.models":
             # Re-log older reports using the current loader's source files.
             return {**specification, "code_paths": MODEL_CODE}
         return specification
@@ -47,8 +50,8 @@ def model_artifact(report: dict) -> dict | None:
     if kind == "xgboost":
         requirements = [
             line
-            for line in (ROOT / "requirements.txt").read_text().splitlines()
-            if line.strip() and not line.startswith("#")
+            for line in Path("requirements.txt").read_text().splitlines()
+            if line.split("==")[0] in INFERENCE_PACKAGES
         ]
         filename = "model.joblib"
     elif kind == "catboost":
@@ -77,6 +80,8 @@ def model_artifact(report: dict) -> dict | None:
 
 
 class XGBoostPredictor:
+    """Give MLflow the same bundle-based predictor used by the API and evaluation."""
+
     def __init__(self, directory: Path):
         self.bundle = load_bundle(directory / "model.joblib")
 
@@ -87,6 +92,8 @@ class XGBoostPredictor:
 
 
 class FramePredictor:
+    """Share feature preparation and EUR conversion between CatBoost and TabPFN."""
+
     def __init__(self, model, specification: dict):
         self.model = model
         self.preprocessing = specification["preprocessing"]
@@ -94,13 +101,9 @@ class FramePredictor:
             raise ValueError("Expected the saved model to predict log1p rent.")
 
     def predict(self, data):
-        frame = pd.DataFrame.from_records(
-            [
-                build_features(row, self.preprocessing)
-                for row in data.to_dict("records")
-            ],
-            columns=self.preprocessing["features"],
-        )
+        records = data.to_dict("records")
+        feature_rows = [build_features(row, self.preprocessing) for row in records]
+        frame = pd.DataFrame(feature_rows, columns=self.preprocessing["features"])
         predictions = np.expm1(self.model.predict(frame))
         if not (np.isfinite(predictions) & (predictions > 0)).all():
             raise ValueError("The model returned an invalid monthly rent.")
@@ -111,17 +114,19 @@ def save_tabpfn_artifact(
     model, directory: Path, checkpoint: Path, report: dict
 ) -> dict:
     """Call in the training environment, immediately after evaluating this estimator."""
+    directory = directory.resolve()
+    checkpoint = checkpoint.resolve()
     checkpoint_hash = sha256(checkpoint.read_bytes()).hexdigest()
     if checkpoint_hash != report["lineage"]["checkpoint_sha256"]:
         raise ValueError("The TabPFN checkpoint differs from the evaluated checkpoint.")
     destination = directory / "model.tabpfn_fit"
     directory.mkdir(parents=True, exist_ok=True)
     original_path = model.model_path
-    if Path(original_path).resolve() != checkpoint.resolve():
+    if Path(original_path).resolve() != checkpoint:
         raise ValueError("Save the checkpoint used by the fitted TabPFN estimator.")
     try:
         # The pinned TabPFN serializer expects a JSON-compatible checkpoint path.
-        model.model_path = str(checkpoint.resolve())
+        model.model_path = str(checkpoint)
         model.save_fit_state(destination)
     finally:
         model.model_path = original_path
@@ -138,17 +143,15 @@ def save_tabpfn_artifact(
                 "sha256": checkpoint_hash,
             },
         },
+        # Pinned to the existing .venv-tabpfn environment.
         "requirements": [
-            f"{name}=={version(name)}"
-            for name in (
-                "tabpfn",
-                "torch",
-                "numpy",
-                "pandas",
-                "scikit-learn",
-                "scipy",
-                "joblib",
-            )
+            "tabpfn==9.2.0",
+            "torch==2.15.0",
+            "numpy==2.5.4",
+            "pandas==3.1.1",
+            "scikit-learn==1.9.1",
+            "scipy==1.18.1",
+            "joblib==1.6.0",
         ],
         "code_paths": MODEL_CODE,
         "preprocessing": report["preprocessing"],
@@ -183,14 +186,15 @@ def _load_pyfunc(data_path: str):
     """Load a saved predictor; only its optional model library is imported."""
     directory = Path(data_path)
     specification = json.loads((directory / "model.json").read_text())
-    if specification["kind"] == "xgboost":
+    kind = specification["kind"]
+    if kind == "xgboost":
         return XGBoostPredictor(directory)
-    if specification["kind"] == "catboost":
+    if kind == "catboost":
         from catboost import CatBoostRegressor
 
         model = CatBoostRegressor()
         model.load_model(str(directory / "model.cbm"))
         return FramePredictor(model, specification)
-    if specification["kind"] == "tabpfn":
+    if kind == "tabpfn":
         return FramePredictor(load_tabpfn(directory), specification)
     raise ValueError("Provide a loader_module for this model format.")

@@ -6,7 +6,6 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
-import joblib
 import numpy as np
 
 from features import binary, categorical, floor_flags, latlon_to_km, ppm_from_grid
@@ -27,6 +26,9 @@ class ModelUnavailableError(RuntimeError):
 
 def load_bundle(path: Path) -> dict:
     """Load a trusted local bundle. Joblib may execute code during deserialization."""
+    # Native CatBoost/TabPFN predictors reuse build_features without needing joblib.
+    import joblib
+
     try:
         return joblib.load(path)
     except OSError as exc:

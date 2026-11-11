@@ -13,10 +13,8 @@ def validate_snapshot(content: bytes, manifest: dict) -> int:
         raise ValueError("Use a completed scraper snapshot.")
     if hashlib.sha256(content).hexdigest() != manifest["csv_sha256"]:
         raise ValueError("The CSV differs from its scraper snapshot manifest.")
-    rows = (
-        sum(bool(row) for row in csv.reader(io.StringIO(content.decode("utf-8-sig"))))
-        - 1
-    )
+    reader = csv.reader(io.StringIO(content.decode("utf-8-sig")))
+    rows = sum(1 for row in reader if row) - 1  # Exclude the header and blank lines.
     if rows < 1 or rows != manifest["saved_rows"]:
         raise ValueError(
             "The CSV row count differs from its scraper snapshot manifest."

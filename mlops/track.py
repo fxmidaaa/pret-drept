@@ -13,73 +13,13 @@ from mlflow.models import ModelSignature
 from mlops.models import model_artifact, model_type
 from mlops.registry import local_client, register
 
-ROOT = Path(__file__).resolve().parents[1]
-
-
-def flatten_params(values: dict, prefix: str = "") -> dict:
-    result = {}
-    for name, value in values.items():
-        key = f"{prefix}.{name}" if prefix else name
-        if isinstance(value, dict):
-            result.update(flatten_params(value, key))
-        else:
-            result[key] = (
-                json.dumps(value, sort_keys=True)
-                if value is None or isinstance(value, (list, bool))
-                else value
-            )
-    return result
-
-
-def log_model(directory: Path, specification: dict):
-    """Copy a complete predictor into MLflow without loading it in this environment."""
-    with tempfile.TemporaryDirectory() as temporary:
-        work = Path(temporary)
-        bundle = work / "bundle"
-        bundle.mkdir()
-        packaged = {**specification, "files": {}}
-        if not specification["files"]:
-            raise ValueError("A registered predictor needs a saved model file.")
-        for name, entry in specification["files"].items():
-            if Path(name).name != name or name in {"", ".", "..", "model.json"}:
-                raise ValueError("Model artifact names must be plain filenames.")
-            source = directory / entry["path"]
-            if sha256(source.read_bytes()).hexdigest() != entry["sha256"]:
-                raise ValueError(f"Model artifact {name} changed after evaluation.")
-            shutil.copy2(source, bundle / name)
-            packaged["files"][name] = {**entry, "path": name}
-        (bundle / "model.json").write_text(
-            json.dumps(packaged, indent=2), encoding="utf-8"
-        )
-        code = work / "code"
-        code.mkdir()
-        for relative in specification.get("code_paths", []):
-            source = (ROOT / relative).resolve()
-            if not source.is_relative_to(ROOT) or not source.is_file():
-                raise ValueError(
-                    "code_paths must name source files inside the repository."
-                )
-            destination = code / source.relative_to(ROOT)
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, destination)
-        return mlflow.pyfunc.log_model(
-            name="model",
-            loader_module=specification["loader_module"],
-            data_path=str(bundle),
-            code_paths=[str(path) for path in sorted(code.iterdir())],
-            pip_requirements=[
-                f"mlflow=={mlflow.__version__}",
-                *specification["requirements"],
-            ],
-            metadata={"target_unit": "EUR/month"},
-            signature=ModelSignature.from_dict(specification["signature"])
-            if specification.get("signature")
-            else None,
-        )
+ROOT = Path.cwd()  # Run tracking commands from the project root.
 
 
 def track(directory: Path, store: Path, dataset_directory: Path | None = None) -> str:
-    report = json.loads((directory / "evaluation.json").read_text())
+    """Read reports, choose the experiment, and log one run with its saved predictor."""
+    report_path = directory / "evaluation.json"
+    report = json.loads(report_path.read_text())
     if dataset_directory is None:
         dataset_directory = (
             directory if (directory / "dataset.json").is_file() else directory.parent
@@ -115,21 +55,21 @@ def track(directory: Path, store: Path, dataset_directory: Path | None = None) -
     if "runtime" in report:
         parameters["runtime"] = report["runtime"]
     specification = model_artifact(report)
-    kind = model_type(report)
+    model_kind = model_type(report)
     tags = {
         "dataset": dataset_kind,
-        "model_type": kind,
-        "model_ready": str(specification is not None).lower(),
+        "model_type": model_kind,
+        "model_ready": "true" if specification is not None else "false",
         "evaluation_sha256": dataset["evaluation_sha256"],
         **report.get("lineage", {}),
     }
     with mlflow.start_run(
         experiment_id=experiment_id,
-        run_name=f"{kind} · {dataset_kind}",
+        run_name=f"{model_kind} · {dataset_kind}",
         tags=tags,
     ) as run:
         mlflow.log_params(flatten_params(parameters))
-        mlflow.log_artifact(str(directory / "evaluation.json"))
+        mlflow.log_artifact(str(report_path))
         mlflow.log_artifact(str(dataset_path))
         if specification is not None:
             info = log_model(directory, specification)
@@ -138,6 +78,69 @@ def track(directory: Path, store: Path, dataset_directory: Path | None = None) -
         else:
             mlflow.log_metrics(report["metrics"])
     return run.info.run_id
+
+
+def flatten_params(values: dict, prefix: str = "") -> dict:
+    """Turn nested settings into MLflow columns such as model.depth and split.seed."""
+    result = {}
+    for name, value in values.items():
+        key = f"{prefix}.{name}" if prefix else name
+        if isinstance(value, dict):
+            result.update(flatten_params(value, key))
+        else:
+            if value is None or isinstance(value, (list, bool)):
+                value = json.dumps(value, sort_keys=True)
+            result[key] = value
+    return result
+
+
+def log_model(directory: Path, specification: dict):
+    """Package weights, loader code and requirements without importing model libraries."""
+    with tempfile.TemporaryDirectory() as temporary:
+        work = Path(temporary)
+        bundle = work / "bundle"
+        bundle.mkdir()
+        packaged = {**specification, "files": {}}
+        if not specification["files"]:
+            raise ValueError("A registered predictor needs a saved model file.")
+        for name, entry in specification["files"].items():
+            if Path(name).name != name or name in {"", ".", "..", "model.json"}:
+                raise ValueError("Model artifact names must be plain filenames.")
+            source = directory / entry["path"]
+            if sha256(source.read_bytes()).hexdigest() != entry["sha256"]:
+                raise ValueError(f"Model artifact {name} changed after evaluation.")
+            shutil.copy2(source, bundle / name)
+            packaged["files"][name] = {**entry, "path": name}
+        (bundle / "model.json").write_text(
+            json.dumps(packaged, indent=2), encoding="utf-8"
+        )
+
+        # Preserve package folders so the exported loader also works outside this repo.
+        code = work / "code"
+        code.mkdir()
+        for relative in specification.get("code_paths", []):
+            source = (ROOT / relative).resolve()
+            if not source.is_relative_to(ROOT) or not source.is_file():
+                raise ValueError(
+                    "code_paths must name source files inside the repository."
+                )
+            destination = code / source.relative_to(ROOT)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
+
+        signature = specification.get("signature")
+        return mlflow.pyfunc.log_model(
+            name="model",
+            loader_module=specification["loader_module"],
+            data_path=str(bundle),
+            code_paths=[str(path) for path in sorted(code.iterdir())],
+            pip_requirements=[
+                f"mlflow=={mlflow.__version__}",
+                *specification["requirements"],
+            ],
+            metadata={"target_unit": "EUR/month"},
+            signature=ModelSignature.from_dict(signature) if signature else None,
+        )
 
 
 def main() -> None:

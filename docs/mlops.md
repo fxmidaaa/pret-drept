@@ -11,12 +11,29 @@ This branch runs on your machine. Each stage is an ordinary Python command:
 | Track | `mlops/track.py` | A local MLflow run, evaluated model artifacts and optional registry version |
 | Predict | `predict.py`, `api.py`, `mlops/batch.py` | CLI, browser/API or PySpark predictions |
 
-Preparation and training read `params.json` as an ordinary dictionary. Stages save CSVs with
-`to_csv`, models with `joblib.dump`, and JSON with `write_text`. Generated outputs are unlinked
-before writing so an existing DVC cache link is not modified in place. An interrupted stage
-can be reproduced again. Original snapshot copies and scraper checkpoints use a temporary
-filename followed by `replace` to keep the previous file readable if a write is interrupted.
-There is no pipeline framework or deployment service to run.
+DVC runs preparation, training and evaluation in order. Tracking and prediction are separate
+commands. Each script can also run directly. `params.json` holds the split and model settings;
+CSV, joblib and JSON files connect the stages.
+
+When reading the code, start with `prepare()`, `train()`, `evaluate()`, `track()` and
+`score_csv()`. Each file's `main()` just reads command-line arguments and calls that function.
+In `track.py`, the run's workflow comes first; the helpers below flatten nested parameters
+and package the saved predictor for MLflow. The small predictor classes in `models.py` give
+MLflow its required `predict()` method and reuse the existing feature preparation.
+
+Preparation reads the local CSV directly, then saves only the prepared feature columns and
+target. Batch prediction selects the saved model's features, scores Pandas batches with the
+shared functions in `predict.py`, and adds `predicted_rent_eur` to the output. Neither path
+saves raw ad text or identifiers; batch output can retain an explicit `listing_key` for
+matching predictions.
+
+Run preparation, evaluation and tracking from the project root. They use the local
+`params.json`, `requirements.txt` and source files directly. Exported predictors still load
+from their packaged files and can run outside the repository.
+
+Generated outputs are unlinked before writing to protect DVC's cached copies. Dataset selection
+and scraper checkpoints use temporary files followed by replacement. Keep these few filesystem
+operations when changing a stage: writing through a DVC cache link can corrupt an older version.
 
 ## Setup
 
@@ -30,23 +47,28 @@ python -m pip install -r requirements.txt
 python -m pip check
 ```
 
-If package downloads are unavailable in an editing session, run these installation commands
-from a terminal with internet access before using the updated workflow.
-
-`requirements.txt` contains the API, training, DVC, MLflow, PySpark, notebook and test
+`requirements.txt` contains the API, training, DVC, MLflow, PySpark, plotting and test
 dependencies. Pandas is pinned to **2.3.3**, which satisfies MLflow 3.14's `pandas<3`
 requirement. Docker and CI install the same file. Indirect dependencies are resolved by pip.
 
-The CatBoost and TabPFN experiment environments remain separate; their model requirements
-are saved with their MLflow artifacts.
+| Environment | Use |
+| --- | --- |
+| `.venv` | All commands in this guide, including the MLflow server, tracking and registry |
+| `.venv-catboost` | Existing CatBoost experiments with their original package versions |
+| `.venv-tabpfn` | Existing TabPFN experiments, including PyTorch and their original package versions |
+
+The optional model environments preserve earlier experiments. Their NumPy/pandas versions differ
+from the main environment; consolidate them only after checking saved-model loading and predictions.
+The shared MLflow store works independently of which environment trained a model.
+See the [directory map](../README.md#whats-where) for source files and generated local folders.
 
 ## Configuration
 
-Copy the example once and edit `.env` for your machine. It is ignored by Git and excluded
-from the Docker build context. Existing `.env` files should be kept when updating the project.
+Create `.env` once if it is missing, then edit it for your machine. It is ignored by Git and
+excluded from Docker builds. Keep your existing settings when updating the project.
 
 ```bash
-cp .env.example .env
+test -f .env || cp .env.example .env
 ```
 
 At the start of each terminal session, run these commands from the project root:
@@ -70,6 +92,8 @@ settings for one command.
 | Seed, evaluation fraction and model hyperparameters | `params.json` | Versioned training inputs, read directly by preparation and training |
 | Python logging, Matplotlib cache and Spark address | Dockerfile | Defaults needed by the container runtime |
 | MLflow store | `--store PATH` | Optional override of the existing `.mlflow` default |
+
+MLflow telemetry is configured by `.env` locally and by the CI environment.
 
 Docker uses `/models/model.joblib` inside the image. Keep the local `.env` in the terminal;
 passing it to `docker run --env-file` would replace that path with a host-relative one.
@@ -242,9 +266,7 @@ the model in the tracking environment. Files are checked against their evaluated
 when packaging them. Export and loading use those saved copies.
 
 Every tracking call creates a new run, even for an unchanged report. Every registration
-creates a new version. Git status, source-code fingerprints and duplicate-run detection are
-omitted. DVC still versions the original input and pipeline outputs; the tracker retains the
-evaluation split hash so runs can be compared on the same partition.
+creates a new version. The evaluation split hash identifies runs evaluated on the same partition.
 
 Keep preparation, training and evaluation together through `dvc repro`. Independent experiment
 reports are trusted when logging: changing a manifest after evaluation is no longer detected
@@ -252,8 +274,9 @@ by a second set of dataset hash checks in the tracker.
 
 Keep the SQLite database and its artifact directory together at their recorded absolute paths.
 To back up the store, stop the local server/writers and copy the whole `.mlflow` directory.
-Model dependencies describe the inference environment. Existing registered versions retain
-their recorded requirements; the current XGBoost workflow uses the shared requirements file.
+Model dependencies describe the inference environment. New XGBoost packages select the prediction
+libraries from `requirements.txt`; API, DVC, Spark and test tools stay in the project environment.
+Existing registered versions retain their original requirements and packaged source.
 
 ### Versions, aliases and export
 
@@ -323,6 +346,8 @@ An explicit `"model_artifact": null` records only results.
 
 The project supplies loaders for its XGBoost bundles, native CatBoost models, and fitted
 TabPFN 9.2.0 state. Existing XGBoost/CatBoost reports are recognized for compatibility.
+Model libraries are imported only when loading their format. Joblib is imported inside
+`load_bundle()` so native CatBoost inference can reuse the feature builder without it.
 The historical TabPFN benchmark saved scores and a foundation checkpoint, not the fitted
 estimator. Its results are tracked, but that checkpoint alone is not a registry version.
 
@@ -342,6 +367,9 @@ report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
 The report needs its existing preprocessing, target transform and evaluated checkpoint hash.
 The helper saves fitted state and declares both that state and the checkpoint as model files.
+Its inference requirements are explicitly pinned in `save_tabpfn_artifact` to the existing
+`.venv-tabpfn` versions. Update those pins if that environment changes; no installed-package
+version discovery runs when saving the model.
 Then run the ordinary tracking command with `--register`. The packaged TabPFN loader relocates
 the checkpoint reference; `PRET_DREPT_TABPFN_DEVICE=cpu` (or `mps`) overrides its automatic
 device selection. Load only trusted model packages and fitted states.
@@ -353,6 +381,10 @@ override it for batch prediction. It runs as UID 10001, with data and models mou
 Java makes it larger than an API-only image, but avoids maintaining separate builds.
 The Dockerfile installs dependencies first, then uses `COPY . .`. The `.dockerignore`
 allowlist limits that copy to the API, batch code and their runtime files.
+
+The container smoke script uses `.venv/bin/python` for validation on the host, or `python3`
+in CI where `.venv` is absent. It checks host imports before starting the container, so the local
+environment does not need to be activated separately.
 
 ```bash
 docker build -t pret-drept:local .
@@ -428,18 +460,34 @@ For HTTP 503, check `PRET_DREPT_MODEL` and model permissions. `/health` reports 
 `/options` and `/predict` check readiness. Restart the API after replacing its model.
 If DVC cannot write its system cache, set `DVC_SITE_CACHE_DIR` to a writable directory.
 
-Registry checks exercise a real temporary SQLite store, two trained fixture models, new runs
-and versions on repeated calls, alias assignment and rollback, export after removing the source
-model, packaging checks, inference from packaged code outside the repository, a custom loader,
-and score-only benchmarks. Run `tests/test_registry.py` with the project environment;
-its subprocesses use the same Python interpreter and a temporary tracking store.
+Registry tests use a temporary SQLite store and verify tracking, registration, aliases, rollback,
+export and predictions from packaged source outside the repository. They also cover custom loaders
+and score-only benchmarks. They use `.venv` and leave the normal `.mlflow` history unchanged.
+
+To exercise the tracking CLI separately without adding runs to the normal store:
+
+```bash
+CHECK_STORE=$(mktemp -d)
+python -m mlops.track artifacts/demo --store "$CHECK_STORE" --register
+```
 
 If DVC cannot access its system cache in a restricted session, retry with:
 
 ```bash
-DVC_SITE_CACHE_DIR="$PWD/artifacts/checks/dvc-site-cache" dvc repro
+DVC_SITE_CACHE_DIR="${TMPDIR:-/tmp}/pret-drept-dvc" dvc repro
 ```
 
 Docker needs access to the local daemon. If that access is unavailable, run the build and
 container smoke commands above in a Docker-enabled terminal. Java 17 is required to run Spark
-outside the image. If actionlint is absent, install it and rerun the command in Checks.
+outside the image; the container includes it. On macOS, install a missing actionlint with
+`brew install actionlint`, then rerun `actionlint -shellcheck= -pyflakes=`.
+
+## Local cleanup
+
+Python bytecode, `.pytest_cache/`, `.ruff_cache/` and disposable `artifacts/checks/` outputs can
+be recreated. Use temporary directories for one-off checks so they do not accumulate in the project.
+Keep `artifacts/demo/` when running tests directly; the fixture stage commands recreate it.
+
+Preserve `.dvc/cache/`, `.mlflow/`, original snapshots, experiment results and model checkpoints.
+The older `artifacts/private/.../tracking/` directories are also MLflow stores. Their recorded
+artifact paths are absolute, so keep those stores and their artifacts at their existing locations.

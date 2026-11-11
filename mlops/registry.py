@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import os
 import shutil
 from pathlib import Path
 
@@ -11,7 +10,6 @@ from mlflow.exceptions import MlflowException
 
 
 def local_client(store: Path):
-    os.environ.setdefault("MLFLOW_DISABLE_TELEMETRY", "true")
     store = store.resolve()
     store.mkdir(parents=True, exist_ok=True)
     uri = f"sqlite:///{store / 'mlflow.db'}"
@@ -47,11 +45,6 @@ def register(run_id: str, store: Path, name: str | None = None):
     )
 
 
-def set_alias(name: str, version: str, alias: str, store: Path) -> None:
-    client = local_client(store)
-    client.set_registered_model_alias(name, alias, version)
-
-
 def export_model(
     name: str,
     output: Path,
@@ -62,8 +55,6 @@ def export_model(
 ) -> dict:
     if (version is None) == (alias is None):
         raise ValueError("Choose exactly one version or alias.")
-    if output.exists():
-        raise FileExistsError(f"Refusing to overwrite {output}.")
     client = local_client(store)
     selected = (
         client.get_model_version_by_alias(name, alias)
@@ -73,7 +64,7 @@ def export_model(
     # Pin the resolved version so an alias change cannot affect this export.
     uri = f"models:/{name}/{selected.version}"
     downloaded = mlflow.artifacts.download_artifacts(artifact_uri=uri)
-    shutil.copytree(downloaded, output)
+    shutil.copytree(downloaded, output)  # Refuses an existing output directory.
     identity = {
         "name": name,
         "version": selected.version,
@@ -118,7 +109,8 @@ def main() -> None:
         version = register(args.run_id, args.store, args.name)
         print(f"models:/{version.name}/{version.version}")
     elif args.command == "alias":
-        set_alias(args.name, args.version, args.alias, args.store)
+        client = local_client(args.store)
+        client.set_registered_model_alias(args.name, args.alias, args.version)
         print(f"{args.name}@{args.alias} -> {args.version}")
     elif args.command == "export":
         print(
@@ -135,6 +127,8 @@ def main() -> None:
     else:
         client = local_client(args.store)
         for version in client.search_model_versions(f"name = '{args.name}'"):
+            # MLflow's search results omit aliases; fetch the complete version.
+            version = client.get_model_version(args.name, version.version)
             run = client.get_run(version.run_id)
             print(
                 json.dumps(

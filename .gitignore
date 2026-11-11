@@ -1,6 +1,6 @@
 __pycache__/
 *.pyc
-.venv/
+.venv*/
 venv/
 .env
 
@@ -11,6 +11,7 @@ data/*
 !data/sample
 data/sample/*
 !data/sample/listings_sample.csv
+!data/sample/demo.csv
 !data/sample/README.md
 
 # model artifacts — generated locally and mounted at runtime
@@ -20,14 +21,12 @@ model.joblib
 
 .ipynb_checkpoints/
 .pytest_cache/
+.ruff_cache/
 .jupyter/
 
 # Simple MLOps demo and private local runs
-!/data/sample/demo.csv
 /artifacts/
 /.mlflow/
-.venv-*/
-.ruff_cache/
 /mlruns/
 /mlartifacts/
 /mlflow.db*

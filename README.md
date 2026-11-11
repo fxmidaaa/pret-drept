@@ -9,9 +9,6 @@ scraper snapshot and reproduces the real-data pipeline locally; CI uses a genera
 Private data stays outside Git. The project notes below describe the historical July 2026 dataset
 and model.
 
-Install the main workflow in `.venv` with `python -m pip install -r requirements.txt`.
-The same requirements file is used locally, in CI and in Docker.
-
 My first machine learning project. I scraped about 4,500 real apartment rental listings from a
 Moldovan classifieds site, trained a model on them, and built a small app that estimates a fair
 monthly rent and tells you whether a given listing is overpriced or a good deal.
@@ -207,8 +204,8 @@ After loading `.env` as described in the guide, start the app:
 uvicorn api:app --host 127.0.0.1 --port 8000
 ```
 
-The guide covers the DVC pipeline, local MLflow tracking and model registry, authorized private inputs,
-legacy model compatibility, the Docker model mount and CI checks.
+The guide is the reference for setup, environment selection, DVC, MLflow, Docker, batch predictions
+and checks. The notebooks and analysis above describe the historical July workflow.
 
 ---
 
@@ -229,25 +226,43 @@ curl -X POST "https://pret-drept-tm6owb5eka-ew.a.run.app/predict" \
 
 ## What's where
 
-```
-scrape.py                  999.md GraphQL scraper -> data/raw/snapshots/<run-id>/listings.csv
-features.py                all the cleaning and feature engineering
-train.py                   fits XGBoost on the prepared training partition
-predict.py                 shared bundle loading and inference
-mlops/                     preparation, evaluation, local tracking/registry and Spark batch prediction
-dvc.yaml / dvc.lock        real-data pipeline and its versioned identities
-data/dataset.dvc          pointer to the original CSV and scraper manifest in DVC cache
-api.py                     FastAPI - /predict, /options, /health, serves the page
-app/index.html             the one-page front end (form in, verdict out)
-Dockerfile                 one local image for the API and PySpark, with a mounted model
-.env.example               example local runtime settings; copy to the ignored .env file
-params.json                DVC-tracked split and model parameters
-notebooks/eda.ipynb        exploratory analysis (aggregate views only)
-notebooks/model_selection.ipynb   the "why XGBoost" model comparison
-data/sample/               synthetic sample + column schema (real data stays private)
-images/                    charts from the EDA
-tests/                     unit tests for the cleaning rules, features and the API
-```
+| Path | Purpose |
+| --- | --- |
+| `scrape.py` | Collect original listings into dated snapshots |
+| `features.py` | Parse listings and share feature rules |
+| `train.py` | Fit XGBoost on the prepared training partition |
+| `predict.py` | Load bundles and share inference across the CLI, API, evaluation and batch |
+| `api.py`, `app/` | FastAPI endpoints and the browser form |
+| `mlops/dataset.py` | Select and validate the original snapshot |
+| `mlops/prepare.py` | Clean rows and create the grouped train/evaluation split |
+| `mlops/evaluate.py` | Calculate EUR metrics and record model/data identities |
+| `mlops/track.py`, `mlops/registry.py` | Record evaluations, register models, assign aliases and export |
+| `mlops/models.py` | Package and load XGBoost, CatBoost and fitted TabPFN predictors |
+| `mlops/batch.py` | Run batch predictions through PySpark |
+| `dvc.yaml`, `dvc.lock`, `data/dataset.dvc` | Pipeline commands and versioned input/output identities |
+| `params.json`, `.env.example` | Versioned training settings and example local runtime settings |
+| `requirements.txt`, `Dockerfile` | Shared project dependencies and the API/Spark image |
+| `data/sample/` | Fictional examples and column documentation for tests and CI |
+| `notebooks/`, `images/` | Original EDA, model comparison and charts |
+| `docs/` | Setup, commands, data contract and verification guide |
+| `tests/` | Data, feature, workflow, API, scraper and registry checks |
+| `scripts/` | Docker API and Spark smoke check |
+| `.github/workflows/` | CI using the public test fixture |
+
+Generated local directories are separate from the source:
+
+| Path | Contents |
+| --- | --- |
+| `.venv/` | Main Python environment, including MLflow |
+| `.venv-catboost/`, `.venv-tabpfn/` | Original environments for optional model experiments |
+| `data/raw/snapshots/` | Original scraper archive |
+| `data/dataset/` | Selected snapshot used by DVC |
+| `artifacts/real/` | Current real-data pipeline outputs |
+| `artifacts/private/` | Earlier experiments, model checkpoints and older tracking stores |
+| `artifacts/demo/`, `artifacts/checks/` | Generated fixture outputs and disposable checks |
+| `.dvc/` | DVC configuration and cached dataset/model versions |
+| `.mlflow/` | Shared tracking database and saved model artifacts |
+| `__pycache__/`, `.pytest_cache/`, `.ruff_cache/` | Rebuildable Python, test and lint caches |
 
 ## Still on the list
 

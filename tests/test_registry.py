@@ -93,11 +93,12 @@ def test_model_registry_round_trip_and_generic_tracking(tmp_path):
     # The subprocess uses the same Python environment and a temporary MLflow store.
     script = """
 import json
+import subprocess
 import sys
 from hashlib import sha256
 from pathlib import Path
 
-from mlops.registry import export_model, local_client, register, set_alias
+from mlops.registry import export_model, local_client, register
 from mlops.track import track
 
 root = Path(sys.argv[1])
@@ -133,7 +134,16 @@ assert "xgboost" not in sys.modules and "catboost" not in sys.modules
 
 # Registry artifacts remain usable after the original experiment's model is gone.
 (second / "model.joblib").unlink()
-set_alias(name, version2.version, "champion", store)
+subprocess.run([
+    sys.executable, "-m", "mlops.registry", "--store", str(store),
+    "alias", name, str(version2.version), "champion"
+], check=True, capture_output=True)
+listing = subprocess.check_output([
+    sys.executable, "-m", "mlops.registry", "--store", str(store), "list", name
+], text=True)
+listed = [json.loads(line) for line in listing.splitlines()]
+aliases = {str(row["version"]): row["aliases"] for row in listed}
+assert "champion" in aliases[str(version2.version)]
 chosen = export_model(name, root / "selected", store, alias="champion")
 assert chosen["version"] == version2.version
 try:
@@ -142,7 +152,7 @@ except FileExistsError:
     pass
 else:
     raise AssertionError("An export must not overwrite an existing directory.")
-set_alias(name, version1.version, "champion", store)
+client.set_registered_model_alias(name, "champion", version1.version)
 rollback = export_model(name, root / "rollback", store, alias="champion")
 assert rollback["version"] == version1.version
 

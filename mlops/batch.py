@@ -8,6 +8,8 @@ from functools import partial
 from pathlib import Path
 
 import pandas as pd
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
 
 from features import categorical
 from predict import configured_model_path, load_bundle, model_matrix, predict_eur
@@ -23,29 +25,26 @@ def predict_batches(
     for batch in batches:
         if batch.empty:
             continue
-        if (
-            not batch["rooms"].between(1, 6).all()
-            or not batch["area"].between(10, 400).all()
-            or not batch["sector"].fillna("").str.strip().ne("").all()
-            or not batch["author"].fillna("").str.strip().ne("").all()
-        ):
+        valid_rows = (
+            batch["rooms"].between(1, 6)
+            & batch["area"].between(10, 400)
+            & batch["sector"].fillna("").str.strip().ne("")
+            & batch["author"].fillna("").str.strip().ne("")
+        )
+        if not valid_rows.all():
             raise ValueError(
                 "Each listing needs 1–6 rooms, 10–400 m², a sector and an author."
             )
 
         matrix = model_matrix(batch.to_dict(orient="records"), bundle)
-        yield batch.assign(
-            **{PREDICTION_COLUMN: predict_eur(matrix, bundle).astype(float)}
-        )
+        scored = batch.copy()
+        scored[PREDICTION_COLUMN] = predict_eur(matrix, bundle).astype(float)
+        yield scored
 
 
 def score_csv(source: Path, output: Path, model: Path) -> None:
-    from pyspark.sql import SparkSession
-    from pyspark.sql import functions as F
-    from pyspark.sql.types import DoubleType, StructField, StructType
-
-    source = source.expanduser().resolve(strict=True)
-    model = model.expanduser().resolve(strict=True)
+    source = source.expanduser().resolve()
+    model = model.expanduser()
     output = output.expanduser().absolute()
     if not source.is_file() or not model.is_file():
         raise ValueError("Expected a local input CSV and a trusted model file.")
@@ -88,9 +87,7 @@ def score_csv(source: Path, output: Path, model: Path) -> None:
         if inputs.isEmpty():
             raise ValueError("The input CSV has no listings to score.")
 
-        schema = StructType(
-            [*inputs.schema, StructField(PREDICTION_COLUMN, DoubleType(), False)]
-        )
+        schema = inputs.schema.add(PREDICTION_COLUMN, "double", nullable=False)
         scores = inputs.repartition(WORKERS).mapInPandas(
             partial(predict_batches, bundle=bundle), schema
         )

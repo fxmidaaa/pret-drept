@@ -1,3 +1,5 @@
+"""Score the saved XGBoost bundle on its held-out rows and write EUR metrics."""
+
 import argparse
 import json
 from hashlib import sha256

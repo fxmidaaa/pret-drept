@@ -2,9 +2,16 @@
 set -euo pipefail
 
 if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
-    echo "Usage: bash scripts/smoke_container.sh IMAGE TRUSTED_SYNTHETIC_MODEL [PREPARED_CSV]" >&2
+    echo "Usage: bash scripts/smoke_container.sh IMAGE TRUSTED_MODEL [PREPARED_CSV]" >&2
     exit 2
 fi
+
+host_python=.venv/bin/python
+if [ ! -x "$host_python" ]; then
+    host_python=python3
+fi
+# Check host dependencies before starting the container.
+"$host_python" -c 'import numpy, pandas, predict'
 
 scratch=$(mktemp -d)
 container=
@@ -20,7 +27,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# The temporary directory is private to the caller. Its mounted demo file is readable by UID 10001.
+# The temporary directory is private; its mounted files are readable by UID 10001.
 cp -- "$2" "$scratch/model.joblib"
 cp -- "${3:-$(dirname "$2")/evaluation.csv}" "$scratch/input.csv"
 chmod 0644 "$scratch/model.joblib" "$scratch/input.csv"
@@ -49,7 +56,7 @@ docker exec "$container" python -m mlops.batch \
     --input /data/input.csv --output /tmp/predictions
 docker cp "$container:/tmp/predictions" "$scratch/predictions"
 
-python - "$scratch" <<'PY'
+"$host_python" - "$scratch" <<'PY'
 import json
 import sys
 from pathlib import Path

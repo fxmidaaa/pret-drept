@@ -1,3 +1,5 @@
+"""Clean one listing CSV and save a grouped training/evaluation split."""
+
 import argparse
 import io
 import json
@@ -23,11 +25,6 @@ REQUIRED_COLUMNS = {
     features.SECTOR_COL,
     features.AUTHOR_COL,
 }
-INPUT_COLUMNS = REQUIRED_COLUMNS | {
-    source
-    for name, (source, _) in features.COLUMN_PARSERS.items()
-    if name in features.MODEL_FEATURES
-}
 
 
 def prepare(
@@ -46,19 +43,13 @@ def prepare(
             "Choose an output directory that does not overwrite the input CSV."
         )
 
-    # Read and hash the same bytes. Materialize only the columns used by the model.
+    # Validate and hash the same input bytes. Only prepared features are saved below.
     content = source.read_bytes()
     if snapshot is not None:
         if synthetic:
             raise ValueError("A scraper snapshot cannot be labelled synthetic.")
         validate_snapshot(content, json.loads(snapshot.read_text()))
-    input_sha256 = sha256(content).hexdigest()
-    raw = pd.read_csv(
-        io.BytesIO(content),
-        encoding="utf-8-sig",
-        dtype=str,
-        usecols=lambda name: name in INPUT_COLUMNS,
-    )
+    raw = pd.read_csv(io.BytesIO(content), encoding="utf-8-sig", dtype=str)
     missing = REQUIRED_COLUMNS.difference(raw.columns)
     if missing:
         raise ValueError(
@@ -99,7 +90,7 @@ def prepare(
 
     manifest = {
         "dataset": "synthetic" if synthetic else "private",
-        "input_sha256": input_sha256,
+        "input_sha256": sha256(content).hexdigest(),
         "input_rows": raw_rows,
         "excluded_rows": raw_rows - clean_rows,
         "duplicate_rows": clean_rows - len(cleaned),
