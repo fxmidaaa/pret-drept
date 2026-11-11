@@ -2,10 +2,15 @@
 
 This branch adds a local MLOps workflow to the original app: prepare, train, evaluate, track and
 predict. Start with the [local workflow guide](docs/mlops.md) for your collected data, DVC, MLflow
-and the single Docker image for API and PySpark predictions. DVC versions the selected original
+and the single Docker image for API and PySpark predictions. Local runtime settings live in
+`.env`; copy `.env.example` and follow the guide's loading commands. Training parameters live
+in `params.json`. DVC versions the selected original
 scraper snapshot and reproduces the real-data pipeline locally; CI uses a generated test fixture.
 Private data stays outside Git. The project notes below describe the historical July 2026 dataset
 and model.
+
+Install the main workflow in `.venv` with `python -m pip install -r requirements.txt`.
+The same requirements file is used locally, in CI and in Docker.
 
 My first machine learning project. I scraped about 4,500 real apartment rental listings from a
 Moldovan classifieds site, trained a model on them, and built a small app that estimates a fair
@@ -196,9 +201,10 @@ Worth being upfront about a few things:
 
 Follow the [MLOps guide](docs/mlops.md) to select and version a completed scraper snapshot,
 then run `dvc repro` to prepare the real dataset, train and evaluate the model.
+After loading `.env` as described in the guide, start the app:
 
 ```bash
-PRET_DREPT_MODEL=artifacts/real/model.joblib uvicorn api:app --host 127.0.0.1 --port 8000
+uvicorn api:app --host 127.0.0.1 --port 8000
 ```
 
 The guide covers the DVC pipeline, local MLflow tracking and model registry, authorized private inputs,
@@ -234,6 +240,8 @@ data/dataset.dvc          pointer to the original CSV and scraper manifest in DV
 api.py                     FastAPI - /predict, /options, /health, serves the page
 app/index.html             the one-page front end (form in, verdict out)
 Dockerfile                 one local image for the API and PySpark, with a mounted model
+.env.example               example local runtime settings; copy to the ignored .env file
+params.json                DVC-tracked split and model parameters
 notebooks/eda.ipynb        exploratory analysis (aggregate views only)
 notebooks/model_selection.ipynb   the "why XGBoost" model comparison
 data/sample/               synthetic sample + column schema (real data stays private)

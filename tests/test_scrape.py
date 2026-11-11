@@ -2,12 +2,12 @@ import csv
 import json
 import sys
 from datetime import UTC, datetime
+from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
 
 import scrape
-from mlops.files import sha256
 
 
 @pytest.fixture
@@ -56,7 +56,7 @@ def read_snapshot(directory):
     manifest = json.loads((directory / "snapshot.json").read_text(encoding="utf-8"))
     path = directory / "listings.csv"
     assert manifest["status"] == "complete"
-    assert manifest["csv_sha256"] == sha256(path)
+    assert manifest["csv_sha256"] == sha256(path.read_bytes()).hexdigest()
     with path.open(encoding="utf-8-sig", newline="") as stream:
         return manifest, list(csv.DictReader(stream))
 

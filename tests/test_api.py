@@ -38,18 +38,21 @@ GOOD_FLAT = {
     "price": 700,
 }
 
+
 def test_health():
-    r = client.get('/health')
+    r = client.get("/health")
     assert r.status_code == 200
     assert r.json() == {"status": "ok"}
 
+
 def test_home_serves_the_site():
-    r = client.get('/')
+    r = client.get("/")
     assert r.status_code == 200
     assert "overpriced" in r.text
 
+
 def test_options_has_the_dropdown_values(configured_model):
-    r = client.get('/options')
+    r = client.get("/options")
     assert r.status_code == 200
     opts = r.json()
     assert "centru" in opts["sector"]
@@ -59,10 +62,12 @@ def test_options_has_the_dropdown_values(configured_model):
     assert "necunoscut" not in opts["sector"]
     assert "necunoscut" not in opts["author"]
 
+
 def test_predict_rejects_missing_author(configured_model):
     flat = {k: v for k, v in GOOD_FLAT.items() if k != "author"}
     r = client.post("/predict", json=flat)
     assert r.status_code == 422
+
 
 def test_drivers_never_show_absent_or_unset_features(configured_model):
     # the explanation must only mention what the flat actually has: no "necunoscut"
@@ -74,6 +79,7 @@ def test_drivers_never_show_absent_or_unset_features(configured_model):
     assert not any("air conditioning" in f for f in feats)
     assert not any("terrace" in f for f in feats)
 
+
 def test_predict_a_normal_flat(configured_model):
     r = client.post("/predict", json=GOOD_FLAT)
     assert r.status_code == 200
@@ -82,6 +88,7 @@ def test_predict_a_normal_flat(configured_model):
     assert 200 < data["fair_price"] < 5000
     assert data["verdict"] in ("overpriced", "fair price", "good deal")
     assert 1 <= len(data["drivers"]) <= 5
+
 
 def test_predict_without_asking_price_gives_no_verdict(configured_model):
     flat = {k: v for k, v in GOOD_FLAT.items() if k != "price"}
@@ -96,15 +103,18 @@ def test_predict_rejects_negative_area(configured_model):
     r = client.post("/predict", json={**GOOD_FLAT, "area": -5})
     assert r.status_code == 422
 
+
 def test_predict_rejects_absurd_rooms(configured_model):
     r = client.post("/predict", json={**GOOD_FLAT, "rooms": 100})
     assert r.status_code == 422
+
 
 def test_predict_rejects_unknown_sector(configured_model):
     # an unknown category would silently one-hot to all zeros -> nonsense
     # prediction. the api must refuse it instead.
     r = client.post("/predict", json={**GOOD_FLAT, "sector": "london"})
     assert r.status_code == 422
+
 
 def test_sector_is_case_insensitive(configured_model):
     r = client.post("/predict", json={**GOOD_FLAT, "sector": "Centru"})
@@ -117,6 +127,7 @@ def test_feature_dict_matches_the_model(configured_model):
     # and the real feature falls back to a median default, so nothing crashes
     # and the bug is invisible. here the keys must match the model exactly.
     from features import latlon_to_km
+
     bund = predict.get_bundle()
     x = predict.build_features(dict(GOOD_FLAT), bund)
     assert set(x) == set(bund["features"])
@@ -124,6 +135,7 @@ def test_feature_dict_matches_the_model(configured_model):
     # and the distance must really come from the coordinates, not from a default
     if "dist_to_center" in x:
         assert x["dist_to_center"] == latlon_to_km(x["lat"], x["lon"])
+
 
 def test_golden_prediction_directly(configured_model):
     # calling predict.run directly (no http): the flags get derived, the price
@@ -133,12 +145,21 @@ def test_golden_prediction_directly(configured_model):
     assert result["listed_price"] == 700
     assert "deviation_pct" in result
 
+
 def test_bundle_ships_no_row_level_data(configured_model):
     # Guard the bundle shape against accidentally including row-level arrays.
     bund = predict.get_bundle()
     forbidden = {
-        "knn_points", "knn_ppm_values", "listings", "raw", "coords",
-        "lat_values", "lon_values", "ids", "text", "urls",
+        "knn_points",
+        "knn_ppm_values",
+        "listings",
+        "raw",
+        "coords",
+        "lat_values",
+        "lon_values",
+        "ids",
+        "text",
+        "urls",
     }
     present = forbidden & set(bund)
     assert not present, f"forbidden row-level keys in bundle: {present}"

@@ -1,14 +1,14 @@
 import argparse
 import json
+from hashlib import sha256
 from pathlib import Path
 
+import pandas as pd
 import xgboost
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error
 
 from features import categorical
-from mlops.files import sha256, write_json
 from mlops.models import model_artifact
-from mlops.prepare import read_partition
 from predict import load_bundle, model_matrix, predict_eur
 
 
@@ -17,24 +17,19 @@ def evaluate(directory: Path) -> None:
     manifest_path = directory / "dataset.json"
     evaluation_path = directory / "evaluation.csv"
     dataset = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if sha256(evaluation_path) != dataset["evaluation_sha256"]:
+    if sha256(evaluation_path.read_bytes()).hexdigest() != dataset["evaluation_sha256"]:
         raise ValueError(
             "The evaluation CSV differs from dataset.json. Run preparation again."
         )
 
     bundle = load_bundle(model_path)
-    metadata = bundle.get("meta", {})
-    if metadata.get("format") != "pret-drept-simple-v1":
-        raise ValueError("Evaluate a model produced by this branch's train.py.")
-    config = metadata["config"]
-    if metadata["training_sha256"] != dataset["training_sha256"] or any(
-        config[key] != dataset["split"][key] for key in ("seed", "evaluation_fraction")
-    ):
+    metadata = bundle["meta"]
+    if metadata["training_sha256"] != dataset["training_sha256"]:
         raise ValueError(
             "The model and dataset have different training lineage. Retrain the model."
         )
 
-    frame = read_partition(evaluation_path)
+    frame = pd.read_csv(evaluation_path, dtype={name: str for name in categorical})
     predictions = predict_eur(
         model_matrix(frame.to_dict(orient="records"), bundle), bundle
     )
@@ -44,7 +39,7 @@ def evaluate(directory: Path) -> None:
         "model_version": xgboost.__version__,
         "target_transform": "log1p",
         "target_unit": "EUR/month",
-        "parameters": config,
+        "parameters": metadata["config"],
         "metrics": {
             "mae_eur": mean_absolute_error(frame["price"], predictions),
             "rmse_eur": root_mean_squared_error(frame["price"], predictions),
@@ -52,26 +47,14 @@ def evaluate(directory: Path) -> None:
             "evaluation_rows": len(frame),
         },
         "lineage": {
-            "input_sha256": dataset["input_sha256"],
-            "dataset_sha256": sha256(manifest_path),
-            "model_sha256": sha256(model_path),
+            "dataset_sha256": sha256(manifest_path.read_bytes()).hexdigest(),
+            "model_sha256": sha256(model_path.read_bytes()).hexdigest(),
         },
     }
-    report["model_artifact"] = model_artifact(directory, report)
-    report["model_artifact"]["signature"] = {
-        "inputs": json.dumps(
-            [
-                {
-                    "name": name,
-                    "type": "string" if name in categorical else "double",
-                    "required": name in {"rooms", "area", "sector", "author"},
-                }
-                for name in bundle["features"]
-            ]
-        ),
-        "outputs": json.dumps([{"type": "double", "name": "predicted_rent_eur"}]),
-    }
-    write_json(directory / "evaluation.json", report)
+    report["model_artifact"] = model_artifact(report)
+    report_path = directory / "evaluation.json"
+    report_path.unlink(missing_ok=True)
+    report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report["metrics"], sort_keys=True))
 
 

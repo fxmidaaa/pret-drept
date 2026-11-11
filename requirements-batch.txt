@@ -1,5 +1,0 @@
--r requirements-serve.txt
-
-pyspark==4.1.4
-py4j==0.10.9.9
-pyarrow==24.0.0

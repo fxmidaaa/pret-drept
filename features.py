@@ -30,28 +30,57 @@ PANORAMIC_COL = "Geamuri panoramice"
 TEXT_COL = "Textul anunțului"
 
 # I turn each listing's gps coordinate into a distance-to-center in km. (Chisinau city centre)
-CENTER_LAT, CENTER_LON = 47.0245, 28.8322 # piata marii adunari nationale 
-LON_SCALE = 0.682   # cos(47 deg): 1 deg of longitude is shorter than 1 deg of latitude here
+CENTER_LAT, CENTER_LON = 47.0245, 28.8322  # piata marii adunari nationale
+LON_SCALE = (
+    0.682  # cos(47 deg): 1 deg of longitude is shorter than 1 deg of latitude here
+)
 
-numerical = ["rooms", "area", "floor", "total_floors", "dist_to_center",
-              "lat", "lon", "kitchen_area", "ceiling_height",
-                "balcony_count", "photo_count", "bathrooms"]
-binary = ["autonomous_heating", "furnished", "elevator", "parking", "is_ground", "is_top",
-          "air_conditioning", "floor_heating", "terrace", "panoramic_windows",
-          "utilities_included", "lux"]
+numerical = [
+    "rooms",
+    "area",
+    "floor",
+    "total_floors",
+    "dist_to_center",
+    "lat",
+    "lon",
+    "kitchen_area",
+    "ceiling_height",
+    "balcony_count",
+    "photo_count",
+    "bathrooms",
+]
+binary = [
+    "autonomous_heating",
+    "furnished",
+    "elevator",
+    "parking",
+    "is_ground",
+    "is_top",
+    "air_conditioning",
+    "floor_heating",
+    "terrace",
+    "panoramic_windows",
+    "utilities_included",
+    "lux",
+]
 categorical = ["sector", "building_fund", "condition", "author", "building_type"]
 FEATURES = numerical + binary + categorical
 MODEL_FEATURES = [
-    name for name in FEATURES
+    name
+    for name in FEATURES
     if name not in {"lat", "lon", "dist_to_center", "photo_count", "building_type"}
 ]
+
 
 def floor_flags(floor, total_floors):
     # this rule lives here (and ONLY here) so that
     # training, predict.py and the api can never drift apart on what "ground" means
     is_ground = int(floor is not None and floor <= 1)
-    is_top = int(floor is not None and total_floors is not None and floor >= total_floors)
+    is_top = int(
+        floor is not None and total_floors is not None and floor >= total_floors
+    )
     return is_ground, is_top
+
 
 def parse_latlon(harta):
     # 'Harta' is a json string like {"lat": 47.03, "lon": 28.80}. Turn it into the
@@ -61,16 +90,20 @@ def parse_latlon(harta):
         lat, lon = float(h["lat"]), float(h["lon"])
     except (TypeError, ValueError, KeyError):
         return None, None
-    
+
     if not (46.9 < lat < 47.10 and 28.74 < lon < 28.95):
         return None, None
-    return float(lat), float(lon)    
-    
+    return float(lat), float(lon)
+
+
 def latlon_to_km(lat, lon):
     dlat = lat - CENTER_LAT
     dlon = (lon - CENTER_LON) * LON_SCALE
 
-    return float(np.sqrt(dlat ** 2 + dlon ** 2) * 111.0) # degrees into kilometers (thanks to geography in lyceum)
+    return float(
+        np.sqrt(dlat**2 + dlon**2) * 111.0
+    )  # degrees into kilometers (thanks to geography in lyceum)
+
 
 def first_number(text):
     # pull the first number out of a value. "62" -> 62.0, "Apartament cu 3 camere" -> 3.0
@@ -80,6 +113,7 @@ def first_number(text):
     if m is None:
         return None
     return float(m.group().replace(",", "."))
+
 
 def clean_rooms(text):
     # "Apartament cu 1 camera", "Apartament cu 4 camere", or "O camera"
@@ -91,11 +125,13 @@ def clean_rooms(text):
         return None
     return n
 
+
 def clean_text(text):
     # for category columns: lowercase, trim, fill the empty ones
     if not isinstance(text, str):
         return "necunoscut"
     return text.strip().lower() or "necunoscut"
+
 
 def to_flag(value):
     # the amenity columns come back as True (present in romanian) or NaN/False (absent)
@@ -105,23 +141,27 @@ def to_flag(value):
         return 1 if value.strip().lower() in ("true", "da", "1") else 0
     return 0
 
+
 def clean_parking(value):
     # "Loc de parcare" is "Deschis"/"Subterana"/"Sub acoperis" when present (in romanian), NaN when not
     if isinstance(value, str) and value.strip() and value.strip().lower() != "nu":
         return 1
     return 0
 
+
 def clean_balcony(value):
     # "Balcon/ lojie" is "1"/"2"/"3"/"4 si mai multe"/"Nu"/NaN -> a count
     n = first_number(value)
     if n is None:
-        return 0 # "Nu" or not specified
+        return 0  # "Nu" or not specified
     return min(n, 4.0)
+
 
 def clean_photos(value):
     if not isinstance(value, str):
         return 0
     return value.count(".jpg") + value.count(".png") + value.count(".webp")
+
 
 def clean_kitchen(value):
     # kitchen area in m2; only ~10% of listings fill it, and some put 0 for "unknown"
@@ -129,6 +169,7 @@ def clean_kitchen(value):
     if v is None or not (3 <= v <= 60):
         return None
     return v
+
 
 def clean_ceiling(value):
     # ceiling height. people type it in whatever unit they feel like:
@@ -144,18 +185,29 @@ def clean_ceiling(value):
         return v / 100
     return None
 
+
 # people often write the condition in the ad text even when the structured field
 # is empty (~1/3 of listings). ads come in romanian AND russian, so both.
 # order matters: the first pattern that matches wins.
 CONDITION_PATTERNS = [
     ("euroreparație", ["eurorepara", "euro repara", "евроремонт"]),
     ("design individual", ["design individual", "дизайнерск"]),
-    ("dat în exploatare", ["dat în exploatare", "dat in exploatare", "сдан в эксплуатацию"]),
-    ("variantă albă", ["variantă albă", "varianta alba", "белый вариант", "белом варианте"]),
-    ("are nevoie de reparație", ["nevoie de repara", "necesită repara", "требует ремонта"]),
+    (
+        "dat în exploatare",
+        ["dat în exploatare", "dat in exploatare", "сдан в эксплуатацию"],
+    ),
+    (
+        "variantă albă",
+        ["variantă albă", "varianta alba", "белый вариант", "белом варианте"],
+    ),
+    (
+        "are nevoie de reparație",
+        ["nevoie de repara", "necesită repara", "требует ремонта"],
+    ),
     ("fără reparație", ["fără repara", "fara repara", "без ремонта"]),
     ("reparație cosmetică", ["cosmetic", "косметическ"]),
 ]
+
 
 def condition_from_text(text):
     if not isinstance(text, str):
@@ -166,12 +218,21 @@ def condition_from_text(text):
             return condition
     return None
 
+
 # "utilities included in the rent" is invisible in the structured fields but is a
 # known source of price noise. conservative keywords only - "+ comunale" usually
 # means the OPPOSITE (utilities on top), so it's not in the list.
-UTILITIES_KEYS = ["comunale incluse", "inclusiv comunale", "incluse comunale",
-                  "totul inclus", "toate incluse",
-                  "коммунальные включены", "включая коммунальные", "все включено"]
+UTILITIES_KEYS = [
+    "comunale incluse",
+    "inclusiv comunale",
+    "incluse comunale",
+    "totul inclus",
+    "toate incluse",
+    "коммунальные включены",
+    "включая коммунальные",
+    "все включено",
+]
+
 
 def utilities_from_text(text):
     if not isinstance(text, str):
@@ -179,17 +240,33 @@ def utilities_from_text(text):
     t = text.lower()
     return int(any(k in t for k in UTILITIES_KEYS))
 
+
 # the structured fields can't tell a premium flat from an ordinary one - both say
 # "euroreparație". but the ads can: penthouses, jacuzzis, "clasa premium" and so on.
 # without this the model prices every big centru flat at the neighborhood average.
-LUX_KEYS = ["premium", "penthouse", "de lux", "люкс", "exclusiv", "jacuzzi",
-            "джакузи", "saun", "саун", "smart home", "клубн", "мансард", "mansard"]
+LUX_KEYS = [
+    "premium",
+    "penthouse",
+    "de lux",
+    "люкс",
+    "exclusiv",
+    "jacuzzi",
+    "джакузи",
+    "saun",
+    "саун",
+    "smart home",
+    "клубн",
+    "мансард",
+    "mansard",
+]
+
 
 def lux_from_text(text):
     if not isinstance(text, str):
         return 0
     t = text.lower()
     return int(any(k in t for k in LUX_KEYS))
+
 
 def bathrooms_from_text(text):
     # "2 blocuri sanitare" / "3 санузла" -> 2.0 / 3.0. a second bathroom is one of
@@ -200,6 +277,7 @@ def bathrooms_from_text(text):
     if m is None:
         return 1.0
     return min(float(m.group(1)), 4.0)
+
 
 def clean_price(row):
     """Convert a numeric asking rent to EUR; unknown currencies are unusable."""
@@ -247,6 +325,7 @@ COLUMN_PARSERS = {
     "building_type": (BUILDING_TYPE_COL, clean_text),
 }
 
+
 def clean_data(df, *, deduplicate=True):
     """Parse listing fields and keep ordinary monthly rentals. No fitted statistics."""
     df = df.copy()
@@ -259,10 +338,15 @@ def clean_data(df, *, deduplicate=True):
 
     # These geographic features are still used by the historical notebooks and bundles.
     latlon = [parse_latlon(h) for h in raw[MAP_COL]]
-    df["lat"] = np.array([p[0] if p[0] is not None else np.nan for p in latlon], dtype = float)
-    df["lon"] = np.array([p[1] if p[1] is not None else np.nan for p in latlon], dtype=float)
+    df["lat"] = np.array(
+        [p[0] if p[0] is not None else np.nan for p in latlon], dtype=float
+    )
+    df["lon"] = np.array(
+        [p[1] if p[1] is not None else np.nan for p in latlon], dtype=float
+    )
     df["dist_to_center"] = np.array(
-        [latlon_to_km(p[0], p[1]) if p[0] is not None else np.nan for p in latlon], dtype=float
+        [latlon_to_km(p[0], p[1]) if p[0] is not None else np.nan for p in latlon],
+        dtype=float,
     )
 
     # Recover the condition from Romanian/Russian text when its field is blank.
@@ -282,7 +366,11 @@ def clean_data(df, *, deduplicate=True):
         )
 
     # Fixed bounds define the ordinary-rental segment, not fitted outlier thresholds.
-    df = df[df["price"].between(100, 2000) & df["area"].between(10, 400) & df["rooms"].between(1, 6)]
+    df = df[
+        df["price"].between(100, 2000)
+        & df["area"].between(10, 400)
+        & df["rooms"].between(1, 6)
+    ]
 
     # two cheap derived flags, computed by the shared rule above
     flags = [floor_flags(f, t) for f, t in zip(df["floor"], df["total_floors"])]
@@ -291,11 +379,20 @@ def clean_data(df, *, deduplicate=True):
 
     return df
 
+
 # the columns whose missing values get filled with a median. the medians are FIT
 # on the training split only and then reused everywhere else - fitting them on
 # the full dataset would leak validation rows into the training features.
-IMPUTE_COLS = ["floor", "total_floors", "dist_to_center",
-               "lat", "lon", "kitchen_area", "ceiling_height"]
+IMPUTE_COLS = [
+    "floor",
+    "total_floors",
+    "dist_to_center",
+    "lat",
+    "lon",
+    "kitchen_area",
+    "ceiling_height",
+]
+
 
 def trim_ppm_outliers(df, bounds=None):
     # drop the worst 1% on each end of "rent-per-m2". these are almost always some data issues.
@@ -309,6 +406,7 @@ def trim_ppm_outliers(df, bounds=None):
     lo, hi = bounds
     return df[(ppm >= lo) & (ppm <= hi)], bounds
 
+
 def trim_knn_outliers(df, lo=0.5, hi=2.0):
     # drop listings asking under half or over double their own neighborhood's
     # going rate (the knn_ppm column, which must already be computed). those are
@@ -318,6 +416,7 @@ def trim_knn_outliers(df, lo=0.5, hi=2.0):
     # validation get exactly the same rule and nothing can leak.
     ratio = (df["price"] / df["area"]) / df["knn_ppm"]
     return df[(ratio >= lo) & (ratio <= hi)]
+
 
 def impute_medians(df, medians=None):
     # fill missing numerics with medians. pass medians=None to fit them (train
@@ -329,20 +428,23 @@ def impute_medians(df, medians=None):
         df[column] = df[column].fillna(median)
     return df, medians
 
+
 # --- local market rate as a COARSE AGGREGATE ---------------------------------
 # The model needs a "what do nearby flats charge per m2?" signal, but it must
 # never ship one coordinate + price per training listing. So instead of a per-row
 # KNN we publish medians over coarse ~1 km grid cells, and only for cells that
 # hold enough listings that no single flat can be recovered from the aggregate.
-GRID_PREC = 2          # decimals to round lat/lon to -> ~1 km cells
-GRID_MIN_GROUP = 15    # a cell / sector needs at least this many listings to publish
+GRID_PREC = 2  # decimals to round lat/lon to -> ~1 km cells
+GRID_MIN_GROUP = 15  # a cell / sector needs at least this many listings to publish
+
 
 def grid_key(lat, lon):
     return (round(float(lat), GRID_PREC), round(float(lon), GRID_PREC))
 
+
 def _has_coords(lat, lon):
-    return (lat is not None and lon is not None
-            and not (np.isnan(lat) or np.isnan(lon)))
+    return lat is not None and lon is not None and not (np.isnan(lat) or np.isnan(lon))
+
 
 def build_ppm_grid(df, min_group=GRID_MIN_GROUP):
     # returns (grid_ppm, sector_ppm, global_ppm): coarse cell -> median eur/m2,
@@ -357,11 +459,14 @@ def build_ppm_grid(df, min_group=GRID_MIN_GROUP):
             grid_vals.setdefault(grid_key(lat, lon), []).append(p)
         sector_vals.setdefault(sec, []).append(p)
 
-    grid_ppm = {k: float(np.median(v)) for k, v in grid_vals.items()
-                if len(v) >= min_group}
-    sector_ppm = {k: float(np.median(v)) for k, v in sector_vals.items()
-                  if len(v) >= min_group}
+    grid_ppm = {
+        k: float(np.median(v)) for k, v in grid_vals.items() if len(v) >= min_group
+    }
+    sector_ppm = {
+        k: float(np.median(v)) for k, v in sector_vals.items() if len(v) >= min_group
+    }
     return grid_ppm, sector_ppm, global_ppm
+
 
 def ppm_from_grid(grid_ppm, sector_ppm, global_ppm, lat, lon, sector):
     # cell median -> sector median -> global median. same rule at train and serve.
@@ -375,9 +480,12 @@ def ppm_from_grid(grid_ppm, sector_ppm, global_ppm, lat, lon, sector):
             return sector_ppm[s]
     return global_ppm
 
+
 def assign_ppm(df, grid_ppm, sector_ppm, global_ppm):
     # the knn_ppm feature value for every row, from the coarse aggregate only
-    return np.array([
-        ppm_from_grid(grid_ppm, sector_ppm, global_ppm, lat, lon, sec)
-        for lat, lon, sec in zip(df["lat"], df["lon"], df["sector"])
-    ])
+    return np.array(
+        [
+            ppm_from_grid(grid_ppm, sector_ppm, global_ppm, lat, lon, sec)
+            for lat, lon, sec in zip(df["lat"], df["lon"], df["sector"])
+        ]
+    )

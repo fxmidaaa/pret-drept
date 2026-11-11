@@ -1,40 +1,19 @@
+"""Read an evaluation, log a new MLflow run, and optionally register its model."""
+
 import argparse
-import hashlib
 import json
-import math
-import os
 import shutil
-import subprocess
 import tempfile
+from hashlib import sha256
 from pathlib import Path
 
-from mlops.files import sha256, write_json
-from mlops.models import model_artifact, model_type, verify_files
+import mlflow
+from mlflow.models import ModelSignature
+
+from mlops.models import model_artifact, model_type
+from mlops.registry import local_client, register
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def git_value(*args: str) -> str:
-    try:
-        return subprocess.check_output(
-            ["git", "--no-optional-locks", "-C", str(ROOT), *args],
-            text=True,
-            stderr=subprocess.DEVNULL,
-        ).strip()
-    except (OSError, subprocess.CalledProcessError):
-        return "unavailable"
-
-
-def local_client(store: Path):
-    os.environ.setdefault("MLFLOW_DISABLE_TELEMETRY", "true")
-    import mlflow
-
-    store = store.resolve()
-    store.mkdir(parents=True, exist_ok=True)
-    uri = f"sqlite:///{store / 'mlflow.db'}"
-    mlflow.set_tracking_uri(uri)
-    mlflow.set_registry_uri(uri)
-    return mlflow.MlflowClient(tracking_uri=uri, registry_uri=uri)
 
 
 def flatten_params(values: dict, prefix: str = "") -> dict:
@@ -52,54 +31,26 @@ def flatten_params(values: dict, prefix: str = "") -> dict:
     return result
 
 
-def read_result(directory: Path, dataset_directory: Path | None = None) -> tuple:
-    report = json.loads((directory / "evaluation.json").read_text())
-    if dataset_directory is None:
-        dataset_directory = (
-            directory if (directory / "dataset.json").is_file() else directory.parent
-        )
-    dataset_path = dataset_directory / "dataset.json"
-    dataset = json.loads(dataset_path.read_text())
-    if (
-        report["dataset"] not in {"synthetic", "private"}
-        or report["dataset"] != dataset["dataset"]
-    ):
-        raise ValueError("Expected matching synthetic or private dataset reports.")
-    if report["lineage"]["dataset_sha256"] != sha256(dataset_path):
-        raise ValueError("The dataset changed after evaluation. Evaluate it again.")
-    for key in ("input_sha256", "training_sha256", "evaluation_sha256"):
-        if key in report["lineage"] and report["lineage"][key] != dataset[key]:
-            raise ValueError("The evaluation report uses a different dataset split.")
-    for name, value in report["metrics"].items():
-        if (
-            isinstance(value, bool)
-            or not isinstance(value, (int, float))
-            or not math.isfinite(value)
-        ):
-            raise ValueError(f"Metric {name} must be a finite number.")
-    specification = model_artifact(directory, report)
-    if specification is not None:
-        verify_files(directory, specification)
-    return report, dataset, dataset_path, specification
-
-
 def log_model(directory: Path, specification: dict):
     """Copy a complete predictor into MLflow without loading it in this environment."""
-    import mlflow
-    from mlflow.models import ModelSignature
-
     with tempfile.TemporaryDirectory() as temporary:
         work = Path(temporary)
         bundle = work / "bundle"
         bundle.mkdir()
         packaged = {**specification, "files": {}}
-        for name, source in verify_files(directory, specification).items():
+        if not specification["files"]:
+            raise ValueError("A registered predictor needs a saved model file.")
+        for name, entry in specification["files"].items():
+            if Path(name).name != name or name in {"", ".", "..", "model.json"}:
+                raise ValueError("Model artifact names must be plain filenames.")
+            source = directory / entry["path"]
+            if sha256(source.read_bytes()).hexdigest() != entry["sha256"]:
+                raise ValueError(f"Model artifact {name} changed after evaluation.")
             shutil.copy2(source, bundle / name)
-            expected = specification["files"][name]["sha256"]
-            if sha256(bundle / name) != expected:
-                raise ValueError(f"Model artifact {name} changed while copying.")
-            packaged["files"][name] = {"path": name, "sha256": expected}
-        write_json(bundle / "model.json", packaged)
+            packaged["files"][name] = {**entry, "path": name}
+        (bundle / "model.json").write_text(
+            json.dumps(packaged, indent=2), encoding="utf-8"
+        )
         code = work / "code"
         code.mkdir()
         for relative in specification.get("code_paths", []):
@@ -128,73 +79,31 @@ def log_model(directory: Path, specification: dict):
 
 
 def track(directory: Path, store: Path, dataset_directory: Path | None = None) -> str:
-    # Validate inputs before creating a run or importing a model library.
-    report, dataset, dataset_path, specification = read_result(
-        directory, dataset_directory
-    )
-    client = local_client(store)
-    import mlflow
-
+    report = json.loads((directory / "evaluation.json").read_text())
+    if dataset_directory is None:
+        dataset_directory = (
+            directory if (directory / "dataset.json").is_file() else directory.parent
+        )
+    dataset_path = dataset_directory / "dataset.json"
+    dataset = json.loads(dataset_path.read_text())
     dataset_kind = report["dataset"]
+    if (
+        dataset_kind not in {"synthetic", "private"}
+        or dataset_kind != dataset["dataset"]
+    ):
+        raise ValueError("Expected matching synthetic or private dataset reports.")
+
+    client = local_client(store)
     experiment_name = f"pret-drept-{dataset_kind}"
-    artifact_dir = store.resolve() / "artifacts" / dataset_kind
     experiment = client.get_experiment_by_name(experiment_name)
     if experiment is None:
+        artifact_dir = store.resolve() / "artifacts" / dataset_kind
         artifact_dir.mkdir(parents=True, exist_ok=True)
         experiment_id = client.create_experiment(
             experiment_name, artifact_location=artifact_dir.as_uri()
         )
     else:
-        if experiment.artifact_location != artifact_dir.as_uri():
-            raise ValueError(
-                "MLflow experiment points outside this store. Choose a new --store."
-            )
         experiment_id = experiment.experiment_id
-
-    code_hashes = {
-        relative: sha256(ROOT / relative)
-        for relative in (specification or {}).get("code_paths", [])
-    }
-    identity = hashlib.sha256(
-        json.dumps(
-            {
-                "report": sha256(directory / "evaluation.json"),
-                "model_artifact": specification,
-                "inference_code_at_logging": code_hashes,
-            },
-            sort_keys=True,
-        ).encode()
-    ).hexdigest()
-    matching = client.search_runs(
-        [experiment_id],
-        filter_string=f"tags.result_sha256 = '{identity}' and attributes.status = 'FINISHED'",
-        max_results=1,
-    )
-    if matching:
-        return matching[0].info.run_id
-
-    kind = model_type(report)
-    status = git_value("status", "--porcelain")
-    tags = {
-        "dataset": dataset_kind,
-        "model_type": kind,
-        "model_ready": str(specification is not None).lower(),
-        "result_sha256": identity,
-        "evaluation_report_sha256": sha256(directory / "evaluation.json"),
-        "evaluation_sha256": dataset["evaluation_sha256"],
-        "git_commit_at_logging": git_value("rev-parse", "HEAD"),
-        "git_worktree_at_logging": status
-        if status == "unavailable"
-        else ("dirty" if status else "clean"),
-        **report["lineage"],
-    }
-    if (
-        directory.resolve() == ROOT / "artifacts" / "real"
-        and (ROOT / "dvc.lock").is_file()
-    ):
-        tags["dvc_lock_sha256_at_logging"] = sha256(ROOT / "dvc.lock")
-        if (ROOT / "data" / "dataset.dvc").is_file():
-            tags["input_dvc_sha256_at_logging"] = sha256(ROOT / "data" / "dataset.dvc")
 
     parameters = report["parameters"]
     # Legacy XGBoost reports already nest model parameters; other reports are flat.
@@ -205,8 +114,19 @@ def track(directory: Path, store: Path, dataset_directory: Path | None = None) -
         parameters["library_version"] = report["model_version"]
     if "runtime" in report:
         parameters["runtime"] = report["runtime"]
+    specification = model_artifact(report)
+    kind = model_type(report)
+    tags = {
+        "dataset": dataset_kind,
+        "model_type": kind,
+        "model_ready": str(specification is not None).lower(),
+        "evaluation_sha256": dataset["evaluation_sha256"],
+        **report.get("lineage", {}),
+    }
     with mlflow.start_run(
-        experiment_id=experiment_id, run_name=f"{kind} · {dataset_kind}", tags=tags
+        experiment_id=experiment_id,
+        run_name=f"{kind} · {dataset_kind}",
+        tags=tags,
     ) as run:
         mlflow.log_params(flatten_params(parameters))
         mlflow.log_artifact(str(directory / "evaluation.json"))
@@ -235,8 +155,6 @@ def main() -> None:
     args = parser.parse_args()
     run_id = track(args.directory, args.store, args.dataset_dir)
     if args.register:
-        from mlops.registry import register
-
         version = register(run_id, args.store)
         print(f"{run_id} models:/{version.name}/{version.version}")
     else:

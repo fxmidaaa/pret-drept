@@ -3,25 +3,22 @@ import os
 import shutil
 import subprocess
 import sys
+from hashlib import sha256
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from mlops.config import load_config
 from mlops.evaluate import evaluate
-from mlops.files import sha256, write_json
-from mlops.track import read_result
 from predict import load_bundle, model_matrix, predict_eur
 from train import train
 
 ROOT = Path(__file__).resolve().parents[1]
-TRACKING_PYTHON = ROOT / ".venv-mlflow/bin/python"
 
 
 @pytest.mark.parametrize("changed", ["model", "dataset", "metric"])
-def test_tracking_rejects_invalid_evaluations_before_logging(tmp_path, changed):
+def test_tracking_rejects_invalid_inputs(tmp_path, changed):
     demo = ROOT / "artifacts/demo"
     if not (demo / "evaluation.json").is_file():
         pytest.skip("Run the fixture stage commands first.")
@@ -32,18 +29,37 @@ def test_tracking_rejects_invalid_evaluations_before_logging(tmp_path, changed):
         with (tmp_path / "model.joblib").open("ab") as stream:
             stream.write(b"changed")
     elif changed == "dataset":
-        with (tmp_path / "dataset.json").open("a") as stream:
-            stream.write("\n")
+        report["dataset"] = "private"
+        (tmp_path / "evaluation.json").write_text(json.dumps(report), encoding="utf-8")
     else:
         report["metrics"]["mae_eur"] = "invalid"
-        write_json(tmp_path / "evaluation.json", report)
-    with pytest.raises(ValueError, match="changed|finite"):
-        read_result(tmp_path)
+        (tmp_path / "evaluation.json").write_text(json.dumps(report), encoding="utf-8")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mlops.track",
+            str(tmp_path),
+            "--store",
+            str(tmp_path / "tracking"),
+        ],
+        check=False,
+        cwd=ROOT,
+        env={**os.environ, "MLFLOW_DISABLE_TELEMETRY": "true"},
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode != 0
+    expected = {
+        "model": "changed after evaluation",
+        "dataset": "matching synthetic or private",
+        "metric": "invalid",
+    }
+    assert expected[changed] in result.stderr, result.stdout + result.stderr
 
 
 def test_model_registry_round_trip_and_generic_tracking(tmp_path):
-    if not TRACKING_PYTHON.is_file():
-        pytest.skip("Install requirements-tracking.txt in .venv-mlflow.")
     demo = ROOT / "artifacts/demo"
     if not (demo / "evaluation.json").is_file():
         pytest.skip("Run the fixture stage commands first.")
@@ -59,11 +75,14 @@ def test_model_registry_round_trip_and_generic_tracking(tmp_path):
             "evaluation.json",
         ):
             shutil.copy2(demo / name, destination / name)
-    config = load_config(ROOT / "params.json")
-    config.model.n_estimators = 4
+    legacy = json.loads((first / "evaluation.json").read_text())
+    legacy["model_artifact"]["code_paths"].append("mlops/files.py")
+    (first / "evaluation.json").write_text(json.dumps(legacy), encoding="utf-8")
+    config = json.loads((ROOT / "params.json").read_text())
+    config["model"]["n_estimators"] = 4
     train(second, config)
     evaluate(second)
-    expected_hash = sha256(second / "model.joblib")
+    expected_hash = sha256((second / "model.joblib").read_bytes()).hexdigest()
     inputs = pd.read_csv(second / "evaluation.csv").drop(columns="price")
     bundle = load_bundle(second / "model.joblib")
     expected = predict_eur(
@@ -71,34 +90,43 @@ def test_model_registry_round_trip_and_generic_tracking(tmp_path):
         bundle,
     )
 
-    # The real MLflow database and registry run in the isolated tracking environment.
+    # The subprocess uses the same Python environment and a temporary MLflow store.
     script = """
 import json
 import sys
+from hashlib import sha256
 from pathlib import Path
 
-from mlops.files import write_json
-from mlops.registry import export_model, register, set_alias
-from mlops.track import local_client, track
+from mlops.registry import export_model, local_client, register, set_alias
+from mlops.track import track
 
 root = Path(sys.argv[1])
 store = root / "tracking"
 first = root / "first"
 second = root / "second"
 run1 = track(first, store)
-assert track(first, store) == run1
+assert track(first, store) != run1
 version1 = register(run1, store)
-assert register(run1, store).version == version1.version
+assert register(run1, store).version != version1.version
 run2 = track(second, store)
 version2 = register(run2, store)
 assert version1.version != version2.version
 name = version1.name
 client = local_client(store)
-assert len(client.search_model_versions(f"name = '{name}'")) == 2
+assert len(client.search_model_versions(f"name = '{name}'")) == 3
 run = client.get_run(run2)
 report = json.loads((second / "evaluation.json").read_text())
+assert run.info.status == "FINISHED"
+assert run.data.tags["dataset"] == "synthetic"
+assert run.data.tags["model_type"] == "xgboost"
+assert run.data.tags["model_ready"] == "true"
+assert run.data.tags["model_uri"]
 assert run.data.metrics == report["metrics"]
+assert run.data.params["seed"] == str(report["parameters"]["seed"])
 assert run.data.params["model.n_estimators"] == "4"
+assert {file.path for file in client.list_artifacts(run2)} == {
+    "dataset.json", "evaluation.json"
+}
 assert not any(key.startswith("xgboost.") for key in run.data.params)
 assert run.data.tags["evaluation_sha256"]
 assert "xgboost" not in sys.modules and "catboost" not in sys.modules
@@ -124,7 +152,7 @@ benchmark.mkdir()
 report = json.loads((first / "evaluation.json").read_text())
 report.update(model_type="other-regressor", model_artifact=None,
               parameters={"depth": 3, "options": {"layers": [4, 2]}})
-write_json(benchmark / "evaluation.json", report)
+(benchmark / "evaluation.json").write_text(json.dumps(report))
 benchmark_run = track(benchmark, store, first)
 logged = client.get_run(benchmark_run)
 assert logged.data.params["model.depth"] == "3"
@@ -144,7 +172,7 @@ except ValueError:
     pass
 else:
     raise AssertionError("Synthetic and private versions must stay separate.")
-assert len(client.search_runs([run.info.experiment_id])) == 3
+assert len(client.search_runs([run.info.experiment_id])) == 4
 
 # A custom loader and file format can register without edits to the tracker.
 import mlops.track as tracking
@@ -159,14 +187,13 @@ code.mkdir()
 )
 custom = root / "custom"
 custom.mkdir()
-write_json(custom / "weights.json", {"rent": 500})
-from mlops.files import sha256
+(custom / "weights.json").write_text(json.dumps({"rent": 500}))
 report.update(model_type="constant", model_artifact={
     "loader_module": "constant_loader",
-    "files": {"weights.json": {"path": "weights.json", "sha256": sha256(custom / "weights.json")}},
+    "files": {"weights.json": {"path": "weights.json", "sha256": sha256((custom / "weights.json").read_bytes()).hexdigest()}},
     "requirements": [], "code_paths": ["constant_loader.py"]
 })
-write_json(custom / "evaluation.json", report)
+(custom / "evaluation.json").write_text(json.dumps(report))
 tracking.ROOT = code
 custom_run = track(custom, store, first)
 custom_version = register(custom_run, store)
@@ -176,7 +203,7 @@ assert list(mlflow.pyfunc.load_model(str(root / "custom-export")).predict([{}, {
 print(json.dumps({"run_id": run2, "version": version2.version}))
 """
     result = subprocess.run(
-        [str(TRACKING_PYTHON), "-B", "-c", script, str(tmp_path)],
+        [sys.executable, "-B", "-c", script, str(tmp_path)],
         cwd=ROOT,
         check=False,
         env={**os.environ, "MLFLOW_DISABLE_TELEMETRY": "true"},
@@ -191,7 +218,7 @@ print(json.dumps({"run_id": run2, "version": version2.version}))
         == identity["version"]
     )
     saved = tmp_path / "selected/data/bundle/model.joblib"
-    assert sha256(saved) == expected_hash
+    assert sha256(saved.read_bytes()).hexdigest() == expected_hash
 
     # Load the packaged source outside the repository in the inference environment.
     prediction_script = """

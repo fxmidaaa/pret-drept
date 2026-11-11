@@ -1,15 +1,15 @@
 import json
 import os
+from hashlib import sha256
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from mlops.config import load_config
+from features import categorical
 from mlops.evaluate import evaluate
-from mlops.files import sha256
-from mlops.prepare import GROUP_COLUMNS, prepare, read_partition
+from mlops.prepare import GROUP_COLUMNS, prepare
 from predict import load_bundle, model_matrix, predict_eur
 from train import EMPTY_COLUMN_DEFAULTS, train
 
@@ -21,11 +21,16 @@ def test_preparation_keeps_reposts_together_and_excludes_unknown_currency(tmp_pa
     pd.concat([fixture, invalid], ignore_index=True).to_csv(source, index=False)
 
     prepare(
-        source, tmp_path / "prepared", load_config(Path("params.json")), synthetic=True
+        source,
+        tmp_path / "prepared",
+        json.loads(Path("params.json").read_text()),
+        synthetic=True,
     )
     output = tmp_path / "prepared"
-    train = read_partition(output / "train.csv")
-    evaluation = read_partition(output / "evaluation.csv")
+    train = pd.read_csv(output / "train.csv", dtype={name: str for name in categorical})
+    evaluation = pd.read_csv(
+        output / "evaluation.csv", dtype={name: str for name in categorical}
+    )
     manifest = json.loads((output / "dataset.json").read_text())
 
     train_keys = set(train[GROUP_COLUMNS].itertuples(index=False, name=None))
@@ -33,7 +38,7 @@ def test_preparation_keeps_reposts_together_and_excludes_unknown_currency(tmp_pa
     assert train_keys.isdisjoint(evaluation_keys)
     assert manifest["excluded_rows"] == 1
     assert len(train) + len(evaluation) == len(fixture)
-    assert manifest["input_sha256"] == sha256(source)
+    assert manifest["input_sha256"] == sha256(source.read_bytes()).hexdigest()
 
 
 def test_dvc_evaluation_matches_reloaded_model():
@@ -46,8 +51,12 @@ def test_dvc_evaluation_matches_reloaded_model():
 
     model_path = directory / "model.joblib"
     bundle = load_bundle(model_path)
-    train = read_partition(directory / "train.csv")
-    evaluation = read_partition(directory / "evaluation.csv")
+    train = pd.read_csv(
+        directory / "train.csv", dtype={name: str for name in categorical}
+    )
+    evaluation = pd.read_csv(
+        directory / "evaluation.csv", dtype={name: str for name in categorical}
+    )
     report = json.loads(report_path.read_text())
     predictions = predict_eur(
         model_matrix(evaluation.to_dict(orient="records"), bundle), bundle
@@ -59,7 +68,9 @@ def test_dvc_evaluation_matches_reloaded_model():
         report["dataset"]
         == json.loads((directory / "dataset.json").read_text())["dataset"]
     )
-    assert report["lineage"]["model_sha256"] == sha256(model_path)
+    assert (
+        report["lineage"]["model_sha256"] == sha256(model_path.read_bytes()).hexdigest()
+    )
     assert report["metrics"]["mae_eur"] == pytest.approx(np.abs(errors).mean())
     assert report["metrics"]["rmse_eur"] == pytest.approx(np.sqrt((errors**2).mean()))
 
@@ -71,7 +82,7 @@ def test_training_with_only_required_listing_fields(tmp_path):
     pd.read_csv("data/sample/demo.csv")[sorted(REQUIRED_COLUMNS)].to_csv(
         source, index=False
     )
-    config = load_config(Path("params.json"))
+    config = json.loads(Path("params.json").read_text())
     output = tmp_path / "run"
     prepare(source, output, config, synthetic=True)
     train(output, config)
@@ -85,6 +96,34 @@ def test_training_with_only_required_listing_fields(tmp_path):
     assert np.isfinite(
         json.loads((output / "evaluation.json").read_text())["metrics"]["mae_eur"]
     )
+
+
+def test_rebuilding_preserves_files_linked_to_a_dvc_cache(tmp_path):
+    directory = tmp_path / "run"
+    config = json.loads(Path("params.json").read_text())
+    prepare(Path("data/sample/demo.csv"), directory, config, synthetic=True)
+    train(directory, config)
+    evaluate(directory)
+    cached = {}
+    for name in (
+        "train.csv",
+        "evaluation.csv",
+        "dataset.json",
+        "model.joblib",
+        "evaluation.json",
+    ):
+        link = tmp_path / name
+        os.link(directory / name, link)
+        cached[link] = link.read_bytes()
+
+    config["seed"] += 1
+    prepare(Path("data/sample/demo.csv"), directory, config, synthetic=True)
+    train(directory, config)
+    evaluate(directory)
+
+    for path, content in cached.items():
+        assert path.read_bytes() == content
+    assert (directory / "train.csv").read_bytes() != cached[tmp_path / "train.csv"]
 
 
 @pytest.mark.parametrize("changed", ["evaluation.csv", "dataset.json"])
@@ -119,7 +158,9 @@ def test_batch_worker_preserves_rows_and_uses_the_saved_model():
     if not (demo / "model.joblib").exists():
         pytest.skip("Run the fixture stage commands first.")
     bundle = load_bundle(demo / "model.joblib")
-    inputs = read_partition(demo / "evaluation.csv").drop(columns="price")
+    inputs = pd.read_csv(
+        demo / "evaluation.csv", dtype={name: str for name in categorical}
+    ).drop(columns="price")
     inputs["listing_key"] = [f"row-{i}" for i in range(len(inputs))]
     expected = predict_eur(model_matrix(inputs.to_dict("records"), bundle), bundle)
     # Spark ships this function and its model to a Python worker.

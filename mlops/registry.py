@@ -2,19 +2,25 @@
 
 import argparse
 import json
+import os
 import shutil
-import tempfile
 from pathlib import Path
 
-from mlops.files import write_json
-from mlops.models import verify_files
-from mlops.track import local_client
+import mlflow
+from mlflow.exceptions import MlflowException
+
+
+def local_client(store: Path):
+    os.environ.setdefault("MLFLOW_DISABLE_TELEMETRY", "true")
+    store = store.resolve()
+    store.mkdir(parents=True, exist_ok=True)
+    uri = f"sqlite:///{store / 'mlflow.db'}"
+    mlflow.set_tracking_uri(uri)
+    mlflow.set_registry_uri(uri)
+    return mlflow.MlflowClient(tracking_uri=uri, registry_uri=uri)
 
 
 def register(run_id: str, store: Path, name: str | None = None):
-    import mlflow
-    from mlflow.exceptions import MlflowException
-
     client = local_client(store)
     run = client.get_run(run_id)
     if run.info.status != "FINISHED" or run.data.tags.get("model_ready") != "true":
@@ -34,9 +40,6 @@ def register(run_id: str, store: Path, name: str | None = None):
         raise ValueError(
             "Synthetic and private models must have separate registry names."
         )
-    for version in client.search_model_versions(f"name = '{name}'"):
-        if version.run_id == run_id:
-            return version
     return mlflow.register_model(
         run.data.tags["model_uri"],
         name,
@@ -46,9 +49,6 @@ def register(run_id: str, store: Path, name: str | None = None):
 
 def set_alias(name: str, version: str, alias: str, store: Path) -> None:
     client = local_client(store)
-    model = client.get_model_version(name, version)
-    if model.status != "READY":
-        raise ValueError("Assign aliases only to ready model versions.")
     client.set_registered_model_alias(name, alias, version)
 
 
@@ -60,9 +60,6 @@ def export_model(
     version: str | None = None,
     alias: str | None = None,
 ) -> dict:
-    import mlflow
-    from mlflow.models import Model
-
     if (version is None) == (alias is None):
         raise ValueError("Choose exactly one version or alias.")
     if output.exists():
@@ -75,22 +72,17 @@ def export_model(
     )
     # Pin the resolved version so an alias change cannot affect this export.
     uri = f"models:/{name}/{selected.version}"
-    with tempfile.TemporaryDirectory() as temporary:
-        downloaded = Path(
-            mlflow.artifacts.download_artifacts(artifact_uri=uri, dst_path=temporary)
-        )
-        metadata = Model.load(str(downloaded / "MLmodel"))
-        data = downloaded / metadata.flavors["python_function"]["data"]
-        specification = json.loads((data / "model.json").read_text())
-        verify_files(data, specification)
-        identity = {
-            "name": name,
-            "version": selected.version,
-            "run_id": selected.run_id,
-            "model_uri": uri,
-        }
-        shutil.copytree(downloaded, output)
-        write_json(output / "registry.json", identity)
+    downloaded = mlflow.artifacts.download_artifacts(artifact_uri=uri)
+    shutil.copytree(downloaded, output)
+    identity = {
+        "name": name,
+        "version": selected.version,
+        "run_id": selected.run_id,
+        "model_uri": uri,
+    }
+    (output / "registry.json").write_text(
+        json.dumps(identity, indent=2), encoding="utf-8"
+    )
     return identity
 
 

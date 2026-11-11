@@ -18,24 +18,22 @@ from pathlib import Path
 
 import requests
 
-from mlops.files import atomic_output, sha256, write_json
-
 GRAPHQL_URL = "https://999.md/graphql"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+    "(KHTML, like Gecko) Chrome/120.0 Safari/537.36",
     "Content-Type": "application/json",
     "Accept-Language": "ro,ru;q=0.9,en;q=0.8",
 }
 
-SUBCATEGORY_RENT = 1404 # the "apartamente/camere" subcategory
+SUBCATEGORY_RENT = 1404  # the "apartamente/camere" subcategory
 
 SNAPSHOTS_DIR = Path(__file__).resolve().parent / "data" / "raw" / "snapshots"
 RUN_ID_FORMAT = "%Y-%m-%dT%H%M%S.%fZ"
 
-PAGE_SIZE = 50 # how many ids per search page
-MAX_LISTINGS = 6000 
+PAGE_SIZE = 50  # how many ids per search page
+MAX_LISTINGS = 6000
 SLEEP = 0.3  # delay between API calls
 
 
@@ -45,7 +43,6 @@ SEARCH_FILTERS = [
     {"filterId": 16, "features": [{"featureId": 1, "optionIds": [912]}]},
     {"filterId": 32, "features": [{"featureId": 8, "optionIds": [13859]}]},
 ]
-
 
 
 # --- the two graphQL queries we use -----------------------------------------
@@ -73,6 +70,7 @@ query($i: AdvertInput!) {
   }
 }
 """
+
 
 class CollectionError(RuntimeError):
     """The crawl stopped before the snapshot could be finalized."""
@@ -138,7 +136,7 @@ def fetch_ids_on_page(skip):
 
 
 def simplify_feature_value(value):
-    # a feature.value can be: a plain string/number/bool, OR a small dict.the dicts look like 
+    # a feature.value can be: a plain string/number/bool, OR a small dict.the dicts look like
     # {"translated": "...", "value": 123} for choices, or {"value": 65, "unit": "UNIT_METER_SQUARE"} for measurements.
     # we want one clean cell out of it.
     if isinstance(value, dict):
@@ -149,16 +147,34 @@ def simplify_feature_value(value):
         return json.dumps(value, ensure_ascii=False)
     return value
 
+
 # --- explicit persistence allowlist -----------------------------------------
 # Only reviewed controls are persisted. The listing key is a stable pseudonym.
 # Keep raw snapshots private because maps, photos and ad text can identify listings.
 FEATURE_FIELDS = [
-    "Număr de camere", "Suprafață totală", "Etaj", "Număr de etaje",
-    "Fond locativ", "Starea apartamentului", "Sector", "Încălzire autonomă",
-    "Mobilat", "Ascensor", "Loc de parcare", "Harta", "Autorul anunțului",
-    "Tip clădire", "Balcon/ lojie", "Fotografii", "Suprafață bucătărie",
-    "Inălțimea tavanelor", "Terasă", "Aparat de aer condiționat",
-    "Încălzire prin pardoseală", "Geamuri panoramice", "Textul anunțului",
+    "Număr de camere",
+    "Suprafață totală",
+    "Etaj",
+    "Număr de etaje",
+    "Fond locativ",
+    "Starea apartamentului",
+    "Sector",
+    "Încălzire autonomă",
+    "Mobilat",
+    "Ascensor",
+    "Loc de parcare",
+    "Harta",
+    "Autorul anunțului",
+    "Tip clădire",
+    "Balcon/ lojie",
+    "Fotografii",
+    "Suprafață bucătărie",
+    "Inălțimea tavanelor",
+    "Terasă",
+    "Aparat de aer condiționat",
+    "Încălzire prin pardoseală",
+    "Geamuri panoramice",
+    "Textul anunțului",
 ]
 # fields used only to filter down to "monthly rent in Chisinau"
 FILTER_FIELDS = ["Tipul ofertei", "Regiune", "Localitate"]
@@ -187,8 +203,8 @@ def fetch_listing_details(listing_id):
 
     row = {"listing_key": listing_key(listing_id), "observed_at": utc_now()}
 
-    for group in (advert.get("groups") or []):
-        for control in (group.get("controls") or []):
+    for group in advert.get("groups") or []:
+        for control in group.get("controls") or []:
             name = control.get("title")
 
             if not name:
@@ -217,15 +233,17 @@ def fetch_listing_details(listing_id):
 
     return row
 
+
 def target_valid(row):
     # checking that the listing explicitly matches monthly rent in Chisinau
     offer = str(row.get("Tipul ofertei", "")).strip()
     loc = (str(row.get("Regiune", "")) + " " + str(row.get("Localitate", ""))).lower()
 
-    is_rent = (offer == "De închiriat lunar")
-    is_chisinau = ("chișinău" in loc or "chisinau" in loc)
+    is_rent = offer == "De închiriat lunar"
+    is_chisinau = "chișinău" in loc or "chisinau" in loc
 
     return is_rent and is_chisinau
+
 
 def collect_snapshot(directory: Path, limit: int | None) -> None:
     manifest_path = directory / "snapshot.json"
@@ -233,6 +251,7 @@ def collect_snapshot(directory: Path, limit: int | None) -> None:
         raise CollectionError("This snapshot is already complete.")
 
     checkpoint_path = directory / "checkpoint.json"
+    checkpoint_temp = directory / ".checkpoint.tmp"
     if limit is None:
         checkpoint = json.loads(checkpoint_path.read_text(encoding="utf-8"))
     else:
@@ -245,7 +264,8 @@ def collect_snapshot(directory: Path, limit: int | None) -> None:
             "rows": {},
             "excluded": {},
         }
-        write_json(checkpoint_path, checkpoint)
+        checkpoint_temp.write_text(json.dumps(checkpoint, indent=2), encoding="utf-8")
+        checkpoint_temp.replace(checkpoint_path)
 
     rows = checkpoint["rows"]
     excluded = checkpoint["excluded"]
@@ -271,7 +291,10 @@ def collect_snapshot(directory: Path, limit: int | None) -> None:
                 time.sleep(SLEEP)
         except (CollectionError, KeyboardInterrupt):
             # Keep completed details and retry this search page on resume.
-            write_json(checkpoint_path, checkpoint)
+            checkpoint_temp.write_text(
+                json.dumps(checkpoint, indent=2), encoding="utf-8"
+            )
+            checkpoint_temp.replace(checkpoint_path)
             raise
 
         checkpoint["next_skip"] += PAGE_SIZE
@@ -281,16 +304,15 @@ def collect_snapshot(directory: Path, limit: int | None) -> None:
             checkpoint["stop_reason"] = "end_of_results"
         if checkpoint["stop_reason"] is not None:
             checkpoint["finished_at"] = utc_now()
-        write_json(checkpoint_path, checkpoint)
+        checkpoint_temp.write_text(json.dumps(checkpoint, indent=2), encoding="utf-8")
+        checkpoint_temp.replace(checkpoint_path)
         print(
             f"Checked {len(rows) + len(excluded)} ads, saved {len(rows)}.", flush=True
         )
 
     csv_path = directory / "listings.csv"
-    with (
-        atomic_output(csv_path) as temporary,
-        temporary.open("w", encoding="utf-8-sig", newline="") as stream,
-    ):
+    csv_temp = directory / ".listings.tmp"
+    with csv_temp.open("w", encoding="utf-8-sig", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=CSV_FIELDS)
         writer.writeheader()
         writer.writerows(
@@ -298,29 +320,28 @@ def collect_snapshot(directory: Path, limit: int | None) -> None:
                 rows.values(), key=lambda row: (row["observed_at"], row["listing_key"])
             )
         )
+    csv_temp.replace(csv_path)
 
     # The final manifest is the completion marker. Write it after the CSV.
-    write_json(
-        manifest_path,
-        {
-            "run_id": directory.name,
-            "source": GRAPHQL_URL,
-            "status": "complete",
-            "started_at": checkpoint["started_at"],
-            "finished_at": checkpoint["finished_at"],
-            "stop_reason": checkpoint["stop_reason"],
-            "limit": limit,
-            "checked_ads": len(rows) + len(excluded),
-            "saved_rows": len(rows),
-            "outside_scope_ads": sum(
-                reason == "outside_scope" for reason in excluded.values()
-            ),
-            "unavailable_ads": sum(
-                reason == "unavailable" for reason in excluded.values()
-            ),
-            "csv_sha256": sha256(csv_path),
-        },
-    )
+    manifest = {
+        "run_id": directory.name,
+        "source": GRAPHQL_URL,
+        "status": "complete",
+        "started_at": checkpoint["started_at"],
+        "finished_at": checkpoint["finished_at"],
+        "stop_reason": checkpoint["stop_reason"],
+        "limit": limit,
+        "checked_ads": len(rows) + len(excluded),
+        "saved_rows": len(rows),
+        "outside_scope_ads": sum(
+            reason == "outside_scope" for reason in excluded.values()
+        ),
+        "unavailable_ads": sum(reason == "unavailable" for reason in excluded.values()),
+        "csv_sha256": hashlib.sha256(csv_path.read_bytes()).hexdigest(),
+    }
+    manifest_temp = directory / ".snapshot.tmp"
+    manifest_temp.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    manifest_temp.replace(manifest_path)
     checkpoint_path.unlink(missing_ok=True)
     print(f"Saved {len(rows)} rows to {csv_path}", flush=True)
 

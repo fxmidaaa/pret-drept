@@ -1,3 +1,5 @@
+"""Score prepared listings with local Spark workers and the shared predictor."""
+
 import argparse
 import os
 import sys
@@ -8,7 +10,7 @@ from pathlib import Path
 import pandas as pd
 
 from features import categorical
-from predict import MODEL_PATH, load_bundle, model_matrix, predict_eur
+from predict import configured_model_path, load_bundle, model_matrix, predict_eur
 
 REQUIRED_COLUMNS = {"rooms", "area", "sector", "author"}
 PREDICTION_COLUMN = "predicted_rent_eur"
@@ -111,7 +113,7 @@ def main() -> None:
     parser.add_argument(
         "--model",
         type=Path,
-        default=Path(os.environ.get("PRET_DREPT_MODEL", MODEL_PATH)),
+        default=configured_model_path(),
         help="Trusted bundle. Defaults to PRET_DREPT_MODEL or model.joblib.",
     )
     args = parser.parse_args()

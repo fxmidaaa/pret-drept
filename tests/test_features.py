@@ -37,15 +37,18 @@ def test_first_number():
     assert first_number(float("nan")) is None
     assert first_number("fara numar") is None
 
+
 def test_clean_rooms():
     assert clean_rooms("Apartament cu 2 camere") == 2.0
     assert clean_rooms("O cameră") == 1.0
     assert clean_rooms(None) is None
 
+
 def test_clean_text():
     assert clean_text("  Centru ") == "centru"
     assert clean_text(float("nan")) == "necunoscut"
     assert clean_text(None) == "necunoscut"
+
 
 def test_to_flag():
     assert to_flag(True) == 1
@@ -54,19 +57,23 @@ def test_to_flag():
     assert to_flag(float("nan")) == 0
     assert to_flag(None) == 0
 
+
 def test_clean_parking():
     assert clean_parking("Subterană") == 1
     assert clean_parking("Deschis") == 1
     assert clean_parking("Nu") == 0
     assert clean_parking(float("nan")) == 0
 
+
 def test_clean_balcony():
     assert clean_balcony("2") == 2
-    assert clean_balcony("4 și mai multe") == 4   # capped at 4
+    assert clean_balcony("4 și mai multe") == 4  # capped at 4
     assert clean_balcony("Nu") == 0
     assert clean_balcony(None) == 0
 
+
 # --- ceiling height: same value, three different units ---
+
 
 def test_clean_ceiling_units():
     assert clean_ceiling("3") == 3.0
@@ -74,17 +81,21 @@ def test_clean_ceiling_units():
     assert clean_ceiling("280") == 2.8
     assert clean_ceiling("2.7") == 2.7
 
+
 def test_clean_ceiling_garbage():
     assert clean_ceiling("5") is None
     assert clean_ceiling("100") is None
     assert clean_ceiling("0") is None
     assert clean_ceiling(None) is None
 
+
 # -- gps --
+
 
 def test_parse_latlon():
     lat, lon = parse_latlon('{"lat": 47.02, "lon": 28.83}')
     assert lat == 47.02 and lon == 28.83
+
 
 def test_parse_latlon_rejects_bad_input():
     # coordinates outside chisinau are someone's typo, not a listing on the moon
@@ -92,8 +103,9 @@ def test_parse_latlon_rejects_bad_input():
     assert parse_latlon("not json at all") == (None, None)
     assert parse_latlon(float("nan")) == (None, None)
     assert parse_latlon('{"lat": 47.02}') == (None, None)
-    assert parse_latlon('[]') == (None, None)
+    assert parse_latlon("[]") == (None, None)
     assert parse_latlon('{"lat": "unknown", "lon": 28.83}') == (None, None)
+
 
 def test_latlon_to_km():
     # the centre is 0 km from the centre
@@ -102,17 +114,21 @@ def test_latlon_to_km():
     d = latlon_to_km(features.CENTER_LAT + 0.01, features.CENTER_LON)
     assert math.isclose(d, 1.11, rel_tol=0.01)
 
+
 # --- floor flags ---
+
 
 def test_floor_flags():
     assert floor_flags(1, 9) == (1, 0)
     assert floor_flags(9, 9) == (0, 1)
     assert floor_flags(1, 1) == (1, 1)
     assert floor_flags(3, 9) == (0, 0)
-    assert floor_flags(None, 9) == (0, 0) # unknown floor -> assume neither
+    assert floor_flags(None, 9) == (0, 0)  # unknown floor -> assume neither
     assert floor_flags(3, None) == (0, 0)
 
+
 # --- reading the ad text (romanian and russian) ---
+
 
 def test_condition_from_text():
     assert condition_from_text("Apartament superb cu euroreparație!") == "euroreparație"
@@ -121,12 +137,14 @@ def test_condition_from_text():
     assert condition_from_text("apartament la pret bun") is None
     assert condition_from_text(float("nan")) is None
 
+
 def test_utilities_from_text():
     assert utilities_from_text("300 euro, comunale incluse") == 1
     assert utilities_from_text("аренда, все включено") == 1
     # "+ comunale" means utilities are ON TOP of the rent - must NOT match
     assert utilities_from_text("chirie 300 euro + comunale") == 0
     assert utilities_from_text(float("nan")) == 0
+
 
 def test_lux_from_text():
     assert lux_from_text("Penthouse spațios cu jacuzzi") == 1
@@ -135,6 +153,7 @@ def test_lux_from_text():
     assert lux_from_text("apartament obișnuit lângă parc") == 0
     assert lux_from_text(float("nan")) == 0
 
+
 def test_bathrooms_from_text():
     assert bathrooms_from_text("2 dormitoare, 2 blocuri sanitare, antreu") == 2.0
     assert bathrooms_from_text("гостиная, 3 санузла") == 3.0
@@ -142,7 +161,9 @@ def test_bathrooms_from_text():
     assert bathrooms_from_text("apartament frumos in centru") == 1.0
     assert bathrooms_from_text(None) == 1.0
 
+
 # --- price: usd/mdl -> eur ---
+
 
 def test_clean_price():
     assert clean_price({"price_value": 500, "price_unit": "UNIT_EUR"}) == 500.0
@@ -154,13 +175,16 @@ def test_clean_price():
     assert clean_price({"price_value": "invalid", "price_unit": "UNIT_EUR"}) is None
     assert clean_price({"price_value": 500, "price_unit": "UNKNOWN"}) is None
 
+
 # --- clean_data end to end
 # a tiny fake scrape with known problems in it, and we check that each problem gets handled:
 # the duplicate, missing area, ...
 
+
 def make_listing(**overrides):
     row = {
-        "price_value": 500, "price_unit": "UNIT_EUR",
+        "price_value": 500,
+        "price_unit": "UNIT_EUR",
         features.ROOMS_COL: "Apartament cu 2 camere",
         features.AREA_COL: "50",
         features.FLOOR_COL: "3",
@@ -188,30 +212,40 @@ def make_listing(**overrides):
     row.update(overrides)
     return row
 
+
 def test_clean_data():
     rows = [
-        make_listing(), # just a normal rent
-        make_listing(), # exact duplicate of the first
-        make_listing(**{features.AREA_COL: None}), # should be dropped if no area
+        make_listing(),  # just a normal rent
+        make_listing(),  # exact duplicate of the first
+        make_listing(**{features.AREA_COL: None}),  # should be dropped if no area
         make_listing(price_value=5),
-        make_listing(price_value=14040, price_unit='UNIT_MDL', **{features.AREA_COL: '60'}),
-        make_listing(**{features.CONDITION_COL: None,
-                        features.TEXT_COL: "квартира с евроремонтом",
-                        features.AREA_COL: "41.7", "price_value": 500})
+        make_listing(
+            price_value=14040, price_unit="UNIT_MDL", **{features.AREA_COL: "60"}
+        ),
+        make_listing(
+            **{
+                features.CONDITION_COL: None,
+                features.TEXT_COL: "квартира с евроремонтом",
+                features.AREA_COL: "41.7",
+                "price_value": 500,
+            }
+        ),
     ]
 
     rows[0]["price_value"] = 600
     rows[1]["price_value"] = 600
-    rows[5]["price_value"] = 500.4 # 500.4 / 41.7 = 12.0
+    rows[5]["price_value"] = 500.4  # 500.4 / 41.7 = 12.0
 
     df = clean_data(pd.DataFrame(rows))
 
     assert len(df) == 3
 
     # checking if mdl -> eur (14040 mdl -> 720 eur)
-    assert any(math.isclose(p, 720.0) for p in df['price'])
+    assert any(math.isclose(p, 720.0) for p in df["price"])
+
 
 # --- outlier trimming and imputation (fit on train, reuse on val) ---
+
 
 def test_trim_ppm_outliers_reuses_train_bounds():
     # 100 ordinary flats + one absurdly expensive one: fitting must drop the
@@ -225,20 +259,31 @@ def test_trim_ppm_outliers_reuses_train_bounds():
     val_trimmed, _ = trim_ppm_outliers(val, bounds)
     assert list(val_trimmed["price"]) == [500.0]
 
+
 def test_trim_knn_outliers():
     # 10 EUR/m2 next to 10 EUR/m2 neighbors stays; asking 4x the neighborhood
     # rate (or a fifth of it) is not a market price and must go
-    df = pd.DataFrame({
-        "price": [500.0, 2000.0, 100.0],
-        "area": [50.0, 50.0, 50.0],
-        "knn_ppm": [10.0, 10.0, 10.0],
-    })
+    df = pd.DataFrame(
+        {
+            "price": [500.0, 2000.0, 100.0],
+            "area": [50.0, 50.0, 50.0],
+            "knn_ppm": [10.0, 10.0, 10.0],
+        }
+    )
     out = trim_knn_outliers(df)
     assert list(out["price"]) == [500.0]
 
+
 def test_impute_medians_reuses_train_medians():
-    cols = ["floor", "total_floors", "dist_to_center",
-            "lat", "lon", "kitchen_area", "ceiling_height"]
+    cols = [
+        "floor",
+        "total_floors",
+        "dist_to_center",
+        "lat",
+        "lon",
+        "kitchen_area",
+        "ceiling_height",
+    ]
     train = pd.DataFrame({c: [1.0, 3.0, np.nan] for c in cols})
     train_filled, medians = impute_medians(train)
     assert not train_filled.isna().any().any()
@@ -249,17 +294,22 @@ def test_impute_medians_reuses_train_medians():
     val_filled, _ = impute_medians(val, medians)
     assert val_filled["floor"].iloc[0] == 2.0
 
+
 # --- market rate as a coarse grid aggregate ---
+
 
 def ppm_df(lats, lons, ppms, sectors=None, area=50.0):
     n = len(lats)
-    return pd.DataFrame({
-        "lat": lats,
-        "lon": lons,
-        "sector": sectors if sectors is not None else ["centru"] * n,
-        "area": [area] * n,
-        "price": [p * area for p in ppms],
-    })
+    return pd.DataFrame(
+        {
+            "lat": lats,
+            "lon": lons,
+            "sector": sectors if sectors is not None else ["centru"] * n,
+            "area": [area] * n,
+            "price": [p * area for p in ppms],
+        }
+    )
+
 
 def test_build_ppm_grid_only_keeps_big_groups():
     # 20 flats in one ~1 km cell (kept) + 3 flats far away (dropped: < min_group).
@@ -270,17 +320,25 @@ def test_build_ppm_grid_only_keeps_big_groups():
         ppms=[10.0] * 20 + [99.0, 99.0, 99.0],
     )
     grid_ppm, _, _ = build_ppm_grid(df, min_group=15)
-    assert len(grid_ppm) == 1                     # only the dense cell survives
-    assert next(iter(grid_ppm.values())) == 10.0     # median of the dense cell
-    assert 99.0 not in grid_ppm.values()          # the sparse cell is not published
+    assert len(grid_ppm) == 1  # only the dense cell survives
+    assert next(iter(grid_ppm.values())) == 10.0  # median of the dense cell
+    assert 99.0 not in grid_ppm.values()  # the sparse cell is not published
+
 
 def test_ppm_from_grid_falls_back_cell_then_sector_then_global():
     grid_ppm = {(47.02, 28.83): 10.0}
     sector_ppm = {"centru": 12.0}
     global_ppm = 15.0
     # a known cell -> cell median
-    assert ppm_from_grid(grid_ppm, sector_ppm, global_ppm, 47.02, 28.83, "centru") == 10.0
+    assert (
+        ppm_from_grid(grid_ppm, sector_ppm, global_ppm, 47.02, 28.83, "centru") == 10.0
+    )
     # unknown cell but known sector -> sector median
-    assert ppm_from_grid(grid_ppm, sector_ppm, global_ppm, 46.95, 28.99, "centru") == 12.0
+    assert (
+        ppm_from_grid(grid_ppm, sector_ppm, global_ppm, 46.95, 28.99, "centru") == 12.0
+    )
     # no coords, unknown sector -> global median
-    assert ppm_from_grid(grid_ppm, sector_ppm, global_ppm, None, None, "necunoscut") == 15.0
+    assert (
+        ppm_from_grid(grid_ppm, sector_ppm, global_ppm, None, None, "necunoscut")
+        == 15.0
+    )

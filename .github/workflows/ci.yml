@@ -25,45 +25,23 @@ jobs:
           python-version: "3.13.16"
       - name: Install project and tracking dependencies
         run: |
-          python -m pip install -r requirements-mlops.txt
+          python -m pip install -r requirements.txt
           python -m pip check
-          python -m venv .venv-mlflow
-          .venv-mlflow/bin/python -m pip install -r requirements-tracking.txt
       - name: Lint and check formatting
         run: |
           python -m ruff check mlops *.py tests
-          python -m ruff format --check mlops train.py tests/test_workflow.py tests/test_registry.py tests/test_dataset.py
+          python -m ruff format --check mlops *.py tests
       - name: Validate DVC metadata and exercise stages on the test fixture
         run: |
           dvc stage list --all --fail
           python -m mlops.prepare data/sample/demo.csv artifacts/demo --synthetic
           python train.py artifacts/demo
           python -m mlops.evaluate artifacts/demo
-          PRET_DREPT_MODEL=artifacts/demo/model.joblib python -m pytest -q
           python predict.py --model artifacts/demo/model.joblib
-      - name: Log and read back an MLflow run
-        run: |
-          run_id=$(.venv-mlflow/bin/python -m mlops.track artifacts/demo)
-          .venv-mlflow/bin/python - "$run_id" <<'PY'
-          import json
-          import sys
-          from pathlib import Path
-          from mlflow import MlflowClient
-
-          client = MlflowClient(tracking_uri=f"sqlite:///{Path('.mlflow/mlflow.db').resolve()}")
-          run = client.get_run(sys.argv[1])
-          report = json.loads(Path("artifacts/demo/evaluation.json").read_text())
-          assert run.info.status == "FINISHED" and run.data.tags["dataset"] == "synthetic"
-          assert run.data.params["seed"] == str(report["parameters"]["seed"])
-          assert run.data.params["model.n_estimators"] == str(report["parameters"]["model"]["n_estimators"])
-          assert run.data.tags["model_type"] == "xgboost" and run.data.tags["model_ready"] == "true"
-          assert run.data.tags["model_uri"]
-          assert run.data.metrics["mae_eur"] == report["metrics"]["mae_eur"]
-          assert {file.path for file in client.list_artifacts(run.info.run_id)} == {
-              "dataset.json", "evaluation.json"
-          }
-          print(f"Verified synthetic MLflow run {run.info.run_id}")
-          PY
+      - name: Test predictions and MLflow registry round trip
+        run: PRET_DREPT_MODEL=artifacts/demo/model.joblib python -m pytest -q
+      - name: Exercise the tracking and registration CLI
+        run: python -m mlops.track artifacts/demo --register
       - name: Build and exercise API and Spark in the local image
         run: |
           docker build -t pret-drept:ci .

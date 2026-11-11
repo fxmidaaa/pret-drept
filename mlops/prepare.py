@@ -1,7 +1,7 @@
 import argparse
-import hashlib
 import io
 import json
+from hashlib import sha256
 from pathlib import Path
 
 import numpy as np
@@ -9,9 +9,7 @@ import pandas as pd
 from sklearn.model_selection import GroupShuffleSplit
 
 import features
-from mlops.config import Config, load_config
 from mlops.dataset import validate_snapshot
-from mlops.files import atomic_output, sha256, write_json
 
 GROUP_COLUMNS = ["sector", "rooms", "area", "floor", "total_floors"]
 PREPARED_COLUMNS = [
@@ -35,7 +33,7 @@ INPUT_COLUMNS = REQUIRED_COLUMNS | {
 def prepare(
     source: Path,
     output: Path,
-    config: Config,
+    config: dict,
     *,
     synthetic: bool = False,
     snapshot: Path | None = None,
@@ -54,7 +52,7 @@ def prepare(
         if synthetic:
             raise ValueError("A scraper snapshot cannot be labelled synthetic.")
         validate_snapshot(content, json.loads(snapshot.read_text()))
-    input_sha256 = hashlib.sha256(content).hexdigest()
+    input_sha256 = sha256(content).hexdigest()
     raw = pd.read_csv(
         io.BytesIO(content),
         encoding="utf-8-sig",
@@ -85,52 +83,45 @@ def prepare(
             "Need at least 20 distinct apartment keys after cleaning to split the data."
         )
     split = GroupShuffleSplit(
-        n_splits=1, test_size=config.evaluation_fraction, random_state=config.seed
+        n_splits=1,
+        test_size=config["evaluation_fraction"],
+        random_state=config["seed"],
     )
     train_indices, eval_indices = next(split.split(cleaned, groups=group_keys))
     train = cleaned.iloc[train_indices]
     evaluation = cleaned.iloc[eval_indices]
-    for frame, path in zip((train, evaluation), outputs[:2], strict=True):
-        with atomic_output(path) as temporary:
-            frame.to_csv(temporary, index=False, lineterminator="\n")
+    output.mkdir(parents=True, exist_ok=True)
+    # Unlink generated files first so direct writes cannot change DVC's cached copies.
+    for path in outputs:
+        path.unlink(missing_ok=True)
+    train.to_csv(output / "train.csv", index=False, lineterminator="\n")
+    evaluation.to_csv(output / "evaluation.csv", index=False, lineterminator="\n")
 
-    write_json(
-        outputs[2],
-        {
-            "dataset": "synthetic" if synthetic else "private",
-            "input_sha256": input_sha256,
-            "input_rows": raw_rows,
-            "excluded_rows": raw_rows - clean_rows,
-            "duplicate_rows": clean_rows - len(cleaned),
-            "training_rows": len(train),
-            "evaluation_rows": len(evaluation),
-            "training_sha256": sha256(outputs[0]),
-            "evaluation_sha256": sha256(outputs[1]),
-            "split": {
-                "strategy": "group_shuffle",
-                "seed": config.seed,
-                "evaluation_fraction": config.evaluation_fraction,
-                "group_columns": GROUP_COLUMNS,
-            },
+    manifest = {
+        "dataset": "synthetic" if synthetic else "private",
+        "input_sha256": input_sha256,
+        "input_rows": raw_rows,
+        "excluded_rows": raw_rows - clean_rows,
+        "duplicate_rows": clean_rows - len(cleaned),
+        "training_rows": len(train),
+        "evaluation_rows": len(evaluation),
+        "training_sha256": sha256((output / "train.csv").read_bytes()).hexdigest(),
+        "evaluation_sha256": sha256(
+            (output / "evaluation.csv").read_bytes()
+        ).hexdigest(),
+        "split": {
+            "strategy": "group_shuffle",
+            "seed": config["seed"],
+            "evaluation_fraction": config["evaluation_fraction"],
+            "group_columns": GROUP_COLUMNS,
         },
+    }
+    (output / "dataset.json").write_text(
+        json.dumps(manifest, indent=2), encoding="utf-8"
     )
     print(
         f"Prepared {len(train)} training rows and {len(evaluation)} evaluation rows in {output}."
     )
-
-
-def read_partition(path: Path) -> pd.DataFrame:
-    frame = pd.read_csv(
-        path,
-        dtype={name: str for name in features.categorical},
-    )
-    if list(frame.columns) != PREPARED_COLUMNS or len(frame) < 2:
-        raise ValueError(f"Invalid partition at {path}. Run preparation again.")
-    if not frame["price"].between(100, 2000).all():
-        raise ValueError(
-            f"Expected monthly EUR targets between 100 and 2000 in {path}."
-        )
-    return frame
 
 
 def main() -> None:
@@ -148,7 +139,7 @@ def main() -> None:
     prepare(
         args.source,
         args.output,
-        load_config(args.config),
+        json.loads(args.config.read_text(encoding="utf-8")),
         synthetic=args.synthetic,
         snapshot=args.snapshot,
     )

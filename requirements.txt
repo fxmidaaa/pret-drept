@@ -1,11 +1,31 @@
-requests == 2.32.5
-pandas == 3.0.1
-numpy == 2.4.2
-scikit-learn == 1.8.0
-xgboost == 3.3.0
-shap == 0.52.0
-matplotlib == 3.10.8
-seaborn == 0.13.2
-joblib == 1.5.3
-fastapi == 0.137.1
-uvicorn == 0.49.0
+# Data and model (MLflow 3.14 requires pandas below 3).
+numpy==2.4.2
+pandas==2.3.3
+scikit-learn==1.8.0
+scipy==1.18.1
+joblib==1.5.3
+shap==0.52.0
+cloudpickle==3.1.2
+xgboost==3.3.0; sys_platform == "darwin"
+xgboost-cpu==3.3.0; sys_platform == "linux"
+
+# API.
+fastapi==0.137.1
+uvicorn==0.49.0
+pydantic==2.14.2
+
+# Data versioning, experiment tracking and batch prediction.
+dvc==3.67.1
+mlflow==3.14.0
+pyspark==4.1.4
+pyarrow==24.0.0
+
+# Scraping and notebooks.
+requests==2.32.5
+matplotlib==3.10.8
+seaborn==0.13.2
+
+# Tests and formatting.
+httpx==0.28.1
+pytest==9.2.0
+ruff==0.17.3

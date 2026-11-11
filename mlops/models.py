@@ -2,20 +2,22 @@
 
 import json
 import os
-import shutil
 import tempfile
 import zipfile
+from hashlib import sha256
 from importlib.metadata import version
 from pathlib import Path
 
-from mlops.files import sha256
+import numpy as np
+import pandas as pd
+
+from predict import build_features, load_bundle, model_matrix, predict_eur
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_CODE = [
     "features.py",
     "predict.py",
     "mlops/__init__.py",
-    "mlops/files.py",
     "mlops/models.py",
 ]
 
@@ -28,17 +30,24 @@ def model_type(report: dict) -> str:
     return name.lower()
 
 
-def model_artifact(directory: Path, report: dict) -> dict | None:
+def model_artifact(report: dict) -> dict | None:
     """Read the common contract; retain compatibility with existing local results."""
     if "model_artifact" in report:
-        return report["model_artifact"]
+        specification = report["model_artifact"]
+        if (
+            specification is not None
+            and specification.get("loader_module") == "mlops.models"
+        ):
+            # Re-log older reports using the current loader's source files.
+            return {**specification, "code_paths": MODEL_CODE}
+        return specification
     kind = model_type(report)
     # Defaults for the two formats already saved by this project.
     # New algorithms supply model_artifact explicitly; tracking needs no changes.
     if kind == "xgboost":
         requirements = [
             line
-            for line in (ROOT / "requirements-serve.txt").read_text().splitlines()
+            for line in (ROOT / "requirements.txt").read_text().splitlines()
             if line.strip() and not line.startswith("#")
         ]
         filename = "model.joblib"
@@ -67,30 +76,11 @@ def model_artifact(directory: Path, report: dict) -> dict | None:
     }
 
 
-def verify_files(directory: Path, specification: dict) -> dict[str, Path]:
-    """Verify every declared file before logging, exporting or deserializing it."""
-    files = {}
-    for name, entry in specification["files"].items():
-        if Path(name).name != name or name in {"", ".", "..", "model.json"}:
-            raise ValueError("Model artifact names must be plain filenames.")
-        path = (directory / entry["path"]).resolve()
-        if sha256(path) != entry["sha256"]:
-            raise ValueError(f"Model artifact {name} changed after evaluation.")
-        files[name] = path
-    if not files:
-        raise ValueError("A registered predictor needs at least one model artifact.")
-    return files
-
-
 class XGBoostPredictor:
     def __init__(self, directory: Path):
-        from predict import load_bundle
-
         self.bundle = load_bundle(directory / "model.joblib")
 
     def predict(self, data):
-        from predict import model_matrix, predict_eur
-
         return predict_eur(
             model_matrix(data.to_dict("records"), self.bundle), self.bundle
         )
@@ -104,11 +94,6 @@ class FramePredictor:
             raise ValueError("Expected the saved model to predict log1p rent.")
 
     def predict(self, data):
-        import numpy as np
-        import pandas as pd
-
-        from predict import build_features
-
         frame = pd.DataFrame.from_records(
             [
                 build_features(row, self.preprocessing)
@@ -126,7 +111,8 @@ def save_tabpfn_artifact(
     model, directory: Path, checkpoint: Path, report: dict
 ) -> dict:
     """Call in the training environment, immediately after evaluating this estimator."""
-    if sha256(checkpoint) != report["lineage"]["checkpoint_sha256"]:
+    checkpoint_hash = sha256(checkpoint.read_bytes()).hexdigest()
+    if checkpoint_hash != report["lineage"]["checkpoint_sha256"]:
         raise ValueError("The TabPFN checkpoint differs from the evaluated checkpoint.")
     destination = directory / "model.tabpfn_fit"
     directory.mkdir(parents=True, exist_ok=True)
@@ -136,20 +122,20 @@ def save_tabpfn_artifact(
     try:
         # The pinned TabPFN serializer expects a JSON-compatible checkpoint path.
         model.model_path = str(checkpoint.resolve())
-        with tempfile.TemporaryDirectory(dir=directory) as temporary:
-            saved = Path(temporary) / destination.name
-            model.save_fit_state(saved)
-            shutil.move(saved, destination)
+        model.save_fit_state(destination)
     finally:
         model.model_path = original_path
     return {
         "loader_module": "mlops.models",
         "kind": "tabpfn",
         "files": {
-            destination.name: {"path": destination.name, "sha256": sha256(destination)},
+            destination.name: {
+                "path": destination.name,
+                "sha256": sha256(destination.read_bytes()).hexdigest(),
+            },
             "checkpoint.ckpt": {
                 "path": os.path.relpath(checkpoint, directory),
-                "sha256": sha256(checkpoint),
+                "sha256": checkpoint_hash,
             },
         },
         "requirements": [
@@ -194,10 +180,9 @@ def load_tabpfn(directory: Path):
 
 
 def _load_pyfunc(data_path: str):
-    """MLflow loader for the project's saved predictors; imports are lazy."""
+    """Load a saved predictor; only its optional model library is imported."""
     directory = Path(data_path)
     specification = json.loads((directory / "model.json").read_text())
-    verify_files(directory, specification)
     if specification["kind"] == "xgboost":
         return XGBoostPredictor(directory)
     if specification["kind"] == "catboost":

@@ -7,8 +7,6 @@ import io
 import json
 from pathlib import Path
 
-from mlops.files import atomic_output
-
 
 def validate_snapshot(content: bytes, manifest: dict) -> int:
     if manifest["status"] != "complete":
@@ -34,10 +32,13 @@ def stage_dataset(snapshot: Path, output: Path = Path("data/dataset")) -> None:
     content = (snapshot / "listings.csv").read_bytes()
     manifest = (snapshot / "snapshot.json").read_bytes()
     rows = validate_snapshot(content, json.loads(manifest))
-    # Replace copies atomically; never edit a file linked to DVC's cache in place.
+    output.mkdir(parents=True, exist_ok=True)
+    # Replace filenames rather than writing through a possible DVC cache link.
     for name, data in (("listings.csv", content), ("snapshot.json", manifest)):
-        with atomic_output(output / name) as temporary:
-            temporary.write_bytes(data)
+        temporary = output / f".{name}.tmp"
+        temporary.write_bytes(data)
+        temporary.chmod(0o600)
+        temporary.replace(output / name)
     print(f"Selected {rows} original rows from {snapshot} into {output}.")
 
 

@@ -1,7 +1,6 @@
 # Only the inference source and pinned runtime enter the build context.
 *
-!requirements-serve.txt
-!requirements-batch.txt
+!requirements.txt
 !features.py
 !predict.py
 !api.py

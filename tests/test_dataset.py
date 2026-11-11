@@ -1,12 +1,12 @@
 import csv
 import hashlib
 import io
+import json
 from pathlib import Path
 
 import pytest
 
 from mlops.dataset import stage_dataset
-from mlops.files import write_json
 
 
 def snapshot_fixture(directory: Path) -> tuple[Path, bytes, dict]:
@@ -21,7 +21,7 @@ def snapshot_fixture(directory: Path) -> tuple[Path, bytes, dict]:
         "run_id": "test-snapshot",
     }
     (source / "listings.csv").write_bytes(content)
-    write_json(source / "snapshot.json", manifest)
+    (source / "snapshot.json").write_text(json.dumps(manifest), encoding="utf-8")
     return source, content, manifest
 
 
@@ -48,7 +48,7 @@ def test_invalid_snapshot_does_not_replace_the_current_dataset(tmp_path, invalid
         manifest["csv_sha256"] = "different"
     else:
         manifest["saved_rows"] += 1
-    write_json(source / "snapshot.json", manifest)
+    (source / "snapshot.json").write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ValueError, match="completed|differs"):
         stage_dataset(source, output)
     assert (output / "listings.csv").read_bytes() == content
@@ -56,17 +56,16 @@ def test_invalid_snapshot_does_not_replace_the_current_dataset(tmp_path, invalid
 
 
 def test_preparation_checks_the_snapshot_before_writing_outputs(tmp_path):
-    from mlops.config import load_config
     from mlops.prepare import prepare
 
     source, _, manifest = snapshot_fixture(tmp_path)
     manifest["csv_sha256"] = "different"
-    write_json(source / "snapshot.json", manifest)
+    (source / "snapshot.json").write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ValueError, match="differs"):
         prepare(
             source / "listings.csv",
             tmp_path / "prepared",
-            load_config(Path("params.json")),
+            json.loads(Path("params.json").read_text()),
             snapshot=source / "snapshot.json",
         )
     assert not (tmp_path / "prepared").exists()

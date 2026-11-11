@@ -5,11 +5,9 @@ stages:
       - data/dataset/listings.csv
       - data/dataset/snapshot.json
       - features.py
-      - mlops/config.py
-      - mlops/files.py
       - mlops/prepare.py
       - mlops/dataset.py
-      - requirements-serve.txt
+      - requirements.txt
     params:
       - params.json:
           - seed
@@ -25,10 +23,7 @@ stages:
       - train.py
       - features.py
       - predict.py
-      - mlops/config.py
-      - mlops/files.py
-      - mlops/prepare.py
-      - requirements-serve.txt
+      - requirements.txt
     params:
       - params.json:
           - seed
@@ -44,12 +39,9 @@ stages:
       - artifacts/real/model.joblib
       - features.py
       - predict.py
-      - mlops/config.py
       - mlops/evaluate.py
       - mlops/models.py
-      - mlops/files.py
-      - mlops/prepare.py
-      - requirements-serve.txt
+      - requirements.txt
     metrics:
       - artifacts/real/evaluation.json:
           cache: true
