@@ -1,6 +1,7 @@
 import argparse
 import hashlib
 import io
+import json
 from pathlib import Path
 
 import numpy as np
@@ -9,6 +10,7 @@ from sklearn.model_selection import GroupShuffleSplit
 
 import features
 from mlops.config import Config, load_config
+from mlops.dataset import validate_snapshot
 from mlops.files import atomic_output, sha256, write_json
 
 GROUP_COLUMNS = ["sector", "rooms", "area", "floor", "total_floors"]
@@ -31,7 +33,12 @@ INPUT_COLUMNS = REQUIRED_COLUMNS | {
 
 
 def prepare(
-    source: Path, output: Path, config: Config, *, synthetic: bool = False
+    source: Path,
+    output: Path,
+    config: Config,
+    *,
+    synthetic: bool = False,
+    snapshot: Path | None = None,
 ) -> None:
     outputs = [
         output / name for name in ("train.csv", "evaluation.csv", "dataset.json")
@@ -43,6 +50,10 @@ def prepare(
 
     # Read and hash the same bytes. Materialize only the columns used by the model.
     content = source.read_bytes()
+    if snapshot is not None:
+        if synthetic:
+            raise ValueError("A scraper snapshot cannot be labelled synthetic.")
+        validate_snapshot(content, json.loads(snapshot.read_text()))
     input_sha256 = hashlib.sha256(content).hexdigest()
     raw = pd.read_csv(
         io.BytesIO(content),
@@ -128,11 +139,18 @@ def main() -> None:
     parser.add_argument("output", type=Path)
     parser.add_argument("--config", type=Path, default=Path("params.json"))
     parser.add_argument(
+        "--snapshot", type=Path, help="Validate the raw CSV against its snapshot.json."
+    )
+    parser.add_argument(
         "--synthetic", action="store_true", help="Label generated demo data."
     )
     args = parser.parse_args()
     prepare(
-        args.source, args.output, load_config(args.config), synthetic=args.synthetic
+        args.source,
+        args.output,
+        load_config(args.config),
+        synthetic=args.synthetic,
+        snapshot=args.snapshot,
     )
 
 

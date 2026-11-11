@@ -2,8 +2,9 @@
 
 This branch adds a local MLOps workflow to the original app: prepare, train, evaluate, track and
 predict. Start with the [local workflow guide](docs/mlops.md) for your collected data, DVC, MLflow
-and the single Docker image for API and PySpark predictions. DVC and CI use the generated fixture;
-real experiments stay local. The project notes below describe the historical July 2026 dataset
+and the single Docker image for API and PySpark predictions. DVC versions the selected original
+scraper snapshot and reproduces the real-data pipeline locally; CI uses a generated test fixture.
+Private data stays outside Git. The project notes below describe the historical July 2026 dataset
 and model.
 
 My first machine learning project. I scraped about 4,500 real apartment rental listings from a
@@ -193,13 +194,14 @@ Worth being upfront about a few things:
 
 ## Running it
 
-Follow the [MLOps guide](docs/mlops.md) to set up the environments and generate the demo bundle.
+Follow the [MLOps guide](docs/mlops.md) to select and version a completed scraper snapshot,
+then run `dvc repro` to prepare the real dataset, train and evaluate the model.
 
 ```bash
-PRET_DREPT_MODEL=artifacts/demo/model.joblib uvicorn api:app --host 127.0.0.1 --port 8000
+PRET_DREPT_MODEL=artifacts/real/model.joblib uvicorn api:app --host 127.0.0.1 --port 8000
 ```
 
-The guide covers the DVC pipeline, local MLflow tracking, authorized private inputs,
+The guide covers the DVC pipeline, local MLflow tracking and model registry, authorized private inputs,
 legacy model compatibility, the Docker model mount and CI checks.
 
 ---
@@ -226,8 +228,9 @@ scrape.py                  999.md GraphQL scraper -> data/raw/snapshots/<run-id>
 features.py                all the cleaning and feature engineering
 train.py                   fits XGBoost on the prepared training partition
 predict.py                 shared bundle loading and inference
-mlops/                     preparation, evaluation, local tracking and Spark batch prediction
-dvc.yaml / dvc.lock        safe demo pipeline and its versioned identities
+mlops/                     preparation, evaluation, local tracking/registry and Spark batch prediction
+dvc.yaml / dvc.lock        real-data pipeline and its versioned identities
+data/dataset.dvc          pointer to the original CSV and scraper manifest in DVC cache
 api.py                     FastAPI - /predict, /options, /health, serves the page
 app/index.html             the one-page front end (form in, verdict out)
 Dockerfile                 one local image for the API and PySpark, with a mounted model

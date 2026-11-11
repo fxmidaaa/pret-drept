@@ -7,6 +7,7 @@ venv/
 # data — never track raw/private datasets; only the reviewed synthetic samples
 *.csv
 data/*
+!data/dataset.dvc
 !data/sample
 data/sample/*
 !data/sample/listings_sample.csv

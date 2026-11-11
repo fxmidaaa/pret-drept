@@ -2,9 +2,12 @@ import argparse
 import json
 from pathlib import Path
 
+import xgboost
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error
 
+from features import categorical
 from mlops.files import sha256, write_json
+from mlops.models import model_artifact
 from mlops.prepare import read_partition
 from predict import load_bundle, model_matrix, predict_eur
 
@@ -37,6 +40,10 @@ def evaluate(directory: Path) -> None:
     )
     report = {
         "dataset": dataset["dataset"],
+        "model_type": "xgboost",
+        "model_version": xgboost.__version__,
+        "target_transform": "log1p",
+        "target_unit": "EUR/month",
         "parameters": config,
         "metrics": {
             "mae_eur": mean_absolute_error(frame["price"], predictions),
@@ -49,6 +56,20 @@ def evaluate(directory: Path) -> None:
             "dataset_sha256": sha256(manifest_path),
             "model_sha256": sha256(model_path),
         },
+    }
+    report["model_artifact"] = model_artifact(directory, report)
+    report["model_artifact"]["signature"] = {
+        "inputs": json.dumps(
+            [
+                {
+                    "name": name,
+                    "type": "string" if name in categorical else "double",
+                    "required": name in {"rooms", "area", "sector", "author"},
+                }
+                for name in bundle["features"]
+            ]
+        ),
+        "outputs": json.dumps([{"type": "double", "name": "predicted_rent_eur"}]),
     }
     write_json(directory / "evaluation.json", report)
     print(json.dumps(report["metrics"], sort_keys=True))

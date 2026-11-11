@@ -1,25 +1,27 @@
 stages:
   prepare:
-    cmd: python -m mlops.prepare data/sample/demo.csv artifacts/demo --synthetic
+    cmd: python -m mlops.prepare data/dataset/listings.csv artifacts/real --snapshot data/dataset/snapshot.json
     deps:
-      - data/sample/demo.csv
+      - data/dataset/listings.csv
+      - data/dataset/snapshot.json
       - features.py
       - mlops/config.py
       - mlops/files.py
       - mlops/prepare.py
+      - mlops/dataset.py
       - requirements-serve.txt
     params:
       - params.json:
           - seed
           - evaluation_fraction
     outs:
-      - artifacts/demo/train.csv
-      - artifacts/demo/evaluation.csv
-      - artifacts/demo/dataset.json
+      - artifacts/real/train.csv
+      - artifacts/real/evaluation.csv
+      - artifacts/real/dataset.json
   train:
-    cmd: python train.py artifacts/demo
+    cmd: python train.py artifacts/real
     deps:
-      - artifacts/demo/train.csv
+      - artifacts/real/train.csv
       - train.py
       - features.py
       - predict.py
@@ -33,19 +35,21 @@ stages:
           - evaluation_fraction
           - model
     outs:
-      - artifacts/demo/model.joblib
+      - artifacts/real/model.joblib
   evaluate:
-    cmd: python -m mlops.evaluate artifacts/demo
+    cmd: python -m mlops.evaluate artifacts/real
     deps:
-      - artifacts/demo/dataset.json
-      - artifacts/demo/evaluation.csv
-      - artifacts/demo/model.joblib
+      - artifacts/real/dataset.json
+      - artifacts/real/evaluation.csv
+      - artifacts/real/model.joblib
       - features.py
       - predict.py
       - mlops/config.py
       - mlops/evaluate.py
+      - mlops/models.py
       - mlops/files.py
       - mlops/prepare.py
       - requirements-serve.txt
     metrics:
-      - artifacts/demo/evaluation.json
+      - artifacts/real/evaluation.json:
+          cache: true

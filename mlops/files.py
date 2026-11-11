@@ -2,7 +2,7 @@ import hashlib
 import json
 import os
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -13,7 +13,7 @@ def sha256(path: Path) -> str:
 
 
 @contextmanager
-def atomic_output(path: Path) -> Iterator[Path]:
+def atomic_output(path: Path) -> Generator[Path]:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
     os.close(descriptor)

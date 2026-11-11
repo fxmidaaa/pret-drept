@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -36,15 +37,17 @@ def test_preparation_keeps_reposts_together_and_excludes_unknown_currency(tmp_pa
 
 
 def test_dvc_evaluation_matches_reloaded_model():
-    demo = Path("artifacts/demo")
-    report_path = demo / "evaluation.json"
+    directory = Path(
+        os.environ.get("PRET_DREPT_MODEL", "artifacts/demo/model.joblib")
+    ).parent
+    report_path = directory / "evaluation.json"
     if not report_path.is_file():
-        pytest.skip("Run dvc repro to build and evaluate the demo model.")
+        pytest.skip("Build and evaluate the configured model first.")
 
-    model_path = demo / "model.joblib"
+    model_path = directory / "model.joblib"
     bundle = load_bundle(model_path)
-    train = read_partition(demo / "train.csv")
-    evaluation = read_partition(demo / "evaluation.csv")
+    train = read_partition(directory / "train.csv")
+    evaluation = read_partition(directory / "evaluation.csv")
     report = json.loads(report_path.read_text())
     predictions = predict_eur(
         model_matrix(evaluation.to_dict(orient="records"), bundle), bundle
@@ -52,7 +55,10 @@ def test_dvc_evaluation_matches_reloaded_model():
     errors = predictions - evaluation["price"].to_numpy()
 
     assert bundle["numeric_defaults"]["area"] == train["area"].median()
-    assert report["dataset"] == "synthetic"
+    assert (
+        report["dataset"]
+        == json.loads((directory / "dataset.json").read_text())["dataset"]
+    )
     assert report["lineage"]["model_sha256"] == sha256(model_path)
     assert report["metrics"]["mae_eur"] == pytest.approx(np.abs(errors).mean())
     assert report["metrics"]["rmse_eur"] == pytest.approx(np.sqrt((errors**2).mean()))
@@ -87,7 +93,7 @@ def test_evaluation_rejects_changed_data(tmp_path, changed):
 
     demo = Path("artifacts/demo")
     if not (demo / "model.joblib").exists():
-        pytest.skip("Run dvc repro first.")
+        pytest.skip("Run the fixture stage commands first.")
     for name in ("model.joblib", "evaluation.csv", "dataset.json"):
         shutil.copy2(demo / name, tmp_path / name)
     if changed == "evaluation.csv":
@@ -111,7 +117,7 @@ def test_batch_worker_preserves_rows_and_uses_the_saved_model():
 
     demo = Path("artifacts/demo")
     if not (demo / "model.joblib").exists():
-        pytest.skip("Run dvc repro first.")
+        pytest.skip("Run the fixture stage commands first.")
     bundle = load_bundle(demo / "model.joblib")
     inputs = read_partition(demo / "evaluation.csv").drop(columns="price")
     inputs["listing_key"] = [f"row-{i}" for i in range(len(inputs))]

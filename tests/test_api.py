@@ -17,7 +17,7 @@ def configured_model(monkeypatch):
     if not path.is_file():
         if configured:
             pytest.fail("PRET_DREPT_MODEL must point to an existing trusted bundle.")
-        pytest.skip("Run dvc repro to build the synthetic demo bundle.")
+        pytest.skip("Run the fixture stage commands to build the demo bundle.")
     monkeypatch.setenv("PRET_DREPT_MODEL", str(path))
 
 
