@@ -6,14 +6,27 @@ This branch runs on your machine. Each stage is an ordinary Python command:
 | --- | --- | --- |
 | Select original input | `mlops/dataset.py` | Verified copy in `data/dataset/`, then `dvc add` records its version |
 | Clean and split | `mlops/prepare.py`, using `features.py` | `train.csv`, `evaluation.csv`, `dataset.json` |
-| Train | `train.py` | `model.joblib`, with the fitted encoder and numeric defaults |
-| Evaluate | `mlops/evaluate.py`, using `predict.py` | `evaluation.json` with EUR metrics and file hashes |
+| Train | `train.py`, `mlops/train_catboost.py`, `mlops/train_tabpfn.py` | One fitted model and its preprocessing per algorithm |
+| Evaluate | `mlops/evaluate.py`, using `predict.py` | An `evaluation.json` per model with EUR metrics and file hashes |
 | Track | `mlops/track.py` | A local MLflow run, evaluated model artifacts and optional registry version |
 | Predict | `predict.py`, `api.py`, `mlops/batch.py` | CLI, browser/API or PySpark predictions |
 
-DVC runs preparation, training and evaluation in order. Tracking and prediction are separate
-commands. Each script can also run directly. `params.json` holds the split and model settings;
-CSV, joblib and JSON files connect the stages.
+DVC prepares the data once, then has a train and evaluate branch for each algorithm. Tracking
+and prediction are separate commands. Each script can also run directly. `params.json` holds
+the split and model settings; CSV, model and JSON files connect the stages.
+
+```mermaid
+flowchart TD
+    prepare["Prepare and split"] --> train_x["Train XGBoost"]
+    prepare --> train_c["Train CatBoost"]
+    prepare --> train_t["Train TabPFN"]
+    train_x --> eval_x["Evaluate XGBoost"]
+    train_c --> eval_c["Evaluate CatBoost"]
+    train_t --> eval_t["Evaluate TabPFN"]
+    eval_x --> track["Track in MLflow"]
+    eval_c --> track
+    eval_t --> track
+```
 
 When reading the code, start with `prepare()`, `train()`, `evaluate()`, `track()` and
 `score_csv()`. Each file's `main()` just reads command-line arguments and calls that function.
@@ -53,13 +66,28 @@ requirement. Docker and CI install the same file. Indirect dependencies are reso
 
 | Environment | Use |
 | --- | --- |
-| `.venv` | All commands in this guide, including the MLflow server, tracking and registry |
-| `.venv-catboost` | Existing CatBoost experiments with their original package versions |
-| `.venv-tabpfn` | Existing TabPFN experiments, including PyTorch and their original package versions |
+| `.venv` | DVC, XGBoost, the MLflow server, tracking and registry |
+| `.venv-catboost` | CatBoost training and evaluation |
+| `.venv-tabpfn` | TabPFN training and evaluation, including PyTorch |
 
-The optional model environments preserve earlier experiments. Their NumPy/pandas versions differ
-from the main environment; consolidate them only after checking saved-model loading and predictions.
-The shared MLflow store works independently of which environment trained a model.
+The model environments use the existing experiment versions. Their pandas version differs from
+the main environment, where the full MLflow server requires pandas below 3. To recreate them:
+
+```bash
+python3.13 -m venv .venv-catboost
+.venv-catboost/bin/python -m pip install catboost==1.2.10 numpy==2.5.4 pandas==3.1.1
+.venv-catboost/bin/python -m pip check
+
+python3.13 -m venv .venv-tabpfn
+.venv-tabpfn/bin/python -m pip install tabpfn==9.2.0 torch==2.15.0 \
+  numpy==2.5.4 pandas==3.1.1 scikit-learn==1.9.1 scipy==1.18.1 joblib==1.6.0
+.venv-tabpfn/bin/python -m pip check
+```
+
+These commands install the model libraries separately; `requirements.txt` remains the main
+project requirements file. To load an exported MLflow model with `mlflow.pyfunc.load_model`
+inside either model environment, also install `mlflow-skinny==3.14.0` there. The shared MLflow
+store and server run in `.venv` independently of which environment trained the model.
 See the [directory map](../README.md#whats-where) for source files and generated local folders.
 
 ## Configuration
@@ -100,11 +128,29 @@ passing it to `docker run --env-file` would replace that path with a host-relati
 
 ## Daily workflow
 
-With the original dataset already selected, run:
+With the original dataset already selected, choose the model to run:
 
 ```bash
-dvc repro
+dvc repro evaluate           # XGBoost
+dvc repro evaluate_catboost  # CatBoost
+dvc repro evaluate_tabpfn   # TabPFN
+```
+
+Each command runs the shared preparation if needed, then trains and evaluates the selected
+model. `dvc repro` without a target considers **all three** branches and needs both model
+environments and the TabPFN checkpoint described below. Unchanged stages are skipped.
+
+To track and optionally register the models after evaluating them:
+
+```bash
 python -m mlops.track artifacts/real --register
+python -m mlops.track artifacts/real/catboost --register
+python -m mlops.track artifacts/real/tabpfn --register
+```
+
+To serve the XGBoost bundle in the browser:
+
+```bash
 uvicorn api:app --host 127.0.0.1 --port 8000
 ```
 
@@ -114,6 +160,38 @@ For a single CLI example, run `python predict.py`. Existing commands such as
 `python predict.py --model artifacts/real/model.joblib` also work.
 See [MLflow](#mlflow-tracking-and-local-model-registry) to open the comparison UI and
 [Docker and batch prediction](#docker-and-batch-prediction) for container commands.
+
+The files make each branch visible:
+
+```text
+artifacts/real/
+  train.csv, evaluation.csv, dataset.json    shared prepared split
+  model.joblib, evaluation.json              XGBoost
+  catboost/model.cbm, training.json, evaluation.json
+  tabpfn/model.tabpfn_fit, training.json, evaluation.json
+```
+
+`training.json` records the fitted preprocessing, settings and training data identity.
+CatBoost uses its native categorical features; XGBoost uses `DictVectorizer`; TabPFN receives
+the categorical feature positions. All three use training-only numeric medians and predict
+`log1p(price)`, converted back to EUR for evaluation.
+
+TabPFN requires the existing local checkpoint at
+`artifacts/private/checkpoints/tabpfn-v2-regressor.ckpt`. It is a DVC dependency, not a Git
+file; the pipeline does not download it. The fitted state and checkpoint are both needed for
+inference and may contain sensitive information. Keep them and MLflow artifacts private.
+Training uses `tabpfn.device` in `params.json` (`auto`, `cpu` or `mps`);
+`PRET_DREPT_TABPFN_DEVICE` controls loading for evaluation and inference.
+TabPFN may refuse more than 1,000 training rows on CPU. If CPU processing time and memory use
+are acceptable, explicitly allow it for a run:
+
+```bash
+TABPFN_ALLOW_CPU_LARGE_DATASET=1 dvc repro evaluate_tabpfn
+```
+
+DVC tracks the files and parameters listed in `dvc.yaml`, not packages installed inside the
+virtual environments or environment variables. If those change, use the same documented
+versions or explicitly rerun the affected stage. Model reports record the installed versions.
 
 ## Select or restore a dataset
 
@@ -132,7 +210,7 @@ byte into `data/dataset/`; the scraper archive remains unchanged. Atomic file re
 avoids modifying any file linked to DVC's cache in place.
 
 DVC versions the two original input files together through `data/dataset.dvc`.
-The root `dvc.yaml` prepares that CSV, trains XGBoost, and evaluates it in
+The root `dvc.yaml` prepares that CSV, then trains and evaluates the three models in
 `artifacts/real/`. Preparation also verifies the selected snapshot manifest.
 Derived CSVs, the model bundle and evaluation report are cached and identified in `dvc.lock`.
 A second unchanged run skips the stages.
@@ -169,7 +247,13 @@ RUN="artifacts/private/<experiment>"
 python -m mlops.prepare data/dataset/listings.csv "$RUN" --snapshot data/dataset/snapshot.json
 python train.py "$RUN"
 python -m mlops.evaluate "$RUN"
+.venv-catboost/bin/python -m mlops.train_catboost "$RUN"
+.venv-catboost/bin/python -m mlops.evaluate "$RUN" --model catboost
+.venv-tabpfn/bin/python -m mlops.train_tabpfn "$RUN"
+.venv-tabpfn/bin/python -m mlops.evaluate "$RUN" --model tabpfn
 python -m mlops.track "$RUN" --register
+python -m mlops.track "$RUN/catboost" --register
+python -m mlops.track "$RUN/tabpfn" --register
 ```
 
 Load only trusted joblib files: loading can execute Python code.
@@ -188,6 +272,9 @@ python -m mlops.evaluate artifacts/demo
 PRET_DREPT_MODEL=artifacts/demo/model.joblib python -m pytest -q
 ```
 
+The tests additionally train, evaluate, register and reload CatBoost in its separate environment.
+They exercise TabPFN the same way when its environment and checkpoint are available; the default
+CI does not have that checkpoint, so the TabPFN integration test is skipped there.
 This creates 101 training rows and 25 evaluation rows in `artifacts/demo/` for tests.
 These synthetic scores check code behavior; they do not measure market prediction quality.
 The real-data DVC reproduction is checked locally where the private input is available.
@@ -204,8 +291,8 @@ The [sample guide](../data/sample/README.md) lists optional fields.
   author type. Missing optional fields are allowed. Invalid floor pairs become missing.
 - The split keeps rows sharing sector, rooms, area, floor and total floors together. It needs
   at least 20 distinct groups. Seed 42 holds out roughly 20% of groups.
-- Numeric medians and categories are fitted on training rows only. XGBoost fits `log1p(price)`;
-  evaluation and every prediction path reuse the saved preprocessing and model.
+- Numeric medians and fitted categorical transformations use training rows only. Each model
+  fits `log1p(price)`; evaluation reuses its saved preprocessing and model.
 - Prepared files omit IDs, coordinates, photos and raw text. Asking rent is used for evaluation
   and the API comparison, never as a model input.
 
@@ -349,30 +436,12 @@ TabPFN 9.2.0 state. Existing XGBoost/CatBoost reports are recognized for compati
 Model libraries are imported only when loading their format. Joblib is imported inside
 `load_bundle()` so native CatBoost inference can reuse the feature builder without it.
 The historical TabPFN benchmark saved scores and a foundation checkpoint, not the fitted
-estimator. Its results are tracked, but that checkpoint alone is not a registry version.
-
-For future TabPFN evaluations, save the estimator immediately after scoring, while it is
-still in memory in `.venv-tabpfn`:
-
-```python
-import json
-
-from mlops.models import save_tabpfn_artifact
-
-report["model_artifact"] = save_tabpfn_artifact(model, output_directory, checkpoint, report)
-report_path = output_directory / "evaluation.json"
-report_path.unlink(missing_ok=True)
-report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-```
-
-The report needs its existing preprocessing, target transform and evaluated checkpoint hash.
-The helper saves fitted state and declares both that state and the checkpoint as model files.
-Its inference requirements are explicitly pinned in `save_tabpfn_artifact` to the existing
-`.venv-tabpfn` versions. Update those pins if that environment changes; no installed-package
-version discovery runs when saving the model.
-Then run the ordinary tracking command with `--register`. The packaged TabPFN loader relocates
-the checkpoint reference; `PRET_DREPT_TABPFN_DEVICE=cpu` (or `mps`) overrides its automatic
-device selection. Load only trusted model packages and fitted states.
+estimator. Its scores remain usable, but that checkpoint alone is not a registry version.
+`mlops/train_tabpfn.py` saves fitted state, checkpoint identity and the versions of its inference
+libraries. `mlops/evaluate.py` builds the artifact description from those saved details;
+tracking packages the fitted state and checkpoint for registration. The packaged loader relocates
+the checkpoint reference; `PRET_DREPT_TABPFN_DEVICE=cpu` (or `mps`) overrides automatic device selection.
+Load only trusted model packages and fitted states.
 
 ## Docker and batch prediction
 

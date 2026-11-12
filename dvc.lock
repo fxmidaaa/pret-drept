@@ -56,6 +56,10 @@ stages:
       hash: md5
       md5: 67f4608604c7f676d65f52d4d3b820d0
       size: 16473
+    - path: mlops/training.py
+      hash: md5
+      md5: 8682b4a08d11b10e4fef6251cbc101a4
+      size: 1116
     - path: predict.py
       hash: md5
       md5: 0254a380bcc86012961ff8b0a2597c3e
@@ -66,8 +70,8 @@ stages:
       size: 571
     - path: train.py
       hash: md5
-      md5: 54563d5ebe31e50f51389b32839da8aa
-      size: 2286
+      md5: f970ae8df0f81a759ce17f32c1c47c89
+      size: 2051
     params:
       params.json:
         evaluation_fraction: 0.2
@@ -79,8 +83,8 @@ stages:
     outs:
     - path: artifacts/real/model.joblib
       hash: md5
-      md5: 49b366fd785d4fce68b732db4483fde3
-      size: 46326
+      md5: 432ba2b2eb2a9e3473971bf1970a4289
+      size: 46325
   evaluate:
     cmd: python -m mlops.evaluate artifacts/real
     deps:
@@ -94,20 +98,20 @@ stages:
       size: 85316
     - path: artifacts/real/model.joblib
       hash: md5
-      md5: 49b366fd785d4fce68b732db4483fde3
-      size: 46326
+      md5: 432ba2b2eb2a9e3473971bf1970a4289
+      size: 46325
     - path: features.py
       hash: md5
       md5: 67f4608604c7f676d65f52d4d3b820d0
       size: 16473
     - path: mlops/evaluate.py
       hash: md5
-      md5: a843fc8a98b28215f2b3030afce3d62d
-      size: 2591
+      md5: 93c3a8621a3400381cfdc2449af85a67
+      size: 5399
     - path: mlops/models.py
       hash: md5
-      md5: 677b6e8b87fe42daf1655c962a9fdc16
-      size: 7232
+      md5: 77d21499d99a8c7aab965c1007d853f5
+      size: 6119
     - path: predict.py
       hash: md5
       md5: 0254a380bcc86012961ff8b0a2597c3e
@@ -119,5 +123,173 @@ stages:
     outs:
     - path: artifacts/real/evaluation.json
       hash: md5
-      md5: 3fab722ebc8a5b40503458e6acf56440
+      md5: 1da0d12709cdc7b116862bdae9e6a984
       size: 1344
+  train_catboost:
+    cmd: .venv-catboost/bin/python -m mlops.train_catboost artifacts/real
+    deps:
+    - path: artifacts/real/train.csv
+      hash: md5
+      md5: f4b626a09e15ff6af5e75361d8ce72f0
+      size: 350931
+    - path: features.py
+      hash: md5
+      md5: 67f4608604c7f676d65f52d4d3b820d0
+      size: 16473
+    - path: mlops/train_catboost.py
+      hash: md5
+      md5: 393a7a38d76c218c190be58f611764f1
+      size: 2143
+    - path: mlops/training.py
+      hash: md5
+      md5: 8682b4a08d11b10e4fef6251cbc101a4
+      size: 1116
+    - path: predict.py
+      hash: md5
+      md5: 0254a380bcc86012961ff8b0a2597c3e
+      size: 6897
+    params:
+      params.json:
+        catboost:
+          iterations: 120
+          depth: 4
+          learning_rate: 0.08
+        seed: 42
+    outs:
+    - path: artifacts/real/catboost/model.cbm
+      hash: md5
+      md5: 6311dc1967e4717c0ac7df3915746c6b
+      size: 48584
+    - path: artifacts/real/catboost/training.json
+      hash: md5
+      md5: 48adb50b2da44f34801061d4896adc8d
+      size: 1408
+  evaluate_catboost:
+    cmd: .venv-catboost/bin/python -m mlops.evaluate artifacts/real --model
+      catboost
+    deps:
+    - path: artifacts/real/catboost/model.cbm
+      hash: md5
+      md5: 6311dc1967e4717c0ac7df3915746c6b
+      size: 48584
+    - path: artifacts/real/catboost/training.json
+      hash: md5
+      md5: 48adb50b2da44f34801061d4896adc8d
+      size: 1408
+    - path: artifacts/real/dataset.json
+      hash: md5
+      md5: d8268c4c97aacef8a0616bc11beeba77
+      size: 623
+    - path: artifacts/real/evaluation.csv
+      hash: md5
+      md5: c49180b3313cb27fd271517a46bb2282
+      size: 85316
+    - path: features.py
+      hash: md5
+      md5: 67f4608604c7f676d65f52d4d3b820d0
+      size: 16473
+    - path: mlops/evaluate.py
+      hash: md5
+      md5: 93c3a8621a3400381cfdc2449af85a67
+      size: 5399
+    - path: mlops/models.py
+      hash: md5
+      md5: 77d21499d99a8c7aab965c1007d853f5
+      size: 6119
+    - path: predict.py
+      hash: md5
+      md5: 0254a380bcc86012961ff8b0a2597c3e
+      size: 6897
+    outs:
+    - path: artifacts/real/catboost/evaluation.json
+      hash: md5
+      md5: 61634bee20e856b063aa044017d36efc
+      size: 3091
+  train_tabpfn:
+    cmd: .venv-tabpfn/bin/python -m mlops.train_tabpfn artifacts/real
+    deps:
+    - path: artifacts/private/checkpoints/tabpfn-v2-regressor.ckpt
+      hash: md5
+      md5: 13bd1cee380f5ac2ec1da942bba7a910
+      size: 44390977
+    - path: artifacts/real/train.csv
+      hash: md5
+      md5: f4b626a09e15ff6af5e75361d8ce72f0
+      size: 350931
+    - path: features.py
+      hash: md5
+      md5: 67f4608604c7f676d65f52d4d3b820d0
+      size: 16473
+    - path: mlops/train_tabpfn.py
+      hash: md5
+      md5: bf9abfb1e4efd8e347e129de7687973b
+      size: 2805
+    - path: mlops/training.py
+      hash: md5
+      md5: 8682b4a08d11b10e4fef6251cbc101a4
+      size: 1116
+    - path: predict.py
+      hash: md5
+      md5: 0254a380bcc86012961ff8b0a2597c3e
+      size: 6897
+    params:
+      params.json:
+        seed: 42
+        tabpfn:
+          n_estimators: 8
+          device: auto
+          fit_mode: fit_preprocessors
+          memory_saving_mode: auto
+    outs:
+    - path: artifacts/real/tabpfn/model.tabpfn_fit
+      hash: md5
+      md5: d2d77a15bc11a1fd0c93aaaed7483de0
+      size: 2334472
+    - path: artifacts/real/tabpfn/training.json
+      hash: md5
+      md5: 8b76c15698e76cde1bef64234e55abcf
+      size: 1612
+  evaluate_tabpfn:
+    cmd: .venv-tabpfn/bin/python -m mlops.evaluate artifacts/real --model tabpfn
+    deps:
+    - path: artifacts/private/checkpoints/tabpfn-v2-regressor.ckpt
+      hash: md5
+      md5: 13bd1cee380f5ac2ec1da942bba7a910
+      size: 44390977
+    - path: artifacts/real/dataset.json
+      hash: md5
+      md5: d8268c4c97aacef8a0616bc11beeba77
+      size: 623
+    - path: artifacts/real/evaluation.csv
+      hash: md5
+      md5: c49180b3313cb27fd271517a46bb2282
+      size: 85316
+    - path: artifacts/real/tabpfn/model.tabpfn_fit
+      hash: md5
+      md5: d2d77a15bc11a1fd0c93aaaed7483de0
+      size: 2334472
+    - path: artifacts/real/tabpfn/training.json
+      hash: md5
+      md5: 8b76c15698e76cde1bef64234e55abcf
+      size: 1612
+    - path: features.py
+      hash: md5
+      md5: 67f4608604c7f676d65f52d4d3b820d0
+      size: 16473
+    - path: mlops/evaluate.py
+      hash: md5
+      md5: 93c3a8621a3400381cfdc2449af85a67
+      size: 5399
+    - path: mlops/models.py
+      hash: md5
+      md5: 77d21499d99a8c7aab965c1007d853f5
+      size: 6119
+    - path: predict.py
+      hash: md5
+      md5: 0254a380bcc86012961ff8b0a2597c3e
+      size: 6897
+    outs:
+    - path: artifacts/real/tabpfn/evaluation.json
+      hash: md5
+      md5: aaadce1905407bd511643bef4ad4a28f
+      size: 3594

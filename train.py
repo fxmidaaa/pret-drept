@@ -5,36 +5,29 @@ from pathlib import Path
 
 import joblib
 import numpy as np
-import pandas as pd
 from sklearn.feature_extraction import DictVectorizer
 from xgboost import XGBRegressor
 
-from features import MODEL_FEATURES, categorical, numerical
+from mlops.training import training_data
 from predict import build_features
-
-# Fixed defaults only apply when a whole optional column is missing from training.
-EMPTY_COLUMN_DEFAULTS = {
-    "floor": 1.0,
-    "total_floors": 5.0,
-    "kitchen_area": 10.0,
-    "ceiling_height": 2.7,
-}
 
 
 def train(directory: Path, config: dict) -> None:
     source = directory / "train.csv"
-    frame = pd.read_csv(source, dtype={name: str for name in categorical})
-    numeric_columns = [name for name in numerical if name in MODEL_FEATURES]
-    medians = frame[numeric_columns].median().fillna(EMPTY_COLUMN_DEFAULTS).to_dict()
+    frame, preprocessing = training_data(directory)
 
     bundle = {
-        "features": MODEL_FEATURES,
-        "numeric_defaults": medians,
+        "features": preprocessing["features"],
+        "numeric_defaults": preprocessing["numeric_defaults"],
         "meta": {
             "format": "pret-drept-simple-v1",
             "n_listings": len(frame),
             "training_sha256": sha256(source.read_bytes()).hexdigest(),
-            "config": config,
+            "config": {
+                "seed": config["seed"],
+                "evaluation_fraction": config["evaluation_fraction"],
+                "model": config["model"],
+            },
         },
     }
     vectorizer = DictVectorizer(sparse=False)

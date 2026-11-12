@@ -196,8 +196,10 @@ Worth being upfront about a few things:
 
 ## Running it
 
-Follow the [MLOps guide](docs/mlops.md) to select and version a completed scraper snapshot,
-then run `dvc repro` to prepare the real dataset, train and evaluate the model.
+Follow the [MLOps guide](docs/mlops.md) to select and version a completed scraper snapshot.
+Run `dvc repro evaluate` for XGBoost, `dvc repro evaluate_catboost` for CatBoost, or
+`dvc repro evaluate_tabpfn` for TabPFN. Running `dvc repro` without a target uses all three
+branches and requires both extra model environments and the local TabPFN checkpoint.
 After loading `.env` as described in the guide, start the app:
 
 ```bash
@@ -235,7 +237,9 @@ curl -X POST "https://pret-drept-tm6owb5eka-ew.a.run.app/predict" \
 | `api.py`, `app/` | FastAPI endpoints and the browser form |
 | `mlops/dataset.py` | Select and validate the original snapshot |
 | `mlops/prepare.py` | Clean rows and create the grouped train/evaluation split |
-| `mlops/evaluate.py` | Calculate EUR metrics and record model/data identities |
+| `mlops/training.py` | Prepare shared training features and training-only numeric defaults |
+| `mlops/train_catboost.py`, `mlops/train_tabpfn.py` | Fit and save CatBoost and TabPFN |
+| `mlops/evaluate.py` | Calculate EUR metrics for each model and record model/data identities |
 | `mlops/track.py`, `mlops/registry.py` | Record evaluations, register models, assign aliases and export |
 | `mlops/models.py` | Package and load XGBoost, CatBoost and fitted TabPFN predictors |
 | `mlops/batch.py` | Run batch predictions through PySpark |
@@ -254,7 +258,7 @@ Generated local directories are separate from the source:
 | Path | Contents |
 | --- | --- |
 | `.venv/` | Main Python environment, including MLflow |
-| `.venv-catboost/`, `.venv-tabpfn/` | Original environments for optional model experiments |
+| `.venv-catboost/`, `.venv-tabpfn/` | Separate CatBoost and TabPFN training/evaluation environments |
 | `data/raw/snapshots/` | Original scraper archive |
 | `data/dataset/` | Selected snapshot used by DVC |
 | `artifacts/real/` | Current real-data pipeline outputs |

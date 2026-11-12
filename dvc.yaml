@@ -21,6 +21,7 @@ stages:
     deps:
       - artifacts/real/train.csv
       - train.py
+      - mlops/training.py
       - features.py
       - predict.py
       - requirements.txt
@@ -44,4 +45,64 @@ stages:
       - requirements.txt
     metrics:
       - artifacts/real/evaluation.json:
+          cache: true
+  train_catboost:
+    cmd: .venv-catboost/bin/python -m mlops.train_catboost artifacts/real
+    deps:
+      - artifacts/real/train.csv
+      - mlops/train_catboost.py
+      - mlops/training.py
+      - features.py
+      - predict.py
+    params:
+      - params.json:
+          - seed
+          - catboost
+    outs:
+      - artifacts/real/catboost/model.cbm
+      - artifacts/real/catboost/training.json
+  evaluate_catboost:
+    cmd: .venv-catboost/bin/python -m mlops.evaluate artifacts/real --model catboost
+    deps:
+      - artifacts/real/dataset.json
+      - artifacts/real/evaluation.csv
+      - artifacts/real/catboost/model.cbm
+      - artifacts/real/catboost/training.json
+      - features.py
+      - predict.py
+      - mlops/evaluate.py
+      - mlops/models.py
+    metrics:
+      - artifacts/real/catboost/evaluation.json:
+          cache: true
+  train_tabpfn:
+    cmd: .venv-tabpfn/bin/python -m mlops.train_tabpfn artifacts/real
+    deps:
+      - artifacts/real/train.csv
+      - artifacts/private/checkpoints/tabpfn-v2-regressor.ckpt
+      - mlops/train_tabpfn.py
+      - mlops/training.py
+      - features.py
+      - predict.py
+    params:
+      - params.json:
+          - seed
+          - tabpfn
+    outs:
+      - artifacts/real/tabpfn/model.tabpfn_fit
+      - artifacts/real/tabpfn/training.json
+  evaluate_tabpfn:
+    cmd: .venv-tabpfn/bin/python -m mlops.evaluate artifacts/real --model tabpfn
+    deps:
+      - artifacts/real/dataset.json
+      - artifacts/real/evaluation.csv
+      - artifacts/real/tabpfn/model.tabpfn_fit
+      - artifacts/real/tabpfn/training.json
+      - artifacts/private/checkpoints/tabpfn-v2-regressor.ckpt
+      - features.py
+      - predict.py
+      - mlops/evaluate.py
+      - mlops/models.py
+    metrics:
+      - artifacts/real/tabpfn/evaluation.json:
           cache: true

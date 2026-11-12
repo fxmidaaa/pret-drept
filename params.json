@@ -5,5 +5,16 @@
     "n_estimators": 120,
     "max_depth": 4,
     "learning_rate": 0.08
+  },
+  "catboost": {
+    "iterations": 120,
+    "depth": 4,
+    "learning_rate": 0.08
+  },
+  "tabpfn": {
+    "n_estimators": 8,
+    "device": "auto",
+    "fit_mode": "fit_preprocessors",
+    "memory_saving_mode": "auto"
   }
 }

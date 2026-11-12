@@ -4,7 +4,6 @@ import json
 import os
 import tempfile
 import zipfile
-from hashlib import sha256
 from pathlib import Path
 
 import numpy as np
@@ -45,8 +44,8 @@ def model_artifact(report: dict) -> dict | None:
             return {**specification, "code_paths": MODEL_CODE}
         return specification
     kind = model_type(report)
-    # Defaults for the two formats already saved by this project.
-    # New algorithms supply model_artifact explicitly; tracking needs no changes.
+    # Build the artifact description for the three formats used by this project.
+    # Other algorithms can provide model_artifact explicitly.
     if kind == "xgboost":
         requirements = [
             line
@@ -60,18 +59,40 @@ def model_artifact(report: dict) -> dict | None:
             *[f"{name}=={report['runtime'][name]}" for name in ("numpy", "pandas")],
         ]
         filename = "model.cbm"
+    elif kind == "tabpfn" and "checkpoint_path" in report:
+        requirements = [
+            f"tabpfn=={report['model_version']}",
+            *[
+                f"{name}=={report['runtime'][name]}"
+                for name in (
+                    "torch",
+                    "numpy",
+                    "pandas",
+                    "scikit-learn",
+                    "scipy",
+                    "joblib",
+                )
+            ],
+        ]
+        filename = "model.tabpfn_fit"
     else:
         # A benchmark score is useful even when no fitted predictor was saved.
         return None
+    files = {
+        filename: {
+            "path": filename,
+            "sha256": report["lineage"]["model_sha256"],
+        }
+    }
+    if kind == "tabpfn":
+        files["checkpoint.ckpt"] = {
+            "path": report["checkpoint_path"],
+            "sha256": report["lineage"]["checkpoint_sha256"],
+        }
     return {
         "loader_module": "mlops.models",
         "kind": kind,
-        "files": {
-            filename: {
-                "path": filename,
-                "sha256": report["lineage"]["model_sha256"],
-            }
-        },
+        "files": files,
         "requirements": requirements,
         "code_paths": MODEL_CODE,
         "preprocessing": report.get("preprocessing"),
@@ -110,56 +131,7 @@ class FramePredictor:
         return predictions
 
 
-def save_tabpfn_artifact(
-    model, directory: Path, checkpoint: Path, report: dict
-) -> dict:
-    """Call in the training environment, immediately after evaluating this estimator."""
-    directory = directory.resolve()
-    checkpoint = checkpoint.resolve()
-    checkpoint_hash = sha256(checkpoint.read_bytes()).hexdigest()
-    if checkpoint_hash != report["lineage"]["checkpoint_sha256"]:
-        raise ValueError("The TabPFN checkpoint differs from the evaluated checkpoint.")
-    destination = directory / "model.tabpfn_fit"
-    directory.mkdir(parents=True, exist_ok=True)
-    original_path = model.model_path
-    if Path(original_path).resolve() != checkpoint:
-        raise ValueError("Save the checkpoint used by the fitted TabPFN estimator.")
-    try:
-        # The pinned TabPFN serializer expects a JSON-compatible checkpoint path.
-        model.model_path = str(checkpoint)
-        model.save_fit_state(destination)
-    finally:
-        model.model_path = original_path
-    return {
-        "loader_module": "mlops.models",
-        "kind": "tabpfn",
-        "files": {
-            destination.name: {
-                "path": destination.name,
-                "sha256": sha256(destination.read_bytes()).hexdigest(),
-            },
-            "checkpoint.ckpt": {
-                "path": os.path.relpath(checkpoint, directory),
-                "sha256": checkpoint_hash,
-            },
-        },
-        # Pinned to the existing .venv-tabpfn environment.
-        "requirements": [
-            "tabpfn==9.2.0",
-            "torch==2.15.0",
-            "numpy==2.5.4",
-            "pandas==3.1.1",
-            "scikit-learn==1.9.1",
-            "scipy==1.18.1",
-            "joblib==1.6.0",
-        ],
-        "code_paths": MODEL_CODE,
-        "preprocessing": report["preprocessing"],
-        "target_transform": report["target_transform"],
-    }
-
-
-def load_tabpfn(directory: Path):
+def load_tabpfn(directory: Path, checkpoint: Path | None = None):
     from tabpfn import TabPFNRegressor
 
     # TabPFN 9.2.0 stores an absolute checkpoint path in its fitted-state archive.
@@ -174,7 +146,9 @@ def load_tabpfn(directory: Path):
                 data = source.read(entry.filename)
                 if entry.filename == "init_params.json":
                     params = json.loads(data)
-                    params["model_path"] = str(directory / "checkpoint.ckpt")
+                    params["model_path"] = str(
+                        (checkpoint or directory / "checkpoint.ckpt").resolve()
+                    )
                     data = json.dumps(params).encode()
                 target.writestr(entry, data)
         return TabPFNRegressor.load_from_fit_state(

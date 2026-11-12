@@ -208,6 +208,8 @@ tracking.ROOT = code
 custom_run = track(custom, store, first)
 custom_version = register(custom_run, store)
 export_model(name, root / "custom-export", store, version=custom_version.version)
+requirements = (root / "custom-export/requirements.txt").read_text()
+assert "mlflow-skinny==" in requirements and "numpy" in requirements and "pandas" in requirements
 import mlflow
 assert list(mlflow.pyfunc.load_model(str(root / "custom-export")).predict([{}, {}])) == [500, 500]
 print(json.dumps({"run_id": run2, "version": version2.version}))

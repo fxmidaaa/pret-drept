@@ -10,8 +10,9 @@ import pytest
 from features import categorical
 from mlops.evaluate import evaluate
 from mlops.prepare import GROUP_COLUMNS, prepare
+from mlops.training import EMPTY_COLUMN_DEFAULTS
 from predict import load_bundle, model_matrix, predict_eur
-from train import EMPTY_COLUMN_DEFAULTS, train
+from train import train
 
 
 def test_preparation_keeps_reposts_together_and_excludes_unknown_currency(tmp_path):

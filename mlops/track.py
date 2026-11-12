@@ -129,15 +129,23 @@ def log_model(directory: Path, specification: dict):
             shutil.copy2(source, destination)
 
         signature = specification.get("signature")
+        # PyFunc imports NumPy and pandas even for a custom predictor with no
+        # additional dependencies. Preserve any model-specific version pins.
+        requirements = [
+            f"mlflow-skinny=={mlflow.__version__}",
+            *specification["requirements"],
+        ]
+        for package in ("numpy", "pandas"):
+            if not any(item.split("==", 1)[0] == package for item in requirements):
+                requirements.append(package)
         return mlflow.pyfunc.log_model(
             name="model",
             loader_module=specification["loader_module"],
             data_path=str(bundle),
             code_paths=[str(path) for path in sorted(code.iterdir())],
-            pip_requirements=[
-                f"mlflow=={mlflow.__version__}",
-                *specification["requirements"],
-            ],
+            # The inference-only package also supports the model environments'
+            # pandas versions, while the full MLflow server requires pandas < 3.
+            pip_requirements=requirements,
             metadata={"target_unit": "EUR/month"},
             signature=ModelSignature.from_dict(signature) if signature else None,
         )
