@@ -42,9 +42,9 @@ def test_preparation_keeps_reposts_together_and_excludes_unknown_currency(tmp_pa
     assert manifest["input_sha256"] == sha256(source.read_bytes()).hexdigest()
 
 
-def test_dvc_evaluation_matches_reloaded_model():
+def test_dvc_evaluation_matches_reloaded_model(synthetic_run):
     directory = Path(
-        os.environ.get("PRET_DREPT_MODEL", "artifacts/demo/model.joblib")
+        os.environ.get("PRET_DREPT_MODEL", synthetic_run / "model.joblib")
     ).parent
     report_path = directory / "evaluation.json"
     if not report_path.is_file():
@@ -128,14 +128,11 @@ def test_rebuilding_preserves_files_linked_to_a_dvc_cache(tmp_path):
 
 
 @pytest.mark.parametrize("changed", ["evaluation.csv", "dataset.json"])
-def test_evaluation_rejects_changed_data(tmp_path, changed):
+def test_evaluation_rejects_changed_data(tmp_path, changed, synthetic_run):
     import shutil
 
-    demo = Path("artifacts/demo")
-    if not (demo / "model.joblib").exists():
-        pytest.skip("Run the fixture stage commands first.")
     for name in ("model.joblib", "evaluation.csv", "dataset.json"):
-        shutil.copy2(demo / name, tmp_path / name)
+        shutil.copy2(synthetic_run / name, tmp_path / name)
     if changed == "evaluation.csv":
         with (tmp_path / changed).open("a") as stream:
             stream.write("\n")
@@ -148,19 +145,16 @@ def test_evaluation_rejects_changed_data(tmp_path, changed):
     assert not (tmp_path / "evaluation.json").exists()
 
 
-def test_batch_worker_preserves_rows_and_uses_the_saved_model():
+def test_batch_worker_preserves_rows_and_uses_the_saved_model(synthetic_run):
     from functools import partial
 
     import cloudpickle
 
     from mlops.batch import PREDICTION_COLUMN, predict_batches
 
-    demo = Path("artifacts/demo")
-    if not (demo / "model.joblib").exists():
-        pytest.skip("Run the fixture stage commands first.")
-    bundle = load_bundle(demo / "model.joblib")
+    bundle = load_bundle(synthetic_run / "model.joblib")
     inputs = pd.read_csv(
-        demo / "evaluation.csv", dtype={name: str for name in categorical}
+        synthetic_run / "evaluation.csv", dtype={name: str for name in categorical}
     ).drop(columns="price")
     inputs["listing_key"] = [f"row-{i}" for i in range(len(inputs))]
     expected = predict_eur(model_matrix(inputs.to_dict("records"), bundle), bundle)

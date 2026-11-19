@@ -26,8 +26,8 @@ stages:
       size: 4957
     - path: requirements.txt
       hash: md5
-      md5: 6a2ca441db45aaa5485d2b936a06510d
-      size: 571
+      md5: 5b083efda90565a701b5daf306df3d21
+      size: 555
     params:
       params.json:
         evaluation_fraction: 0.2
@@ -66,8 +66,8 @@ stages:
       size: 6897
     - path: requirements.txt
       hash: md5
-      md5: 6a2ca441db45aaa5485d2b936a06510d
-      size: 571
+      md5: 5b083efda90565a701b5daf306df3d21
+      size: 555
     - path: train.py
       hash: md5
       md5: f970ae8df0f81a759ce17f32c1c47c89
@@ -118,8 +118,8 @@ stages:
       size: 6897
     - path: requirements.txt
       hash: md5
-      md5: 6a2ca441db45aaa5485d2b936a06510d
-      size: 571
+      md5: 5b083efda90565a701b5daf306df3d21
+      size: 555
     outs:
     - path: artifacts/real/evaluation.json
       hash: md5
@@ -208,7 +208,7 @@ stages:
   train_tabpfn:
     cmd: .venv-tabpfn/bin/python -m mlops.train_tabpfn artifacts/real
     deps:
-    - path: artifacts/private/checkpoints/tabpfn-v2-regressor.ckpt
+    - path: artifacts/checkpoints/tabpfn-v2-regressor.ckpt
       hash: md5
       md5: 13bd1cee380f5ac2ec1da942bba7a910
       size: 44390977
@@ -222,8 +222,8 @@ stages:
       size: 16473
     - path: mlops/train_tabpfn.py
       hash: md5
-      md5: bf9abfb1e4efd8e347e129de7687973b
-      size: 2805
+      md5: b59dbf1c7cb6e64fc288b68386f37f84
+      size: 2797
     - path: mlops/training.py
       hash: md5
       md5: 8682b4a08d11b10e4fef6251cbc101a4
@@ -243,16 +243,16 @@ stages:
     outs:
     - path: artifacts/real/tabpfn/model.tabpfn_fit
       hash: md5
-      md5: d2d77a15bc11a1fd0c93aaaed7483de0
-      size: 2334472
+      md5: f84a3ad577ec4649e02942168643eb98
+      size: 2334467
     - path: artifacts/real/tabpfn/training.json
       hash: md5
-      md5: 8b76c15698e76cde1bef64234e55abcf
-      size: 1612
+      md5: 1a7d38961444ef6583d1bc826d6cea21
+      size: 1604
   evaluate_tabpfn:
     cmd: .venv-tabpfn/bin/python -m mlops.evaluate artifacts/real --model tabpfn
     deps:
-    - path: artifacts/private/checkpoints/tabpfn-v2-regressor.ckpt
+    - path: artifacts/checkpoints/tabpfn-v2-regressor.ckpt
       hash: md5
       md5: 13bd1cee380f5ac2ec1da942bba7a910
       size: 44390977
@@ -266,12 +266,12 @@ stages:
       size: 85316
     - path: artifacts/real/tabpfn/model.tabpfn_fit
       hash: md5
-      md5: d2d77a15bc11a1fd0c93aaaed7483de0
-      size: 2334472
+      md5: f84a3ad577ec4649e02942168643eb98
+      size: 2334467
     - path: artifacts/real/tabpfn/training.json
       hash: md5
-      md5: 8b76c15698e76cde1bef64234e55abcf
-      size: 1612
+      md5: 1a7d38961444ef6583d1bc826d6cea21
+      size: 1604
     - path: features.py
       hash: md5
       md5: 67f4608604c7f676d65f52d4d3b820d0
@@ -291,5 +291,5 @@ stages:
     outs:
     - path: artifacts/real/tabpfn/evaluation.json
       hash: md5
-      md5: aaadce1905407bd511643bef4ad4a28f
-      size: 3594
+      md5: ff1d6a9847e11e88e65ee7580bf76eb3
+      size: 3578

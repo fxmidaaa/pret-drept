@@ -14,7 +14,7 @@ import pytest
 from mlops.prepare import prepare
 
 ROOT = Path(__file__).resolve().parents[1]
-CHECKPOINT = ROOT / "artifacts/private/checkpoints/tabpfn-v2-regressor.ckpt"
+CHECKPOINT = ROOT / "artifacts/checkpoints/tabpfn-v2-regressor.ckpt"
 
 
 @pytest.mark.parametrize("model_type", ["catboost", "tabpfn"])

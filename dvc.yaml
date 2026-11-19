@@ -79,7 +79,7 @@ stages:
     cmd: .venv-tabpfn/bin/python -m mlops.train_tabpfn artifacts/real
     deps:
       - artifacts/real/train.csv
-      - artifacts/private/checkpoints/tabpfn-v2-regressor.ckpt
+      - artifacts/checkpoints/tabpfn-v2-regressor.ckpt
       - mlops/train_tabpfn.py
       - mlops/training.py
       - features.py
@@ -98,7 +98,7 @@ stages:
       - artifacts/real/evaluation.csv
       - artifacts/real/tabpfn/model.tabpfn_fit
       - artifacts/real/tabpfn/training.json
-      - artifacts/private/checkpoints/tabpfn-v2-regressor.ckpt
+      - artifacts/checkpoints/tabpfn-v2-regressor.ckpt
       - features.py
       - predict.py
       - mlops/evaluate.py

@@ -1,8 +1,9 @@
 # The sample data
 
-`listings_sample.csv` is the original three-row schema example. `demo.csv` contains 126 generated
-rows for tests and CI. It covers EUR, MDL and USD, with synthetic features, fixed-seed prices
-and artificial reposts. Both files contain fictional observations.
+`demo.csv` contains 126 generated rows for tests and CI. It covers EUR, MDL and USD,
+with synthetic features, fixed-seed prices
+and artificial reposts. All observations are fictional. This is the input fixture; pytest creates
+its prepared split, model and evaluation in temporary directories automatically.
 
 Keep real snapshots local. Hashed listing identifiers are pseudonyms. The
 [MLOps guide](../../docs/mlops.md#data-contract-and-evaluation) defines the input and output contracts.

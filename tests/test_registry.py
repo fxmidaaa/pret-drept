@@ -18,12 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.parametrize("changed", ["model", "dataset", "metric"])
-def test_tracking_rejects_invalid_inputs(tmp_path, changed):
-    demo = ROOT / "artifacts/demo"
-    if not (demo / "evaluation.json").is_file():
-        pytest.skip("Run the fixture stage commands first.")
+def test_tracking_rejects_invalid_inputs(tmp_path, changed, synthetic_run):
     for name in ("dataset.json", "evaluation.json", "model.joblib"):
-        shutil.copy2(demo / name, tmp_path / name)
+        shutil.copy2(synthetic_run / name, tmp_path / name)
     report = json.loads((tmp_path / "evaluation.json").read_text())
     if changed == "model":
         with (tmp_path / "model.joblib").open("ab") as stream:
@@ -59,10 +56,7 @@ def test_tracking_rejects_invalid_inputs(tmp_path, changed):
     assert expected[changed] in result.stderr, result.stdout + result.stderr
 
 
-def test_model_registry_round_trip_and_generic_tracking(tmp_path):
-    demo = ROOT / "artifacts/demo"
-    if not (demo / "evaluation.json").is_file():
-        pytest.skip("Run the fixture stage commands first.")
+def test_model_registry_round_trip_and_generic_tracking(tmp_path, synthetic_run):
     first = tmp_path / "first"
     second = tmp_path / "second"
     for destination in (first, second):
@@ -74,7 +68,7 @@ def test_model_registry_round_trip_and_generic_tracking(tmp_path):
             "model.joblib",
             "evaluation.json",
         ):
-            shutil.copy2(demo / name, destination / name)
+            shutil.copy2(synthetic_run / name, destination / name)
     legacy = json.loads((first / "evaluation.json").read_text())
     legacy["model_artifact"]["code_paths"].append("mlops/files.py")
     (first / "evaluation.json").write_text(json.dumps(legacy), encoding="utf-8")

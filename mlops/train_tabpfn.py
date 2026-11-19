@@ -17,7 +17,7 @@ from tabpfn import TabPFNRegressor
 
 from mlops.training import feature_frame, training_data
 
-CHECKPOINT = Path("artifacts/private/checkpoints/tabpfn-v2-regressor.ckpt")
+CHECKPOINT = Path("artifacts/checkpoints/tabpfn-v2-regressor.ckpt")
 
 
 def train(directory: Path, config: dict) -> None:

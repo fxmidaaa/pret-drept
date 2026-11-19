@@ -10,7 +10,6 @@ data/*
 !data/dataset.dvc
 !data/sample
 data/sample/*
-!data/sample/listings_sample.csv
 !data/sample/demo.csv
 !data/sample/README.md
 
@@ -24,9 +23,12 @@ model.joblib
 .ruff_cache/
 .jupyter/
 
-# Simple MLOps demo and private local runs
+# Generated outputs and local tracking history
 /artifacts/
 /.mlflow/
 /mlruns/
 /mlartifacts/
 /mlflow.db*
+
+# One-off repository exports
+/repomix-output.*

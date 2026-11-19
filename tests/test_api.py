@@ -11,13 +11,11 @@ client = TestClient(app)
 
 
 @pytest.fixture
-def configured_model(monkeypatch):
+def configured_model(monkeypatch, synthetic_run):
     configured = os.environ.get("PRET_DREPT_MODEL")
-    path = Path(configured or "artifacts/demo/model.joblib").resolve()
+    path = Path(configured or synthetic_run / "model.joblib").resolve()
     if not path.is_file():
-        if configured:
-            pytest.fail("PRET_DREPT_MODEL must point to an existing trusted bundle.")
-        pytest.skip("Run the fixture stage commands to build the demo bundle.")
+        pytest.fail("PRET_DREPT_MODEL must point to an existing trusted bundle.")
     monkeypatch.setenv("PRET_DREPT_MODEL", str(path))
 
 

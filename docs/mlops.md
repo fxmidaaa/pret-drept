@@ -88,7 +88,7 @@ These commands install the model libraries separately; `requirements.txt` remain
 project requirements file. To load an exported MLflow model with `mlflow.pyfunc.load_model`
 inside either model environment, also install `mlflow-skinny==3.14.0` there. The shared MLflow
 store and server run in `.venv` independently of which environment trained the model.
-See the [directory map](../README.md#whats-where) for source files and generated local folders.
+See the [project map](../README.md#project-map) for source files and generated local folders.
 
 ## Configuration
 
@@ -177,7 +177,7 @@ the categorical feature positions. All three use training-only numeric medians a
 `log1p(price)`, converted back to EUR for evaluation.
 
 TabPFN requires the existing local checkpoint at
-`artifacts/private/checkpoints/tabpfn-v2-regressor.ckpt`. It is a DVC dependency, not a Git
+`artifacts/checkpoints/tabpfn-v2-regressor.ckpt`. It is a DVC dependency, not a Git
 file; the pipeline does not download it. The fitted state and checkpoint are both needed for
 inference and may contain sensitive information. Keep them and MLflow artifacts private.
 Training uses `tabpfn.device` in `params.json` (`auto`, `cpu` or `mps`);
@@ -243,7 +243,7 @@ Existing private experiment directories and bundles remain usable. To run an ind
 experiment without replacing the DVC pipeline's outputs, use a separate local directory:
 
 ```bash
-RUN="artifacts/private/<experiment>"
+RUN="artifacts/experiments/<experiment>"
 python -m mlops.prepare data/dataset/listings.csv "$RUN" --snapshot data/dataset/snapshot.json
 python train.py "$RUN"
 python -m mlops.evaluate "$RUN"
@@ -266,16 +266,19 @@ runs the same Python stage implementations directly against this fixture:
 
 ```bash
 dvc stage list --all --fail
-python -m mlops.prepare data/sample/demo.csv artifacts/demo --synthetic
-python train.py artifacts/demo
-python -m mlops.evaluate artifacts/demo
-PRET_DREPT_MODEL=artifacts/demo/model.joblib python -m pytest -q
+FIXTURE_RUN=$(mktemp -d)
+python -m mlops.prepare data/sample/demo.csv "$FIXTURE_RUN" --synthetic
+python train.py "$FIXTURE_RUN"
+python -m mlops.evaluate "$FIXTURE_RUN"
+PRET_DREPT_MODEL="$FIXTURE_RUN/model.joblib" python -m pytest -q
 ```
 
 The tests additionally train, evaluate, register and reload CatBoost in its separate environment.
 They exercise TabPFN the same way when its environment and checkpoint are available; the default
 CI does not have that checkpoint, so the TabPFN integration test is skipped there.
-This creates 101 training rows and 25 evaluation rows in `artifacts/demo/` for tests.
+The explicit fixture commands create 101 training rows and 25 evaluation rows in a temporary
+directory. Plain `python -m pytest -q` also works: a session fixture builds its own synthetic
+model, split and evaluation outside the project. No test needs a prebuilt `artifacts/demo/`.
 These synthetic scores check code behavior; they do not measure market prediction quality.
 The real-data DVC reproduction is checked locally where the private input is available.
 
@@ -510,9 +513,10 @@ python -m ruff format --check mlops *.py tests
 dvc repro
 dvc repro
 dvc status --json
-python -m mlops.prepare data/sample/demo.csv artifacts/demo --synthetic
-python train.py artifacts/demo
-python -m mlops.evaluate artifacts/demo
+FIXTURE_RUN=$(mktemp -d)
+python -m mlops.prepare data/sample/demo.csv "$FIXTURE_RUN" --synthetic
+python train.py "$FIXTURE_RUN"
+python -m mlops.evaluate "$FIXTURE_RUN"
 PRET_DREPT_MODEL=artifacts/real/model.joblib python -m pytest -q -ra
 python predict.py --model artifacts/real/model.joblib
 actionlint -shellcheck= -pyflakes=
@@ -533,11 +537,12 @@ Registry tests use a temporary SQLite store and verify tracking, registration, a
 export and predictions from packaged source outside the repository. They also cover custom loaders
 and score-only benchmarks. They use `.venv` and leave the normal `.mlflow` history unchanged.
 
-To exercise the tracking CLI separately without adding runs to the normal store:
+To exercise the tracking CLI separately without adding runs to the normal store, use the
+`FIXTURE_RUN` created by the checks above:
 
 ```bash
 CHECK_STORE=$(mktemp -d)
-python -m mlops.track artifacts/demo --store "$CHECK_STORE" --register
+python -m mlops.track "$FIXTURE_RUN" --store "$CHECK_STORE" --register
 ```
 
 If DVC cannot access its system cache in a restricted session, retry with:
@@ -553,10 +558,15 @@ outside the image; the container includes it. On macOS, install a missing action
 
 ## Local cleanup
 
-Python bytecode, `.pytest_cache/`, `.ruff_cache/` and disposable `artifacts/checks/` outputs can
-be recreated. Use temporary directories for one-off checks so they do not accumulate in the project.
-Keep `artifacts/demo/` when running tests directly; the fixture stage commands recreate it.
+Python bytecode, `.pytest_cache/` and `.ruff_cache/` can be recreated. Tests build their
+synthetic models with pytest's temporary-directory fixtures. Use `mktemp -d` for manual checks
+so their outputs do not accumulate in the project. There is no persistent demo output directory.
+
+Keep current DVC outputs in `artifacts/real/`, foundation weights in `artifacts/checkpoints/`
+and independent or historical runs in `artifacts/experiments/`. The names describe their role;
+all real-data outputs remain private.
 
 Preserve `.dvc/cache/`, `.mlflow/`, original snapshots, experiment results and model checkpoints.
-The older `artifacts/private/.../tracking/` directories are also MLflow stores. Their recorded
-artifact paths are absolute, so keep those stores and their artifacts at their existing locations.
+The older `artifacts/experiments/.../tracking/` directories are also MLflow stores. Their recorded
+artifact paths are absolute, so keep those stores and their artifacts together at their current
+locations. Moving a store requires migrating its recorded artifact locations as well.

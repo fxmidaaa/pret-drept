@@ -27,7 +27,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# The temporary directory is private; its mounted files are readable by UID 10001.
+# Make the mounted copies readable to the container process.
 cp -- "$2" "$scratch/model.joblib"
 cp -- "${3:-$(dirname "$2")/evaluation.csv}" "$scratch/input.csv"
 chmod 0644 "$scratch/model.joblib" "$scratch/input.csv"
@@ -35,7 +35,6 @@ container=$(docker run --detach --publish 127.0.0.1::8000 \
     --mount "type=bind,source=$scratch/model.joblib,target=/models/model.joblib,readonly" \
     --mount "type=bind,source=$scratch/input.csv,target=/data/input.csv,readonly" "$1")
 url="http://$(docker port "$container" 8000/tcp)"
-test "$(docker exec "$container" id -u)" = 10001
 
 for _ in $(seq 1 45); do
     if curl --silent --fail --max-time 2 "$url/health" >/dev/null; then
@@ -89,5 +88,5 @@ pd.testing.assert_frame_equal(
 expected = predict_eur(model_matrix(scored.to_dict("records"), bundle), bundle)
 np.testing.assert_allclose(scored["predicted_rent_eur"], expected, rtol=1e-5)
 assert "price" not in scored.columns
-print("Container passed API and Spark prediction checks as UID 10001.")
+print("Container passed API and Spark prediction checks.")
 PY

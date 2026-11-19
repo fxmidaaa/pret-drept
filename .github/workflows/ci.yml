@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.13.16"
-      - name: Install project and tracking dependencies
+      - name: Install dependencies
         run: |
           python -m pip install -r requirements.txt
           python -m pip check
@@ -34,18 +34,17 @@ jobs:
         run: |
           python -m ruff check mlops *.py tests
           python -m ruff format --check mlops *.py tests
-      - name: Validate DVC metadata and exercise stages on the test fixture
+      - name: Run the fixture pipeline and tests
         run: |
           dvc stage list --all --fail
-          python -m mlops.prepare data/sample/demo.csv artifacts/demo --synthetic
-          python train.py artifacts/demo
-          python -m mlops.evaluate artifacts/demo
-          python predict.py --model artifacts/demo/model.joblib
-      - name: Test predictions and MLflow registry round trip
-        run: PRET_DREPT_MODEL=artifacts/demo/model.joblib python -m pytest -q
-      - name: Exercise the tracking and registration CLI
-        run: python -m mlops.track artifacts/demo --register
-      - name: Build and exercise API and Spark in the local image
+          fixture_run="$RUNNER_TEMP/pret-drept-fixture"
+          python -m mlops.prepare data/sample/demo.csv "$fixture_run" --synthetic
+          python train.py "$fixture_run"
+          python -m mlops.evaluate "$fixture_run"
+          python predict.py --model "$fixture_run/model.joblib"
+          PRET_DREPT_MODEL="$fixture_run/model.joblib" python -m pytest -q
+          python -m mlops.track "$fixture_run" --store "$RUNNER_TEMP/pret-drept-tracking" --register
+      - name: Test the API and Spark in Docker
         run: |
           docker build -t pret-drept:ci .
-          bash scripts/smoke_container.sh pret-drept:ci artifacts/demo/model.joblib
+          bash scripts/smoke_container.sh pret-drept:ci "$RUNNER_TEMP/pret-drept-fixture/model.joblib"

@@ -1,7 +1,7 @@
-# Local environments, stores and disposable checks are not DVC inputs.
+# Local environments, stores and independent experiments are not DVC inputs.
 .venv*/
 .mlflow/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
-artifacts/checks/
+artifacts/experiments/
