@@ -448,8 +448,8 @@ Load only trusted model packages and fitted states.
 
 ## Docker and batch prediction
 
-One image contains Python, Java, the API and PySpark. The default command starts the API;
-override it for batch prediction. It runs as UID 10001, with data and models mounted at runtime.
+One image contains Python, Java, the API and PySpark. Mount the model at runtime.
+The default command starts the API. For batch prediction, mount the input CSV and pass the batch command.
 Java makes it larger than an API-only image, but avoids maintaining separate builds.
 The Dockerfile installs dependencies first, then uses `COPY . .`. The `.dockerignore`
 allowlist limits that copy to the API, batch code and their runtime files.
@@ -461,24 +461,19 @@ environment does not need to be activated separately.
 ```bash
 docker build -t pret-drept:local .
 bash scripts/smoke_container.sh pret-drept:local artifacts/real/model.joblib
-install -m 0644 artifacts/real/model.joblib artifacts/real/serving-model.joblib
 docker run --rm --publish 127.0.0.1:8000:8000 \
-  --mount "type=bind,source=$PWD/artifacts/real/serving-model.joblib,target=/models/model.joblib,readonly" \
+  --mount "type=bind,source=$PWD/artifacts/real/model.joblib,target=/models/model.joblib,readonly" \
   pret-drept:local
 ```
-
-For a private model, mount its path instead. The container user needs read access to that file;
-use a dedicated serving copy with suitable permissions if necessary.
 
 Batch input uses prepared feature names (`rooms`, `area`, `sector`, `author`, etc.), not raw scraper
 columns. Output CSV parts contain the input features and `predicted_rent_eur`, preserve
 `listing_key` when supplied, and omit target price. Existing output directories are refused.
 
 ```bash
-install -m 0644 artifacts/real/evaluation.csv artifacts/real/batch-input.csv
 docker run --name pret-drept-batch \
-  --mount "type=bind,source=$PWD/artifacts/real/serving-model.joblib,target=/models/model.joblib,readonly" \
-  --mount "type=bind,source=$PWD/artifacts/real/batch-input.csv,target=/data/input.csv,readonly" \
+  --mount "type=bind,source=$PWD/artifacts/real/model.joblib,target=/models/model.joblib,readonly" \
+  --mount "type=bind,source=$PWD/artifacts/real/evaluation.csv,target=/data/input.csv,readonly" \
   pret-drept:local python -m mlops.batch --input /data/input.csv --output /tmp/predictions
 docker cp pret-drept-batch:/tmp/predictions artifacts/real/batch-predictions
 docker rm pret-drept-batch

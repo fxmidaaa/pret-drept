@@ -27,10 +27,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Make the mounted copies readable to the container process.
+# Use the same copies for inference and validation.
 cp -- "$2" "$scratch/model.joblib"
 cp -- "${3:-$(dirname "$2")/evaluation.csv}" "$scratch/input.csv"
-chmod 0644 "$scratch/model.joblib" "$scratch/input.csv"
 container=$(docker run --detach --publish 127.0.0.1::8000 \
     --mount "type=bind,source=$scratch/model.joblib,target=/models/model.joblib,readonly" \
     --mount "type=bind,source=$scratch/input.csv,target=/data/input.csv,readonly" "$1")

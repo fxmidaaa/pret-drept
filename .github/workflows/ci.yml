@@ -8,10 +8,6 @@ on:
 permissions:
   contents: read
 
-env:
-  DVC_NO_ANALYTICS: "true"
-  MLFLOW_DISABLE_TELEMETRY: "true"
-
 jobs:
   verify:
     runs-on: ubuntu-24.04
